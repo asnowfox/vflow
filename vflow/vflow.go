@@ -70,14 +70,10 @@ func main() {
 
 	exchanger := new (mirror.UdpMirrorExchanger)
 
-	go func(exchanger mirror.UdpMirrorExchanger) {
-		defer wg.Done()
-		err := exchanger.LoadCfgAndRun(opts.ForwardFile)
-		if err != nil {
-			logger.Printf(" Run mirror error. reason %s\n", err)
-		}
-	}(*exchanger)
-
+	err := exchanger.LoadCfgAndRun(opts.ForwardFile)
+	if err != nil {
+		logger.Printf(" Run mirror error. reason %s\n", err)
+	}
 
 	go statsHTTPServer(ipfix, sFlow, netflow9,exchanger)
 
