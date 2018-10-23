@@ -127,6 +127,7 @@ func NewOptions() *Options {
 		version:    false,
 		DynWorkers: true,
 		PIDFile:    "/var/run/vflow.pid",
+		ForwardFile: "/etc/nfv9.forward.conf",
 		CPUCap:     "100%",
 		Logger:     log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
@@ -290,6 +291,7 @@ func (opts *Options) vFlowFlagSet() {
 	flag.StringVar(&opts.LogFile, "log-file", opts.LogFile, "log file name")
 	flag.StringVar(&opts.PIDFile, "pid-file", opts.PIDFile, "pid file name")
 	flag.StringVar(&opts.CPUCap, "cpu-cap", opts.CPUCap, "Maximum amount of CPU [percent / number]")
+	flag.StringVar(&opts.ForwardFile, "forward-config-file", opts.ForwardFile, "netflow v9 forward config file")
 
 	// stats options
 	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable/disable stats listener")
