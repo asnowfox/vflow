@@ -79,7 +79,7 @@ func main() {
 	//}(*exchanger)
 
 
-	go statsHTTPServer(ipfix, sFlow, netflow9,exchanger)
+	go statsHTTPServer(ipfix, sFlow, netflow9,nil)
 
 	<-signalCh
 

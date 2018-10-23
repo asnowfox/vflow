@@ -126,7 +126,10 @@ func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sys", StatsSysHandler)
 	mux.HandleFunc("/flow", StatsFlowHandler(ipfix, sflow, netflow9))
-	mux.HandleFunc("/forward", StatsForwardHandler(exchanger))
+	if exchanger != nil {
+		mux.HandleFunc("/forward", StatsForwardHandler(exchanger))
+	}
+
 
 	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
 
