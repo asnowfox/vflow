@@ -47,13 +47,14 @@ type arrUInt32Flags []uint32
 // Options represents options
 type Options struct {
 	// global options
-	Verbose    bool   `yaml:"verbose"`
-	LogFile    string `yaml:"log-file"`
-	PIDFile    string `yaml:"pid-file"`
-	CPUCap     string `yaml:"cpu-cap"`
-	DynWorkers bool   `yaml:"dynamic-workers"`
-	Logger     *log.Logger
-	version    bool
+	Verbose     bool   `yaml:"verbose"`
+	LogFile     string `yaml:"log-file"`
+	ForwardFile string `yaml:"forward-file"`
+	PIDFile     string `yaml:"pid-file"`
+	CPUCap      string `yaml:"cpu-cap"`
+	DynWorkers  bool   `yaml:"dynamic-workers"`
+	Logger      *log.Logger
+	version     bool
 
 	// stats options
 	StatsEnabled  bool   `yaml:"stats-enabled"`
