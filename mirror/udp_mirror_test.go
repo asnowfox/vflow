@@ -17,7 +17,7 @@ func TestReadConfig(t *testing.T) {
 }
 
 func TestSendUdp(t *testing.T) {
-	um := NewMirror("159.226.61.198","4444")
+	um := NewMirror("localhost","4444")
 	cnt := 100000
 	curTime := time.Now().UnixNano()
 	for i:=0;i<cnt;i++{
