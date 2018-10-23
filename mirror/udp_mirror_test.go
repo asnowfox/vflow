@@ -9,7 +9,7 @@ import (
 func TestReadConfig(t *testing.T) {
 	coll := new (UdpMirrorExchanger)
 
-	err := coll.LoadCfgAndRun("C:/go_code/vflow/scripts/nfv9.forward.conf")
+	err := coll.LoadCfgAndRun("C:/go_code/vflow/scripts/nfv9.forward.conf",nil)
 	if(err != nil){
 		fmt.Printf("error is  %s\n", err)
 	}

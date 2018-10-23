@@ -5,11 +5,11 @@ import (
 	"../netflow/v9"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
-	"log"
 	"strings"
 	"fmt"
 	"encoding/binary"
 	"bytes"
+	"log"
 )
 
 type SourcedNetflowMessage struct {
@@ -18,7 +18,6 @@ type SourcedNetflowMessage struct {
 }
 
 var (
-	logger         *log.Logger
 	netflowChannel = make(chan SourcedNetflowMessage, 1000)
 )
 
@@ -29,6 +28,7 @@ type UdpMirrorExchanger struct {
 	mirrorConfigs []ExchangerConfig
 	mirrorMaps    map[string]ExchangerConfig
 	udpCliets     map[string]*UdpMirror
+	Logger *log.Logger
 }
 
 type ExchangerConfig struct {
@@ -51,7 +51,7 @@ func (ume *UdpMirrorExchanger) ExchangeMessage(sourceAddr string, msg netflow9.M
 	netflowChannel <- SourcedNetflowMessage{msg.AgentID, msg}
 }
 
-func (ume *UdpMirrorExchanger) LoadCfgAndRun(mirrorCfg string) error {
+func (ume *UdpMirrorExchanger) LoadCfgAndRun(mirrorCfg string,logger *log.Logger) error {
 	b, err := ioutil.ReadFile(mirrorCfg)
 	if err != nil {
 		return err
@@ -60,6 +60,7 @@ func (ume *UdpMirrorExchanger) LoadCfgAndRun(mirrorCfg string) error {
 	if err != nil {
 		return err
 	}
+	ume.Logger = logger
 	ume.initMap()
 	ume.initUdpClients()
 	ume.run()
@@ -87,11 +88,11 @@ func (ume *UdpMirrorExchanger) initUdpClients() {
 }
 
 func (ume *UdpMirrorExchanger) run() {
+	ume.Logger.Printf("start send packet client.")
 	go func() {
-		logger.Printf("UDP netflow forwarding is running.")
 		for {
 			sMsg := <-netflowChannel
-			logger.Printf("depeckage %s", sMsg.SourceAddr)
+			ume.Logger.Printf("depeckage %s", sMsg.SourceAddr)
 			ec := ume.mirrorMaps[sMsg.SourceAddr]
 
 			for _, exchageRule := range ec.Rules {
@@ -247,7 +248,6 @@ func (c *UdpMirror) Send(b []byte) error {
 	}
 	_, e := c.conn.Write(b)
 	if e != nil {
-		logger.Printf("send msg error %s\n", e)
 		c.openConn()
 	}
 	return nil

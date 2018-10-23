@@ -70,7 +70,7 @@ func main() {
 
 	exchanger := new (mirror.UdpMirrorExchanger)
 
-	err := exchanger.LoadCfgAndRun(opts.ForwardFile)
+	err := exchanger.LoadCfgAndRun(opts.ForwardFile,logger)
 	if err != nil {
 		logger.Printf(" Run mirror error. reason %s\n", err)
 	}
