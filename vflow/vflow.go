@@ -30,7 +30,6 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
-	"../mirror"
 )
 
 var (
@@ -68,16 +67,16 @@ func main() {
 		}(p)
 	}
 
-	exchanger := new (mirror.UdpMirrorExchanger)
-
-	wg.Add(1)
-	go func(exchanger mirror.UdpMirrorExchanger) {
-		defer wg.Done()
-		err := exchanger.LoadCfgAndRun(opts.ForwardFile)
-		if err != nil {
-			logger.Printf(" Run mirror error. reason %s\n", err)
-		}
-	}(*exchanger)
+	//exchanger := new (mirror.UdpMirrorExchanger)
+	//
+	//wg.Add(1)
+	//go func(exchanger mirror.UdpMirrorExchanger) {
+	//	defer wg.Done()
+	//	err := exchanger.LoadCfgAndRun(opts.ForwardFile)
+	//	if err != nil {
+	//		logger.Printf(" Run mirror error. reason %s\n", err)
+	//	}
+	//}(*exchanger)
 
 
 	go statsHTTPServer(ipfix, sFlow, netflow9,exchanger)
