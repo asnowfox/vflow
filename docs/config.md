@@ -68,6 +68,37 @@ sflow-workers: 300
 log-file: /var/log/vflow.log
 ```
 
+#Netflow v9 forwarding configuration
+
+## Format
+ A config file is a plain text file in [YAML](https://en.wikipedia.org/wiki/YAML) format.
+
+## Configuration Keys
+ We can config vflow to forwarding flows identified by input and out put port of a flow data.
+ vflow use a list to define the forwarding rules. a flow record should  match all of the rules
+ in this list. if matched this flow record will repackage and sent to the address defined by 
+ this config file.
+## Example
+ ```
+ #This is a example netflow v9 forwarding config 
+ - source: 127.0.0.1 #sourceId in netflow v9 packet
+   rules:
+   - inport: 1 # -1 match all in port
+     outport: 2 # -1 match all out port
+     distAddress: 127.0.0.1:5555 # this flow item vill forwarding to a new address
+   - inport: 1
+     outport: 2
+     distAddress: 127.0.0.1:5555
+ - source: 127.0.0.1
+   rules:
+   - inport: 1
+     outport: 2
+     distAddress: 127.0.0.1:5555
+   - inport: 1
+     outport: 2
+     distAddress: 127.0.0.1:5555
+ ```
+
 # Kafka Configuration
 
 ## Format
