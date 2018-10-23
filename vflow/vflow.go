@@ -30,7 +30,6 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
-	"fmt"
 	"../mirror"
 )
 
@@ -73,7 +72,7 @@ func main() {
 
 	err := exchanger.LoadCfgAndRun(opts.ForwardFile)
 	if err != nil {
-		fmt.Printf("error is  %s\n", err)
+		logger.Printf(" Run mirror error. reason %s\n", err)
 	}
 
 	go statsHTTPServer(ipfix, sFlow, netflow9,exchanger)
