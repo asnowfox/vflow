@@ -29,8 +29,8 @@ import (
 	"io"
 	"net"
 
-	"github.com/VerizonDigital/vflow/ipfix"
-	"github.com/VerizonDigital/vflow/reader"
+	"../../../vflow/ipfix"
+	"../../../vflow/reader"
 )
 
 type nonfatalError error
@@ -88,9 +88,11 @@ type Decoder struct {
 
 // Message represents Netflow decoded data
 type Message struct {
-	AgentID  string
-	Header   PacketHeader
-	DataSets [][]DecodedField
+	AgentID      string
+	Header       PacketHeader
+	TemplaRecord TemplateRecord
+	SetHeaders    []SetHeader
+	DataSets     [][]DecodedField
 }
 
 //   The Packet Header format is specified as:
@@ -448,6 +450,9 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			if err == nil {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
+
+			//TODO add template record to message
+			msg.TemplaRecord = tr
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break
@@ -457,6 +462,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			data, err = d.decodeData(tr)
 			if err == nil {
 				msg.DataSets = append(msg.DataSets, data)
+				msg.SetHeaders = append(msg.SetHeaders,*setHeader)
 			}
 		}
 	}
