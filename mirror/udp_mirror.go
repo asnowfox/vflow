@@ -88,6 +88,7 @@ func (ume *UdpMirrorExchanger) initUdpClients() {
 
 func (ume *UdpMirrorExchanger) run() {
 	go func() {
+		logger.Printf("UDP netflow forwarding is running.")
 		for {
 			sMsg := <-netflowChannel
 			logger.Printf("depeckage %s", sMsg.SourceAddr)
