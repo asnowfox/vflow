@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"runtime"
 	"time"
+	"../mirror"
 )
 
 var startTime = time.Now().Unix()
@@ -104,8 +105,21 @@ func StatsFlowHandler(i *IPFIX, s *SFlow, n *NetflowV9) http.HandlerFunc {
 		}
 	}
 }
+func StatsForwardHandler(exchanger *mirror.UdpMirrorExchanger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		
+		j, err := json.Marshal(exchanger.Status())
+		if err != nil {
+			logger.Println(err)
+		}
 
-func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9) {
+		if _, err = w.Write(j); err != nil {
+			logger.Println(err)
+		}
+	}
+}
+
+func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger *mirror.UdpMirrorExchanger) {
 	if !opts.StatsEnabled {
 		return
 	}
@@ -113,6 +127,7 @@ func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sys", StatsSysHandler)
 	mux.HandleFunc("/flow", StatsFlowHandler(ipfix, sflow, netflow9))
+	mux.HandleFunc("/forward", StatsForwardHandler(exchanger))
 
 	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
 
