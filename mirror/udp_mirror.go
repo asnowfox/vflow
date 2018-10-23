@@ -41,6 +41,12 @@ type ExchangeRule struct {
 	DistAddress string `yaml:"distAddress"`
 }
 
+func (ume *UdpMirrorExchanger) Status() *MirrorStatus{
+	status := new(MirrorStatus)
+	status.QeueSize = int32(len(netflowChannel))
+	return status
+}
+
 func (ume *UdpMirrorExchanger) ExchangeMessage(sourceAddr string, msg netflow9.Message) {
 	netflowChannel <- SourcedNetflowMessage{msg.AgentID, msg}
 }

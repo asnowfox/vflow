@@ -30,6 +30,8 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+	"fmt"
+	"../mirror"
 )
 
 var (
@@ -67,7 +69,14 @@ func main() {
 		}(p)
 	}
 
-	go statsHTTPServer(ipfix, sFlow, netflow9)
+	exchanger := new (mirror.UdpMirrorExchanger)
+
+	err := exchanger.LoadCfgAndRun(opts.ForwardFile)
+	if err != nil {
+		fmt.Printf("error is  %s\n", err)
+	}
+
+	go statsHTTPServer(ipfix, sFlow, netflow9,exchanger)
 
 	<-signalCh
 
