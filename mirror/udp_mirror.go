@@ -123,7 +123,7 @@ func (nfv9Mirror *Netflowv9Mirror) AddRule(sourceId string,rule nfv9MirrorRule) 
 	rules := append(nfv9Mirror.mirrorMaps[sourceId].Rules, rule)
 	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(rules))
 
-	nfv9Mirror.mirrorMaps[sourceId].Rules = rules
+	//nfv9Mirror.mirrorMaps[sourceId].Rules = rules
 
 	copy(nfv9Mirror.mirrorMaps[sourceId].Rules,rules)
 	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(nfv9Mirror.mirrorMaps[sourceId].Rules))
