@@ -21,6 +21,6 @@ type MirrorController struct {
 // @router /:objectId [get]
 func (o *MirrorController) Get() {
 
-	main.MirrorInstance.GetConfig()
-	o.ServeJSON()
+	//main.MirrorInstance.GetConfig()
+	//o.ServeJSON()
 }
