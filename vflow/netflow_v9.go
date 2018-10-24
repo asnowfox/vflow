@@ -31,8 +31,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/VerizonDigital/vflow/netflow/v9"
+	"../netflow/v9"
 	"github.com/VerizonDigital/vflow/producer"
+
+	"../mirror"
 )
 
 // NetflowV9 represents netflow v9 collector
@@ -43,6 +45,7 @@ type NetflowV9 struct {
 	stop    bool
 	stats   NetflowV9Stats
 	pool    chan chan struct{}
+	exchanger *mirror.Netflowv9Mirror
 }
 
 // NetflowV9UDPMsg represents netflow v9 UDP data
@@ -76,11 +79,12 @@ var (
 )
 
 // NewNetflowV9 constructs NetflowV9
-func NewNetflowV9() *NetflowV9 {
+func NewNetflowV9(exc *mirror.Netflowv9Mirror) *NetflowV9 {
 	return &NetflowV9{
 		port:    opts.NetflowV9Port,
 		workers: opts.NetflowV9Workers,
 		pool:    make(chan chan struct{}, maxWorkers),
+		exchanger :exc,
 	}
 }
 
@@ -208,6 +212,10 @@ LOOP:
 				continue
 			}
 		}
+		if i.exchanger != nil {
+			i.exchanger.ReceiveMessage(decodedMsg)
+		}
+
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 

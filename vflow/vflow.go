@@ -30,12 +30,14 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+	"../restful"
 	"../mirror"
 )
 
 var (
 	opts   *Options
 	logger *log.Logger
+	MirrorInstance *mirror.Netflowv9Mirror
 )
 
 type proto interface {
@@ -54,9 +56,22 @@ func main() {
 
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
+	logger = opts.Logger
+
+	logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
+	nfv9Mirror,err := mirror.NewNetflowv9Mirror(opts.ForwardFile,logger)
+
+	if err != nil {
+		logger.Printf("can not init mirror. reason %s\n", err)
+	}else{
+		nfv9Mirror.Run()
+	}
+	MirrorInstance = nfv9Mirror
+
+
 	sFlow := NewSFlow()
 	ipfix := NewIPFIX()
-	netflow9 := NewNetflowV9()
+	netflow9 := NewNetflowV9(nfv9Mirror)
 
 	protos := []proto{sFlow, ipfix, netflow9}
 
@@ -68,14 +83,10 @@ func main() {
 		}(p)
 	}
 
-	exchanger := new (mirror.UdpMirrorExchanger)
+	go statsHTTPServer(ipfix, sFlow, netflow9, nfv9Mirror)
 
-	err := exchanger.LoadCfgAndRun(opts.ForwardFile,logger)
-	if err != nil {
-		logger.Printf(" Run mirror error. reason %s\n", err)
-	}
-
-	go statsHTTPServer(ipfix, sFlow, netflow9,exchanger)
+	beegoServer := restful.NewBeegoServer(logger)
+	beegoServer.Run()
 
 	<-signalCh
 
@@ -86,6 +97,5 @@ func main() {
 			p.shutdown()
 		}(p)
 	}
-
 	wg.Wait()
 }

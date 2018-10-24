@@ -105,7 +105,7 @@ func StatsFlowHandler(i *IPFIX, s *SFlow, n *NetflowV9) http.HandlerFunc {
 		}
 	}
 }
-func StatsForwardHandler(exchanger *mirror.UdpMirrorExchanger) http.HandlerFunc {
+func StatsForwardHandler(exchanger *mirror.Netflowv9Mirror) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		j, err := json.Marshal(exchanger.Status())
 		if err != nil {
@@ -118,7 +118,7 @@ func StatsForwardHandler(exchanger *mirror.UdpMirrorExchanger) http.HandlerFunc 
 	}
 }
 
-func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger *mirror.UdpMirrorExchanger) {
+func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger *mirror.Netflowv9Mirror) {
 	if !opts.StatsEnabled {
 		return
 	}
