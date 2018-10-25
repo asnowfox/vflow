@@ -217,10 +217,10 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					if sMsg.TemplaRecord.FieldCount > 0 {
 						nfv9Mirror.Logger.Printf("temlate field count > 0")
 					}
-					nfv9Mirror.udpClients[mRule.DistAddress].Send(nfv9Mirror.toBytes(sMsg, mRule.Req,recordHeader,datas))
+					bytes := nfv9Mirror.toBytes(sMsg, mRule.Req,recordHeader,datas)
+					nfv9Mirror.Logger.Printf("send netflow v9 data to: %s, size: %d bytes",mRule.DistAddress, len(bytes))
+					nfv9Mirror.udpClients[mRule.DistAddress].Send(bytes)
 					mRule.Req = mRule.Req+1
-				}else{
-					nfv9Mirror.Logger.Printf("datas length is 0")
 				}
 			}
 		}
@@ -282,8 +282,6 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 
 	count = count + uint16(len(fields))
 
-	nfv9Mirror.Logger.Printf("original count is %d, new count  is %d ",originalMsg.Header.Count,count)
-
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
 	binary.Write(buf, binary.BigEndian, uint16(count))
@@ -319,9 +317,6 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 			binary.Write(buf, binary.BigEndian, item.Value)
 		}
 	}
-
-
-	nfv9Mirror.Logger.Printf("buffer all finshed length is %d",buf.Len())
 	result := buf.Bytes()
 	nfv9Mirror.Logger.Printf("buffer bytes is %d.",len(result))
 	return result
