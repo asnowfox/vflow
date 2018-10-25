@@ -61,14 +61,14 @@ func NewUdpMirrorClient(remoteAddress string, port string) *UdpClient {
 type UdpClient struct {
 	remoteAddress string
 	port          string
-	conn          net.Conn
+	conn          *net.Conn
 }
 
 func (c *UdpClient) Send(b []byte) error {
 	if c.conn == nil {
 		c.openConn()
 	}
-	_, e := c.conn.Write(b)
+	_, e := (*c.conn).Write(b)
 	if e != nil {
 		c.openConn()
 	}
@@ -79,11 +79,11 @@ func (c *UdpClient) openConn() error {
 	if err != nil {
 		return err
 	}
-	c.conn = conn
+	c.conn = &conn
 	return nil
 }
 
 func (c *UdpClient) Close() error {
-	c.conn.Close()
+	(*c.conn).Close()
 	return nil
 }
