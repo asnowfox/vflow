@@ -277,7 +277,6 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uint32,
 	recordHeader netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
 	buf := new(bytes.Buffer)
-
 	var count uint16 = 0
 
 	count = count + uint16(len(fields))
@@ -287,7 +286,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, uint16(count))
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SysUpTime)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.UNIXSecs)
-	binary.Write(buf, binary.BigEndian, seq)
+	binary.Write(buf, binary.BigEndian, originalMsg.Header.SeqNum)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
 	if originalMsg.TemplaRecord.FieldCount > 0 {
@@ -305,10 +304,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 		}
 	}
 
-
 	nfv9Mirror.Logger.Printf("buffer before length is %d.",buf.Len())
-
-
 
 	binary.Write(buf,binary.BigEndian,recordHeader.FlowSetID)
 	binary.Write(buf,binary.BigEndian,recordHeader.Length)
