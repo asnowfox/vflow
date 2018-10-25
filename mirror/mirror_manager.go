@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
 	"net"
+	"fmt"
 )
 
 var(
@@ -70,6 +71,7 @@ func (c *UdpClient) Send(b []byte) error {
 	}
 	_, e := (*c.conn).Write(b)
 	if e != nil {
+		fmt.Printf("send error %s ",e)
 		c.openConn()
 	}
 	return nil
