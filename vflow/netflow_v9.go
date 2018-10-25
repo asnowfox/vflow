@@ -231,11 +231,6 @@ LOOP:
 			default:
 			}
 		}
-
-		if opts.Verbose {
-			logger.Println(string(b))
-		}
-
 	}
 
 }

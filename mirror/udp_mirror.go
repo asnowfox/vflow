@@ -180,6 +180,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var datas [][]netflow9.DecodedField
+				nfv9Mirror.Logger.Printf("sMsg.DataSets size is %d,", len(sMsg.DataSets))
 				for _, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
 					inputFound, outputFound := false, false
@@ -204,10 +205,10 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						inputMatch = true
 					}
 					if inputMatch && outputMatch { // input and output matched
-						nfv9Mirror.Logger.Printf("input  and out put matched ")
 						datas = append(datas, nfData)
 					}
 				}
+				nfv9Mirror.Logger.Printf("datas size is %d,", len(datas))
 				if len(datas) > 0 {
 					//生成header 生成bytes
 					nfv9Mirror.udpClients[mRule.DistAddress].Send(nfv9Mirror.toBytes(sMsg, 0, datas))
