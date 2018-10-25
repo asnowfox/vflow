@@ -174,7 +174,6 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 	go func() {
 		for {
 			sMsg := <-netflowChannel
-			nfv9Mirror.Logger.Printf("depeckage %s", sMsg.AgentID)
 			ec := nfv9Mirror.mirrorMaps[sMsg.AgentID]
 
 			for _, mRule := range ec.Rules {
@@ -183,7 +182,6 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 				var recordHeader netflow9.SetHeader
 				recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
 				recordHeader.Length = 4
-				nfv9Mirror.Logger.Printf("sMsg.DataSets size is %d,", len(sMsg.DataSets))
 				for _, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
 					inputFound, outputFound := false, false
@@ -211,14 +209,16 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
-						//recordHeaders = append(recordHeaders, sMsg.SetHeaders[i])
 					}
 				}
-				nfv9Mirror.Logger.Printf("datas size is %d,", len(datas))
+
 				if len(datas) > 0 || sMsg.TemplaRecord.FieldCount > 0{
 					//生成header 生成bytes
+					if sMsg.TemplaRecord.FieldCount > 0 {
+						nfv9Mirror.Logger.Printf("temlate field count > 0")
+					}
 					nfv9Mirror.udpClients[mRule.DistAddress].Send(nfv9Mirror.toBytes(sMsg, mRule.Req,recordHeader,datas))
-					mRule.Req++
+					mRule.Req = mRule.Req+1
 				}else{
 					nfv9Mirror.Logger.Printf("datas length is 0")
 				}
