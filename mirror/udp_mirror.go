@@ -187,10 +187,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						id := decodedData.ID
 						if id == InputId {
 							inputFound = true
-							nfv9Mirror.Logger.Printf("input value rule port %d decoded port is %d ",mRule.InPort,decodedData.Value)
-
 							if decodedData.Value == mRule.InPort || mRule.InPort == -1 {
-								nfv9Mirror.Logger.Printf("input matched rule port %d decoded port is %d ",mRule.InPort,decodedData.Value)
 								inputMatch = true
 							}
 						} else if id == OutputId {
@@ -207,12 +204,15 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						inputMatch = true
 					}
 					if inputMatch && outputMatch { // input and output matched
+						nfv9Mirror.Logger.Printf("input  and out put matched ")
 						datas = append(datas, nfData)
 					}
 				}
 				if len(datas) > 0 {
 					//生成header 生成bytes
 					nfv9Mirror.udpClients[mRule.DistAddress].Send(nfv9Mirror.toBytes(sMsg, 0, datas))
+				}else{
+					nfv9Mirror.Logger.Printf("datas length is 0")
 				}
 			}
 		}
