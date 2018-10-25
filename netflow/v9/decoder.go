@@ -456,7 +456,6 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			// Data set
 			var data []DecodedField
 			data, err = d.decodeData(tr)
-			fmt.Printf("buffer decoded data length is %d.\n", len(data))
 			if err == nil {
 				msg.DataSets = append(msg.DataSets, data)
 				msg.SetHeaders = append(msg.SetHeaders,*setHeader)

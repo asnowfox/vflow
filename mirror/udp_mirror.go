@@ -291,10 +291,11 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	for i,header := range recordHeaders {
 		binary.Write(buf,binary.BigEndian,header.FlowSetID)
 		binary.Write(buf,binary.BigEndian,header.Length)
-		nfv9Mirror.Logger.Printf("buffer header finish length is %d.",buf.Len())
+		nfv9Mirror.Logger.Printf("buffer header finish length is %d,record length is %d.",buf.Len(), len(fields[i]))
 		for _, item := range fields[i] {
 			binary.Write(buf, binary.BigEndian, item.ID)
 			binary.Write(buf, binary.BigEndian, item.Value)
+			nfv9Mirror.Logger.Printf("buffer record one length is %d.",buf.Len())
 		}
 		nfv9Mirror.Logger.Printf("buffer record finish length is %d.",buf.Len())
 	}
