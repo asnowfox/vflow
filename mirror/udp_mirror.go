@@ -161,7 +161,7 @@ func (nfv9Mirror *Netflowv9Mirror) recycleClients() {
 		for _, ecr := range mirrorConfig.Rules {
 			//在用的不存在了
 			if _, ok := usedClient[ecr.DistAddress]; !ok {
-				nfv9Mirror.udpClients[ecr.DistAddress].conn.Close()
+				(*nfv9Mirror.udpClients[ecr.DistAddress].conn).Close()
 				delete(nfv9Mirror.udpClients, ecr.DistAddress)
 			}
 		}
