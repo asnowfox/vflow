@@ -180,13 +180,17 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var datas [][]netflow9.DecodedField
-				var recordHeaders []netflow9.SetHeader
+				var recordHeader netflow9.SetHeader
+				recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
+				recordHeader.Length = 4
 				nfv9Mirror.Logger.Printf("sMsg.DataSets size is %d,", len(sMsg.DataSets))
-				for i, nfData := range sMsg.DataSets { //[]DecodedField
+				for _, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
 					inputFound, outputFound := false, false
+					dataLen := 0
 					for _, decodedData := range nfData {
 						id := decodedData.ID
+						dataLen += binary.Size(decodedData.Value)
 						if id == InputId {
 							inputFound = true
 							if decodedData.Value == mRule.InPort || mRule.InPort == -1 {
@@ -207,13 +211,14 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
-						recordHeaders = append(recordHeaders, sMsg.SetHeaders[i])
+						//recordHeaders = append(recordHeaders, sMsg.SetHeaders[i])
 					}
 				}
 				nfv9Mirror.Logger.Printf("datas size is %d,", len(datas))
-				if len(datas) > 0 {
+				if len(datas) > 0 || sMsg.TemplaRecord.FieldCount > 0{
 					//生成header 生成bytes
-					nfv9Mirror.udpClients[mRule.DistAddress].Send(nfv9Mirror.toBytes(sMsg, 0,recordHeaders,datas))
+					nfv9Mirror.udpClients[mRule.DistAddress].Send(nfv9Mirror.toBytes(sMsg, mRule.Req,recordHeader,datas))
+					mRule.Req++
 				}else{
 					nfv9Mirror.Logger.Printf("datas length is 0")
 				}
@@ -270,12 +275,12 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uint32,
-	recordHeaders []netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
+	recordHeader netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
 	buf := new(bytes.Buffer)
 
 	var count uint16 = 0
 
-	count = count + uint16(len(recordHeaders))
+	count = count + uint16(len(fields))
 
 	nfv9Mirror.Logger.Printf("original count is %d, new count  is %d ",originalMsg.Header.Count,count)
 
@@ -286,19 +291,29 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.UNIXSecs)
 	binary.Write(buf, binary.BigEndian, seq)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
-	nfv9Mirror.Logger.Printf("buffer before length is %d.",buf.Len())
-	//flow的data
-	//for i,header := range recordHeaders {
-	//	binary.Write(buf,binary.BigEndian,header.FlowSetID)
-	//	binary.Write(buf,binary.BigEndian,header.Length)
-	//	nfv9Mirror.Logger.Printf("buffer header finish length is %d. header recorded length is %d.",buf.Len(),header.Length)
-	//
-	//	for _, item := range fields[i] {
-	//		binary.Write(buf, binary.BigEndian, item.Value)
-	//	}
-	//	nfv9Mirror.Logger.Printf("buffer record finish length is %d.",buf.Len())
-	//}
 
+	if originalMsg.TemplaRecord.FieldCount > 0 {
+		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.TemplateID)
+		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.FieldCount)
+		for _, spec := range originalMsg.TemplaRecord.FieldSpecifiers {
+			binary.Write(buf, binary.BigEndian, spec.ElementID)
+			binary.Write(buf, binary.BigEndian, spec.Length)
+		}
+		if originalMsg.TemplaRecord.ScopeFieldCount > 0 {
+			for _, spec1 := range originalMsg.TemplaRecord.ScopeFieldSpecifiers {
+				binary.Write(buf, binary.BigEndian, spec1.ElementID)
+				binary.Write(buf, binary.BigEndian, spec1.Length)
+			}
+		}
+	}
+
+
+	nfv9Mirror.Logger.Printf("buffer before length is %d.",buf.Len())
+
+
+
+	binary.Write(buf,binary.BigEndian,recordHeader.FlowSetID)
+	binary.Write(buf,binary.BigEndian,recordHeader.Length)
 	for _,field := range fields {
 		for _, item := range field {
 			binary.Write(buf, binary.BigEndian, item.Value)

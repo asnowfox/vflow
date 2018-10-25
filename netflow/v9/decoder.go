@@ -90,7 +90,8 @@ type Decoder struct {
 type Message struct {
 	AgentID      string
 	Header       PacketHeader
-	SetHeaders    []SetHeader
+	TemplaRecord TemplateRecord
+	SetHeader    SetHeader
 	DataSets     [][]DecodedField
 }
 
@@ -435,7 +436,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			))
 		}
 	}
-
+	msg.SetHeader = *setHeader
 	// the next set should be greater than 4 bytes otherwise that's padding
 	for err == nil && (int(setHeader.Length)-(d.reader.ReadCount()-startCount) > 4) && d.reader.Len() > 4 {
 		if setId := setHeader.FlowSetID; setId == 0 || setId == 1 {
@@ -449,6 +450,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			if err == nil {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
+			msg.TemplaRecord = tr
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break
@@ -458,7 +460,6 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			data, err = d.decodeData(tr)
 			if err == nil {
 				msg.DataSets = append(msg.DataSets, data)
-				msg.SetHeaders = append(msg.SetHeaders,*setHeader)
 			}
 		}
 	}

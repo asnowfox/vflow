@@ -27,6 +27,7 @@ type Rule struct {
 	InPort      int32  `yaml:"inport"`
 	OutPort     int32  `yaml:"outport"`
 	DistAddress string `yaml:"distAddress"`
+	Req uint32
 }
 
 
