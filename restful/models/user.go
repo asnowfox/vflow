@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strconv"
 	"time"
-	"fmt"
 )
 
 var (
@@ -15,7 +14,6 @@ func init() {
 	UserList = make(map[string]*User)
 	u := User{"user_11111", "astaxie", "11111", Profile{"male", 20, "Singapore", "astaxie@gmail.com"}}
 	UserList["user_11111"] = &u
-	fmt.Printf("user init finshed")
 }
 
 type User struct {

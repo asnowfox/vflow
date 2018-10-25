@@ -3,7 +3,6 @@ package controllers
 import (
 	"../models"
 	"encoding/json"
-
 	"github.com/astaxie/beego"
 )
 

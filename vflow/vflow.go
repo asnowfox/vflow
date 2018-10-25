@@ -37,7 +37,6 @@ import (
 var (
 	opts   *Options
 	logger *log.Logger
-	MirrorInstance *mirror.Netflowv9Mirror
 )
 
 type proto interface {
@@ -66,8 +65,6 @@ func main() {
 	}else{
 		nfv9Mirror.Run()
 	}
-	MirrorInstance = nfv9Mirror
-
 
 	sFlow := NewSFlow()
 	ipfix := NewIPFIX()

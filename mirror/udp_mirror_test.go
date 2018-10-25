@@ -12,9 +12,9 @@ func TestReadConfig(t *testing.T) {
 	nfv9Mirror,_ := NewNetflowv9Mirror("../scripts/nfv9.forward.conf",
 		log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),)
 
-	cfg := Nfv9MirrorConfig{}
+	cfg := Config{}
 	cfg.Source = "192.168.0.1"
-	rule := nfv9MirrorRule{}
+	rule := Rule{}
 	rule.DistAddress = "10.0.0.1:2222"
 	rule.InPort = -1
 	rule.OutPort = -1

@@ -39,13 +39,13 @@ import (
 
 // NetflowV9 represents netflow v9 collector
 type NetflowV9 struct {
-	port    int
-	addr    string
-	workers int
-	stop    bool
-	stats   NetflowV9Stats
-	pool    chan chan struct{}
-	exchanger *mirror.Netflowv9Mirror
+	port          int
+	addr          string
+	workers       int
+	stop          bool
+	stats         NetflowV9Stats
+	pool          chan chan struct{}
+	messageMirror *mirror.Netflowv9Mirror
 }
 
 // NetflowV9UDPMsg represents netflow v9 UDP data
@@ -81,10 +81,10 @@ var (
 // NewNetflowV9 constructs NetflowV9
 func NewNetflowV9(exc *mirror.Netflowv9Mirror) *NetflowV9 {
 	return &NetflowV9{
-		port:    opts.NetflowV9Port,
-		workers: opts.NetflowV9Workers,
-		pool:    make(chan chan struct{}, maxWorkers),
-		exchanger :exc,
+		port:          opts.NetflowV9Port,
+		workers:       opts.NetflowV9Workers,
+		pool:          make(chan chan struct{}, maxWorkers),
+		messageMirror: exc,
 	}
 }
 
@@ -212,8 +212,8 @@ LOOP:
 				continue
 			}
 		}
-		if i.exchanger != nil {
-			i.exchanger.ReceiveMessage(decodedMsg)
+		if i.messageMirror != nil {
+			i.messageMirror.ReceiveMessage(decodedMsg)
 		}
 
 

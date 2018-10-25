@@ -13,7 +13,6 @@ import(
 )
 
 func init() {
-
 	beego.Router("/user", &controllers.UserController{})
-	beego.Router("/mirror", &controllers.MirrorController{},)
+	beego.Router("/mirror", &controllers.MirrorController{})
 }
