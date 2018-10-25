@@ -187,6 +187,8 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						id := decodedData.ID
 						if id == InputId {
 							inputFound = true
+							nfv9Mirror.Logger.Printf("input value rule port %d decoded port is %d ",mRule.InPort,decodedData.Value)
+
 							if decodedData.Value == mRule.InPort || mRule.InPort == -1 {
 								nfv9Mirror.Logger.Printf("input matched rule port %d decoded port is %d ",mRule.InPort,decodedData.Value)
 								inputMatch = true
