@@ -188,6 +188,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						if id == InputId {
 							inputFound = true
 							if decodedData.Value == mRule.InPort || mRule.InPort == -1 {
+								nfv9Mirror.Logger.Printf("input matched rule port %d decoded port is %d ",mRule.InPort,decodedData.Value)
 								inputMatch = true
 							}
 						} else if id == OutputId {
@@ -312,7 +313,6 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 		}
 	}
 	// 在写data记录
-
 	return buf.Bytes()
 }
 
