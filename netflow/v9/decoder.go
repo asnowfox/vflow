@@ -449,8 +449,6 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			if err == nil {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
-
-
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break
@@ -458,6 +456,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			// Data set
 			var data []DecodedField
 			data, err = d.decodeData(tr)
+			fmt.Printf("buffer decoded data length is %d.", len(data))
 			if err == nil {
 				msg.DataSets = append(msg.DataSets, data)
 				msg.SetHeaders = append(msg.SetHeaders,*setHeader)

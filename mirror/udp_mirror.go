@@ -298,7 +298,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 		}
 		nfv9Mirror.Logger.Printf("buffer record finish length is %d.",buf.Len())
 	}
-	
+
 	nfv9Mirror.Logger.Printf("buffer all finshed length is %d",buf.Len())
 	result := buf.Bytes()
 	nfv9Mirror.Logger.Printf("buffer bytes is %d.",len(result))
