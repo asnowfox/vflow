@@ -290,14 +290,16 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	//flow的data
 	for i, record := range fields {
 		// Recoder header
-		binary.Write(buf,binary.BigEndian,recordHeaders[i])
+		binary.Write(buf,binary.BigEndian,recordHeaders[i].FlowSetID)
+		binary.Write(buf,binary.BigEndian,recordHeaders[i].Length)
 		for _, item := range record {
 			binary.Write(buf, binary.BigEndian, item.ID)
 			binary.Write(buf, binary.BigEndian, item.Value)
 		}
 	}
-
-	return buf.Bytes()
+	result := buf.Bytes()
+	nfv9Mirror.Logger.Printf("buf bytes is %d.",len(result))
+	return result
 }
 
 
