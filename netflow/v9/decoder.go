@@ -90,7 +90,6 @@ type Decoder struct {
 type Message struct {
 	AgentID      string
 	Header       PacketHeader
-	TemplaRecord TemplateRecord
 	SetHeaders    []SetHeader
 	DataSets     [][]DecodedField
 }
@@ -451,8 +450,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
 
-			//TODO add template record to message
-			msg.TemplaRecord = tr
+
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break

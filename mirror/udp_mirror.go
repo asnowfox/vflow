@@ -180,8 +180,9 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var datas [][]netflow9.DecodedField
+				var recordHeaders []netflow9.SetHeader
 				nfv9Mirror.Logger.Printf("sMsg.DataSets size is %d,", len(sMsg.DataSets))
-				for _, nfData := range sMsg.DataSets { //[]DecodedField
+				for i, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
 					inputFound, outputFound := false, false
 					for _, decodedData := range nfData {
@@ -206,12 +207,13 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
+						recordHeaders = append(recordHeaders, sMsg.SetHeaders[i])
 					}
 				}
 				nfv9Mirror.Logger.Printf("datas size is %d,", len(datas))
 				if len(datas) > 0 {
 					//生成header 生成bytes
-					nfv9Mirror.udpClients[mRule.DistAddress].Send(nfv9Mirror.toBytes(sMsg, 0, datas))
+					nfv9Mirror.udpClients[mRule.DistAddress].Send(nfv9Mirror.toBytes(sMsg, 0,recordHeaders,datas))
 				}else{
 					nfv9Mirror.Logger.Printf("datas length is 0")
 				}
@@ -267,15 +269,16 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 // |        Field Type             |         Field Length          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uint32, fields [][]netflow9.DecodedField) []byte {
+func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uint32,
+	recordHeaders []netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
 	buf := new(bytes.Buffer)
 
 	var count uint16 = 0
-	count = count + originalMsg.TemplaRecord.FieldCount
-	count = count + uint16(len(originalMsg.SetHeaders))
+
+	count = count + uint16(len(recordHeaders))
 
 	nfv9Mirror.Logger.Printf("original count is %d, new count  is %d ",originalMsg.Header.Count,count)
-	nfv9Mirror.Logger.Printf("original templete id  is %d",originalMsg.TemplaRecord.TemplateID)
+
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
 	binary.Write(buf, binary.BigEndian, uint16(count))
@@ -284,41 +287,16 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, seq)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
-	//original flow templateRecord
-	if originalMsg.TemplaRecord.FieldCount > 0 {
-		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.TemplateID)
-		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.FieldCount)
-		for _, spec := range originalMsg.TemplaRecord.FieldSpecifiers {
-			binary.Write(buf, binary.BigEndian, spec.ElementID)
-			binary.Write(buf, binary.BigEndian, spec.Length)
-		}
-		if originalMsg.TemplaRecord.ScopeFieldCount > 0 {
-			for _, spec1 := range originalMsg.TemplaRecord.ScopeFieldSpecifiers {
-				binary.Write(buf, binary.BigEndian, spec1.ElementID)
-				binary.Write(buf, binary.BigEndian, spec1.Length)
-			}
-		}
-	}
-
-	//flow的template 头部
-
 	//flow的data
-	for _, record := range fields {
+	for i, record := range fields {
+		// Recoder header
+		binary.Write(buf,binary.BigEndian,recordHeaders[i])
 		for _, item := range record {
 			binary.Write(buf, binary.BigEndian, item.ID)
 			binary.Write(buf, binary.BigEndian, item.Value)
 		}
 	}
 
-	for i, setHeader := range originalMsg.SetHeaders {
-		binary.Write(buf, binary.BigEndian, setHeader.FlowSetID)
-		binary.Write(buf, binary.BigEndian, uint16(len(fields)))
-		for _, field := range fields[i] {
-			binary.Write(buf, binary.BigEndian, field.ID)
-			binary.Write(buf, binary.BigEndian, field.Value)
-		}
-	}
-	// 在写data记录
 	return buf.Bytes()
 }
 
