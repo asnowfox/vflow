@@ -157,12 +157,13 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 		for {
 			sMsg := <-netflowChannel
 			ec := nfv9Mirror.mirrorMaps[sMsg.AgentID]
-
+			var recordHeader netflow9.SetHeader
+			recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
+			recordHeader.Length = 0
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var datas [][]netflow9.DecodedField
-				var recordHeader netflow9.SetHeader
-				recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
+
 
 				for _, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
@@ -191,13 +192,16 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
-						recordHeader.Length = 4 + dataLen
+						recordHeader.Length += dataLen
 					}
 				}
 
+
 				if len(datas) > 0 || sMsg.TemplaRecord.FieldCount > 0 {
+					recordHeader.Length += 4
+					
 					if sMsg.TemplaRecord.FieldCount > 0 {
-						recordHeader.Length = 4 + 4 + 4*sMsg.TemplaRecord.FieldCount
+						recordHeader.Length =  4 + 4*sMsg.TemplaRecord.FieldCount
 					}
 
 					var seq uint32 = 0
@@ -212,10 +216,17 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 
 					dstAddr := strings.Split(mRule.DistAddress, ":")
 					dstPort, _ := strconv.Atoi(dstAddr[1])
+					if sMsg.TemplaRecord.FieldCount > 0 {
+						nfv9Mirror.Logger.Printf("raw socket will send bytes size %d", len(bytes))
+					}
 					bytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, bytes)
-					err := nfv9Mirror.rawSocket.Send(bytes)
-					if err != nil {
-						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(bytes),err)
+					//TODO 需要修复FieldCount的问题
+					if sMsg.TemplaRecord.FieldCount > 0 {
+						nfv9Mirror.Logger.Printf("raw socket will send bytes size %d", len(bytes))
+						err := nfv9Mirror.rawSocket.Send(bytes)
+						if err != nil {
+							nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(bytes),err)
+						}
 					}
 				}
 			}
@@ -275,8 +286,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uint32,
 	recordHeader netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
 	buf := new(bytes.Buffer)
-	var count uint16 = 0
-	count = count + uint16(len(fields))
+	count := uint16(len(fields))
 	if originalMsg.TemplaRecord.FieldCount > 0{
 		count = count + 1
 	}
