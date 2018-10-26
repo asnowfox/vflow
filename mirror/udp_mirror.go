@@ -257,7 +257,8 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					//	dstAddress string ,dstPort int,data []byte) []byte
 					dsts := strings.Split(mRule.DistAddress,":")
 					dstport,_ :=strconv.Atoi(dsts[1])
-					nfv9Mirror.genRawPacket(sMsg.AgentID, 9999,dsts[0],dstport,bytes)
+					bytes = nfv9Mirror.genRawPacket(sMsg.AgentID, 9999,dsts[0],dstport,bytes)
+					nfv9Mirror.rawSocket.Send(bytes)
 					//nfv9Mirror.udpClients[mRule.DistAddress].Send(bytes)
 					mRule.Req = mRule.Req+1
 				}
