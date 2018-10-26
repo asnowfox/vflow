@@ -9,6 +9,8 @@ import (
 	"log"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
+	"github.com/VerizonDigital/vflow/mirror"
+	"net"
 )
 
 var (
@@ -47,6 +49,8 @@ func (nfv9Mirror *Netflowv9Mirror) initUdpClients() {
 			addrPort := strings.Split(ecr.DistAddress, ":")
 			if _, ok := nfv9Mirror.udpClients[ecr.DistAddress]; !ok {
 				fmt.Printf("this is a source %s to distination %s ", ec.Source, ecr.DistAddress)
+				nfv9Mirror.udpClients[ecr.DistAddress] = NewUdpMirrorClient(addrPort[0], addrPort[1])
+
 				nfv9Mirror.udpClients[ecr.DistAddress] = NewUdpMirrorClient(addrPort[0], addrPort[1])
 			}
 		}
@@ -166,6 +170,31 @@ func (nfv9Mirror *Netflowv9Mirror) recycleClients() {
 			}
 		}
 	}
+
+}
+
+func (nfv9Mirror *Netflowv9Mirror) genRawPacket(srcAddress string,srcPort int,
+	dstAddress string ,dstPort int,data []byte) []byte{
+
+	ipHLen := mirror.IPv4HLen
+	udp := mirror.UDP{srcPort, dstPort, 0, 0}
+	udpHdr := udp.Marshal()
+
+	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
+	ipHdr := ip.Marshal()
+
+	payload := make([]byte, 1500)
+
+	udp.SetLen(udpHdr, len(data))
+
+	//(b []byte, src, dst net.IP)
+	ip.SetAddrs(ipHdr, net.ParseIP(srcAddress), net.ParseIP(dstAddress))
+
+	copy(payload[0:ipHLen], ipHdr)
+	copy(payload[ipHLen:ipHLen+8], udpHdr)
+	copy(payload[ipHLen+8:], data)
+
+	return payload
 
 }
 
