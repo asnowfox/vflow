@@ -283,7 +283,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	recordHeader netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
 	buf := new(bytes.Buffer)
 	var count uint16 = 0
-	count = count + uint16(len(fields))
+	count = count + uint16(len(fields)) + originalMsg.TemplaRecord.FieldCount
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
 	binary.Write(buf, binary.BigEndian, uint16(count))
