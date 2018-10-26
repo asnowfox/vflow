@@ -218,10 +218,10 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 				for _, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
 					inputFound, outputFound := false, false
-					dataLen := 0
+					var dataLen uint16 = 0
 					for _, decodedData := range nfData {
 						id := decodedData.ID
-						dataLen += binary.Size(decodedData.Value)
+						dataLen = dataLen + uint16(binary.Size(decodedData.Value))
 						if id == InputId {
 							inputFound = true
 							if decodedData.Value == mRule.InPort || mRule.InPort == -1 {
@@ -242,6 +242,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
+						recordHeader.Length = recordHeader.Length + dataLen
 					}
 				}
 
