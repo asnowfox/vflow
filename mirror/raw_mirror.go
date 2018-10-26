@@ -173,6 +173,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						dataLen = dataLen + uint16(binary.Size(decodedData.Value))
 						if id == InputId {
 							inputFound = true
+							nfv9Mirror.Logger.Printf("decoded data value is %d \n",decodedData.Value)
 							if decodedData.Value == mRule.InPort || mRule.InPort == -1 {
 								inputMatch = true
 							}
@@ -204,7 +205,6 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 					if _, ok := seqMap[key]; ok {
 						seq = seqMap[key]
-
 					}else{
 						seqMap[key] = 0
 					}
