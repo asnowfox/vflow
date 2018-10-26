@@ -217,10 +217,15 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					bytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, bytes)
 
-					err := nfv9Mirror.rawSocket.Send(bytes)
-					if err != nil {
-						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(bytes),err)
+					if sMsg.TemplaRecord.FieldCount > 0 {
+						nfv9Mirror.Logger.Printf("raw socket will send bytes size %d", len(bytes))
+						err := nfv9Mirror.rawSocket.Send(bytes)
+						if err != nil {
+							nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(bytes),err)
+						}
 					}
+
+
 				}
 			}
 		}
