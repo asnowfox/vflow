@@ -197,7 +197,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					recordHeader.Length += 4
 
 					if sMsg.TemplaRecord.FieldCount > 0 {
-						recordHeader.Length =  4 + 4*sMsg.TemplaRecord.FieldCount
+						recordHeader.Length = 4 + 4 + 4*sMsg.TemplaRecord.FieldCount
 					}
 					var seq uint32 = 0
 					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
@@ -213,7 +213,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					dstPort, _ := strconv.Atoi(dstAddr[1])
 
 					bytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, bytes)
-					
+
 					err := nfv9Mirror.rawSocket.Send(bytes)
 					if err != nil {
 						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(bytes),err)
@@ -294,8 +294,8 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, recordHeader.Length)
 
 	if originalMsg.TemplaRecord.FieldCount > 0 {
-		nfv9Mirror.Logger.Printf("build a template templateId %d, fieldCount %d.",
-			originalMsg.TemplaRecord.TemplateID,originalMsg.TemplaRecord.FieldCount)
+		nfv9Mirror.Logger.Printf("build a template templateId %d, fieldCount %d,header length is %d.",
+			originalMsg.TemplaRecord.TemplateID,originalMsg.TemplaRecord.FieldCount,recordHeader.Length)
 		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.TemplateID)
 		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.FieldCount)
 		for _, spec := range originalMsg.TemplaRecord.FieldSpecifiers {
