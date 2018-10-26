@@ -121,6 +121,7 @@ func (i *IPFIX) Run() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		fmt.Printf("call send data.")
 		i.sendData()
 	}()
 
@@ -180,7 +181,7 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 		packets []Packet
 		samples [][]byte
 	)
-
+	fmt.Printf("call gen packets.")
 	ipHLen := mirror.IPv4HLen
 	udp := mirror.UDP{55117, i.Port, 0, 0}
 	udpHdr := udp.Marshal()
@@ -188,6 +189,7 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
 	ipHdr := ip.Marshal()
 
+	fmt.Printf("ip header length is %d",ip.Length)
 	switch typ {
 	case dataType:
 		samples = ipfixDataSamples
