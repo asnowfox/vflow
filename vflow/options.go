@@ -50,6 +50,7 @@ type Options struct {
 	Verbose     bool   `yaml:"verbose"`
 	LogFile     string `yaml:"log-file"`
 	ForwardFile string `yaml:"mirror-config-file"`
+	MirrorItfIp string `yaml:"mirror-interface-addr"`
 	PIDFile     string `yaml:"pid-file"`
 	CPUCap      string `yaml:"cpu-cap"`
 	DynWorkers  bool   `yaml:"dynamic-workers"`
@@ -128,6 +129,7 @@ func NewOptions() *Options {
 		DynWorkers: true,
 		PIDFile:    "/var/run/vflow.pid",
 		ForwardFile: "/etc/vflow/nfv9.forward.conf",
+		MirrorItfIp: "localhost",
 		CPUCap:     "100%",
 		Logger:     log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
@@ -292,7 +294,7 @@ func (opts *Options) vFlowFlagSet() {
 	flag.StringVar(&opts.PIDFile, "pid-file", opts.PIDFile, "pid file name")
 	flag.StringVar(&opts.CPUCap, "cpu-cap", opts.CPUCap, "Maximum amount of CPU [percent / number]")
 	flag.StringVar(&opts.ForwardFile, "mirror-config-file", opts.ForwardFile, "netflow v9 forward config file")
-
+	flag.StringVar(&opts.MirrorItfIp, "mirror-interface-addr" ,opts.MirrorItfIp,"raw socket interface address")
 	// stats options
 	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable/disable stats listener")
 	flag.StringVar(&opts.StatsHTTPPort, "stats-http-port", opts.StatsHTTPPort, "stats port listener")
