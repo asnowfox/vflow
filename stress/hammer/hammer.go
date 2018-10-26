@@ -89,7 +89,6 @@ func NewIPFIX(raddr net.IP) (*IPFIX, error) {
 // Run starts IPFIX simulator - attacking
 func (i *IPFIX) Run() {
 	var wg sync.WaitGroup
-	fmt.Printf("hammer is running....")
 	for j := 1; j < i.MaxRouter; j++ {
 		i.srcs = append(i.srcs, net.ParseIP(fmt.Sprintf("192.168.1.%d", j)))
 	}
@@ -121,7 +120,6 @@ func (i *IPFIX) Run() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		fmt.Printf("call send data.")
 		i.sendData()
 	}()
 
@@ -189,7 +187,6 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
 	ipHdr := ip.Marshal()
 
-	fmt.Printf("ip header length is %d",ip.Length)
 	switch typ {
 	case dataType:
 		samples = ipfixDataSamples

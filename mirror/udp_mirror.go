@@ -11,10 +11,12 @@ import (
 	"gopkg.in/yaml.v2"
 	"github.com/VerizonDigital/vflow/mirror"
 	"net"
+	"strconv"
 )
 
 var (
 	netflowChannel    = make(chan netflow9.Message, 1000)
+	//= NewRawConn(net.ParseIP("127.0.0.1"))
 )
 
 type Netflowv9Mirror struct {
@@ -23,6 +25,7 @@ type Netflowv9Mirror struct {
 	mirrorMaps    map[string]Config
 	udpClients    map[string]*UdpClient
 	Logger        *log.Logger
+	rawSocket Conn
 }
 
 
@@ -181,6 +184,7 @@ func (nfv9Mirror *Netflowv9Mirror) genRawPacket(srcAddress string,srcPort int,
 	udpHdr := udp.Marshal()
 
 	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
+	//ip.Length = int16(ipHLen+8+len(data))
 	ipHdr := ip.Marshal()
 
 	payload := make([]byte, 1500)
@@ -194,7 +198,7 @@ func (nfv9Mirror *Netflowv9Mirror) genRawPacket(srcAddress string,srcPort int,
 	copy(payload[ipHLen:ipHLen+8], udpHdr)
 	copy(payload[ipHLen+8:], data)
 
-	return payload
+	return payload[:ipHLen+8+len(data)]
 
 }
 
@@ -248,7 +252,13 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					bytes := nfv9Mirror.toBytes(sMsg, mRule.Req,recordHeader,datas)
 					nfv9Mirror.Logger.Printf("send netflow v9 data to: %s, size: %d bytes",mRule.DistAddress, len(bytes))
-					nfv9Mirror.udpClients[mRule.DistAddress].Send(bytes)
+
+					//genRawPacket(srcAddress string,srcPort int,
+					//	dstAddress string ,dstPort int,data []byte) []byte
+					dsts := strings.Split(mRule.DistAddress,":")
+					dstport,_ :=strconv.Atoi(dsts[1])
+					nfv9Mirror.genRawPacket(sMsg.AgentID, 9999,dsts[0],dstport,bytes)
+					//nfv9Mirror.udpClients[mRule.DistAddress].Send(bytes)
 					mRule.Req = mRule.Req+1
 				}
 			}
