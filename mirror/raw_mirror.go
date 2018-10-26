@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	netflowChannel    = make(chan netflow9.Message, 1000)
+	netflowChannel = make(chan netflow9.Message, 1000)
 )
 
 type Netflowv9Mirror struct {
@@ -22,9 +22,8 @@ type Netflowv9Mirror struct {
 	mirrorConfigs []Config
 	mirrorMaps    map[string]Config
 	Logger        *log.Logger
-	rawSocket Conn
+	rawSocket     Conn
 }
-
 
 func (nfv9Mirror *Netflowv9Mirror) Status() *Status {
 	status := new(Status)
@@ -76,7 +75,7 @@ func (nfv9Mirror *Netflowv9Mirror) AddRule(sourceId string, rule Rule) (int) {
 	}
 	rules := append(nfv9Mirror.mirrorMaps[sourceId].Rules, rule)
 	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(rules))
-	mc	:=  nfv9Mirror.mirrorMaps[sourceId]
+	mc := nfv9Mirror.mirrorMaps[sourceId]
 	mc.Rules = rules
 
 	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(nfv9Mirror.mirrorMaps[sourceId].Rules))
@@ -157,8 +156,8 @@ func (nfv9Mirror *Netflowv9Mirror) recycleClients() {
 
 }
 
-func (nfv9Mirror *Netflowv9Mirror) genRawPacket(srcAddress string,srcPort int,
-	dstAddress string ,dstPort int,data []byte) []byte{
+func (nfv9Mirror *Netflowv9Mirror) genRawPacket(srcAddress string, srcPort int,
+	dstAddress string, dstPort int, data []byte) []byte {
 	ipHLen := mirror.IPv4HLen
 	udp := mirror.UDP{srcPort, dstPort, 0, 0}
 	udpHdr := udp.Marshal()
@@ -223,20 +222,20 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 				}
 
-				if len(datas) > 0 || sMsg.TemplaRecord.FieldCount > 0{
+				if len(datas) > 0 || sMsg.TemplaRecord.FieldCount > 0 {
 					//生成header 生成bytes
 					if sMsg.TemplaRecord.FieldCount > 0 {
 						nfv9Mirror.Logger.Printf("temlate field count > 0")
 					}
-					bytes := nfv9Mirror.toBytes(sMsg, mRule.Req,recordHeader,datas)
-					nfv9Mirror.Logger.Printf("send netflow v9 data to: %s, size: %d bytes",mRule.DistAddress, len(bytes))
+					bytes := nfv9Mirror.toBytes(sMsg, mRule.Req, recordHeader, datas)
+					nfv9Mirror.Logger.Printf("send netflow v9 data to: %s, size: %d bytes", mRule.DistAddress, len(bytes))
 
-					dstAddr := strings.Split(mRule.DistAddress,":")
-					dstPort,_ :=strconv.Atoi(dstAddr[1])
-					bytes = nfv9Mirror.genRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort,bytes)
+					dstAddr := strings.Split(mRule.DistAddress, ":")
+					dstPort, _ := strconv.Atoi(dstAddr[1])
+					bytes = nfv9Mirror.genRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, bytes)
 					nfv9Mirror.rawSocket.Send(bytes)
 					//nfv9Mirror.udpClients[mRule.DistAddress].Send(bytes)
-					mRule.Req = mRule.Req+1
+					mRule.Req = mRule.Req + 1
 				}
 			}
 		}
@@ -302,8 +301,8 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.UNIXSecs)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SeqNum)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
-	binary.Write(buf,binary.BigEndian,recordHeader.FlowSetID)
-	binary.Write(buf,binary.BigEndian,recordHeader.Length)
+	binary.Write(buf, binary.BigEndian, recordHeader.FlowSetID)
+	binary.Write(buf, binary.BigEndian, recordHeader.Length)
 	if originalMsg.TemplaRecord.FieldCount > 0 {
 
 		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.TemplateID)
@@ -320,7 +319,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 		}
 	}
 
-	for _,field := range fields {
+	for _, field := range fields {
 		for _, item := range field {
 			binary.Write(buf, binary.BigEndian, item.Value)
 		}
@@ -328,6 +327,3 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	result := buf.Bytes()
 	return result
 }
-
-
-

@@ -46,7 +46,7 @@ func NewNetflowv9Mirror(mirrorCfg string, logger *log.Logger) (*Netflowv9Mirror,
 	}
 
 	ume.initMap()
-	ume.rawSocket,_ = NewRawConn(net.ParseIP("127.0.0.1"))
+	ume.rawSocket,_ = NewRawConn(net.ParseIP("159.226.186.79"))
 	Netflowv9Instance = ume
 	return ume, nil
 }
