@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"net"
 	"fmt"
+	"os"
 )
 
 var(
@@ -37,47 +38,27 @@ func NewNetflowv9Mirror(mirrorCfg string, logger *log.Logger, mirrorInfIp string
 	ume.mirrorCfgFile = mirrorCfg
 	b, err := ioutil.ReadFile(mirrorCfg)
 	if err != nil {
+		logger.Printf("Mirror config file is worong, exit! \n",mirrorInfIp)
+		fmt.Printf("Mirror config file is worong,exit! \n",mirrorInfIp)
+		os.Exit(-1)
 		return nil, err
 	}
 	err = yaml.Unmarshal(b, &ume.mirrorConfigs)
 	if err != nil {
+		logger.Printf("Mirror config file is worong, exit! \n",mirrorInfIp)
+		fmt.Printf("Mirror config file is worong,exit! \n",mirrorInfIp)
+		os.Exit(-1)
 		return ume, err
 	}
 	ume.initMap()
 	fmt.Printf("Starting raw socket on interface %s....\n",mirrorInfIp)
-	ume.rawSocket,_ = NewRawConn(net.ParseIP(mirrorInfIp))
+	ume.rawSocket,err = NewRawConn(net.ParseIP(mirrorInfIp))
+	if err != nil {
+		logger.Printf("Mirror interface ip %s is wrong\n",mirrorInfIp)
+		fmt.Printf("Mirror interface ip %s is wrong\n",mirrorInfIp)
+		os.Exit(-1)
+	}
+
 	Netflowv9Instance = ume
 	return ume, nil
-}
-
-
-type UdpClient struct {
-	remoteAddress string
-	port          string
-	conn          *net.Conn
-}
-
-func (c *UdpClient) Send(b []byte) error {
-	if c.conn == nil {
-		c.openConn()
-	}
-	_, e := (*c.conn).Write(b)
-	if e != nil {
-		fmt.Printf("send error %s ",e)
-		c.openConn()
-	}
-	return nil
-}
-func (c *UdpClient) openConn() error {
-	conn, err := net.Dial("udp", c.remoteAddress+":"+c.port)
-	if err != nil {
-		return err
-	}
-	c.conn = &conn
-	return nil
-}
-
-func (c *UdpClient) Close() error {
-	(*c.conn).Close()
-	return nil
 }

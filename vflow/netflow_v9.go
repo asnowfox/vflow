@@ -199,7 +199,7 @@ LOOP:
 				break LOOP
 			}
 		}
-		
+
 
 		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {
@@ -211,8 +211,7 @@ LOOP:
 		if i.messageMirror != nil {
 			i.messageMirror.ReceiveMessage(decodedMsg)
 		}
-
-
+		
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
 		if decodedMsg.DataSets != nil {

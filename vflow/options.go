@@ -129,7 +129,7 @@ func NewOptions() *Options {
 		DynWorkers: true,
 		PIDFile:    "/var/run/vflow.pid",
 		ForwardFile: "/etc/vflow/nfv9.forward.conf",
-		MirrorItfIp: "localhost",
+		MirrorItfIp: "127.0.0.1",
 		CPUCap:     "100%",
 		Logger:     log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
