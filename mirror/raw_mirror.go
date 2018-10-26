@@ -191,22 +191,15 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
-						var templateLength uint16 = 0
-						if sMsg.TemplaRecord.FieldCount > 0 {
-							templateLength = 4 + 4*sMsg.TemplaRecord.FieldCount
-						}
-						recordHeader.Length = 4 + templateLength + dataLen
-						if sMsg.TemplaRecord.FieldCount > 0 {
-							nfv9Mirror.Logger.Printf("template record header length is %d.",recordHeader.Length)
-						}
+						recordHeader.Length = 4 + dataLen
 					}
 				}
 
 				if len(datas) > 0 || sMsg.TemplaRecord.FieldCount > 0 {
-					//生成header 生成bytes
 					if sMsg.TemplaRecord.FieldCount > 0 {
-						nfv9Mirror.Logger.Printf("temlate field count > 0")
+						recordHeader.Length = 4 + 4 + 4*sMsg.TemplaRecord.FieldCount
 					}
+
 					var seq uint32 = 0
 					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 					if _, ok := seqMap[key]; ok {
@@ -231,8 +224,6 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 							nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(bytes),err)
 						}
 					}
-
-
 				}
 			}
 		}
