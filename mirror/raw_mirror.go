@@ -196,6 +196,9 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 							templateLength = 4 + 4*sMsg.TemplaRecord.FieldCount
 						}
 						recordHeader.Length = 4 + templateLength + dataLen
+						if sMsg.TemplaRecord.FieldCount > 0 {
+							nfv9Mirror.Logger.Printf("template record header length is %d.",recordHeader.Length)
+						}
 					}
 				}
 
@@ -220,7 +223,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						nfv9Mirror.Logger.Printf("raw socket will send bytes size %d", len(bytes))
 					}
 					bytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, bytes)
-
+					//TODO 需要修复FieldCount的问题
 					if sMsg.TemplaRecord.FieldCount > 0 {
 						nfv9Mirror.Logger.Printf("raw socket will send bytes size %d", len(bytes))
 						err := nfv9Mirror.rawSocket.Send(bytes)
@@ -291,7 +294,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	var count uint16 = 0
 	count = count + uint16(len(fields))
 	if originalMsg.TemplaRecord.FieldCount > 0{
-		count = count+1
+		count = count + 1
 	}
 
 	//orginal flow header
