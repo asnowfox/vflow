@@ -173,12 +173,13 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						dataLen = dataLen + uint16(binary.Size(decodedData.Value))
 						if id == InputId {
 							inputFound = true
-							if decodedData.Value.(int16) == mRule.InPort || mRule.InPort == -1 {
+
+							if binary.BigEndian.Uint16(decodedData.Value.([]byte)) == mRule.InPort || mRule.InPort == 255 {
 								inputMatch = true
 							}
 						} else if id == OutputId {
 							outputFound = true
-							if decodedData.Value.(int16) == mRule.OutPort || mRule.OutPort == -1 {
+							if binary.BigEndian.Uint16(decodedData.Value.([]byte)) == mRule.OutPort || mRule.OutPort == 255 {
 								outputMatch = true
 							}
 						}
