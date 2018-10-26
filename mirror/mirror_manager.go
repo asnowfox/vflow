@@ -46,19 +46,18 @@ func NewNetflowv9Mirror(mirrorCfg string, logger *log.Logger) (*Netflowv9Mirror,
 	}
 
 	ume.initMap()
-	ume.initUdpClients()
 	ume.rawSocket,_ = NewRawConn(net.ParseIP("127.0.0.1"))
 	Netflowv9Instance = ume
 	return ume, nil
 }
 
-func NewUdpMirrorClient(remoteAddress string, port string) *UdpClient {
-	um := new(UdpClient)
-	um.port = port
-	um.remoteAddress = remoteAddress
-	um.conn = nil
-	return um
-}
+//func NewUdpMirrorClient(remoteAddress string, port string) *UdpClient {
+//	um := new(UdpClient)
+//	um.port = port
+//	um.remoteAddress = remoteAddress
+//	um.conn = nil
+//	return um
+//}
 
 type UdpClient struct {
 	remoteAddress string
