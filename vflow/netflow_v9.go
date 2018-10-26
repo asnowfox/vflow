@@ -211,7 +211,7 @@ LOOP:
 		if i.messageMirror != nil {
 			i.messageMirror.ReceiveMessage(decodedMsg)
 		}
-		
+
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
 		if decodedMsg.DataSets != nil {

@@ -201,15 +201,15 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						nfv9Mirror.Logger.Printf("temlate field count > 0")
 					}
 					var seq uint32 = 0
-					key := string(sMsg.AgentID)+"_"+string(sMsg.Header.SrcID)
+					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 					if _, ok := seqMap[key]; ok {
 						seq = seqMap[key]
-						seqMap[key] = seq+1
-					}else{
-						seqMap[string(sMsg.AgentID)+"_"+string(sMsg.Header.SrcID)] = seq
-					}
 
+					}else{
+						seqMap[key] = 0
+					}
 					bytes := nfv9Mirror.toBytes(sMsg, seq, recordHeader, datas)
+					seqMap[key] = seqMap[key] + 1
 
 					dstAddr := strings.Split(mRule.DistAddress, ":")
 					dstPort, _ := strconv.Atoi(dstAddr[1])
