@@ -26,8 +26,8 @@ type Config struct {
 	Rules  []Rule `yaml:"rules"`
 }
 type Rule struct {
-	InPort      int32  `yaml:"inport"`
-	OutPort     int32  `yaml:"outport"`
+	InPort      int16  `yaml:"inport"`
+	OutPort     int16  `yaml:"outport"`
 	DistAddress string `yaml:"distAddress"`
 }
 
