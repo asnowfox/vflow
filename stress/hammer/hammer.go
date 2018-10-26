@@ -89,7 +89,7 @@ func NewIPFIX(raddr net.IP) (*IPFIX, error) {
 // Run starts IPFIX simulator - attacking
 func (i *IPFIX) Run() {
 	var wg sync.WaitGroup
-
+	fmt.Printf("hammer is running....")
 	for j := 1; j < i.MaxRouter; j++ {
 		i.srcs = append(i.srcs, net.ParseIP(fmt.Sprintf("192.168.1.%d", j)))
 	}
