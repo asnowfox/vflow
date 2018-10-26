@@ -163,7 +163,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 				var datas [][]netflow9.DecodedField
 				var recordHeader netflow9.SetHeader
 				recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
-				recordHeader.Length = 4
+
 				for _, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
 					inputFound, outputFound := false, false
@@ -191,7 +191,11 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
-						recordHeader.Length = recordHeader.Length + dataLen
+						var templateLength uint16 = 0
+						if sMsg.TemplaRecord.FieldCount > 0 {
+							templateLength = 4 + 4*sMsg.TemplaRecord.FieldCount
+						}
+						recordHeader.Length = 4 + templateLength + dataLen
 					}
 				}
 
@@ -231,6 +235,8 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 		}
 	}()
 }
+
+
 
 //   The Packet Header format is specified as:
 //
@@ -283,7 +289,11 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	recordHeader netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
 	buf := new(bytes.Buffer)
 	var count uint16 = 0
-	count = count + uint16(len(fields)) + originalMsg.TemplaRecord.FieldCount
+	count = count + uint16(len(fields))
+	if originalMsg.TemplaRecord.FieldCount > 0{
+		count = count+1
+	}
+
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
 	binary.Write(buf, binary.BigEndian, uint16(count))
@@ -291,8 +301,10 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.UNIXSecs)
 	binary.Write(buf, binary.BigEndian, seq)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
+
 	binary.Write(buf, binary.BigEndian, recordHeader.FlowSetID)
 	binary.Write(buf, binary.BigEndian, recordHeader.Length)
+
 	if originalMsg.TemplaRecord.FieldCount > 0 {
 		nfv9Mirror.Logger.Printf("build a template templateId %d, fieldCount %d.",
 			originalMsg.TemplaRecord.TemplateID,originalMsg.TemplaRecord.FieldCount)
