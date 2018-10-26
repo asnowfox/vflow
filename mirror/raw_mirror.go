@@ -173,7 +173,6 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						dataLen = dataLen + uint16(binary.Size(decodedData.Value))
 						if id == InputId {
 							inputFound = true
-
 							if binary.BigEndian.Uint16(decodedData.Value.([]byte)) == mRule.InPort || mRule.InPort == 255 {
 								inputMatch = true
 							}
@@ -213,8 +212,15 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 
 					dstAddr := strings.Split(mRule.DistAddress, ":")
 					dstPort, _ := strconv.Atoi(dstAddr[1])
+					if sMsg.TemplaRecord.FieldCount > 0 {
+						nfv9Mirror.Logger.Printf("raw socket will send bytes size %d", len(bytes))
+					}
 					bytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, bytes)
-					nfv9Mirror.rawSocket.Send(bytes)
+
+					err := nfv9Mirror.rawSocket.Send(bytes)
+					if err != nil {
+						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(bytes),err)
+					}
 				}
 			}
 		}

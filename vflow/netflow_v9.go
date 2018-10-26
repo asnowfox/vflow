@@ -208,6 +208,7 @@ LOOP:
 				continue
 			}
 		}
+		//所有的worker的消息由 messageMirror接收
 		if i.messageMirror != nil {
 			i.messageMirror.ReceiveMessage(decodedMsg)
 		}
