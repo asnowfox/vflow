@@ -199,11 +199,7 @@ LOOP:
 				break LOOP
 			}
 		}
-
-		if opts.Verbose {
-			logger.Printf("rcvd netflow v9 data from: %s, size: %d bytes",
-				msg.raddr, len(msg.body))
-		}
+		
 
 		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {

@@ -28,7 +28,6 @@ type Rule struct {
 	InPort      int32  `yaml:"inport"`
 	OutPort     int32  `yaml:"outport"`
 	DistAddress string `yaml:"distAddress"`
-	Req uint32
 }
 
 
@@ -44,20 +43,13 @@ func NewNetflowv9Mirror(mirrorCfg string, logger *log.Logger, mirrorInfIp string
 	if err != nil {
 		return ume, err
 	}
-
 	ume.initMap()
+	fmt.Printf("Starting raw socket on interface %s....\n",mirrorInfIp)
 	ume.rawSocket,_ = NewRawConn(net.ParseIP(mirrorInfIp))
 	Netflowv9Instance = ume
 	return ume, nil
 }
 
-//func NewUdpMirrorClient(remoteAddress string, port string) *UdpClient {
-//	um := new(UdpClient)
-//	um.port = port
-//	um.remoteAddress = remoteAddress
-//	um.conn = nil
-//	return um
-//}
 
 type UdpClient struct {
 	remoteAddress string

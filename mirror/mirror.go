@@ -96,6 +96,6 @@ func (c *Conn) Send(b []byte) error {
 }
 
 // Close releases file descriptor
-func (c *Conn) Close(b []byte) error {
+func (c *Conn) Close() error {
 	return syscall.Close(c.fd)
 }
