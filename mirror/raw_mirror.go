@@ -283,7 +283,8 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, recordHeader.FlowSetID)
 	binary.Write(buf, binary.BigEndian, recordHeader.Length)
 	if originalMsg.TemplaRecord.FieldCount > 0 {
-
+		nfv9Mirror.Logger.Printf("build a template templateId %d, fieldCount %d.",
+			originalMsg.TemplaRecord.TemplateID,originalMsg.TemplaRecord.FieldCount)
 		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.TemplateID)
 		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.FieldCount)
 		for _, spec := range originalMsg.TemplaRecord.FieldSpecifiers {
