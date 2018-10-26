@@ -163,8 +163,6 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var datas [][]netflow9.DecodedField
-
-
 				for _, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
 					inputFound, outputFound := false, false
@@ -195,15 +193,12 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						recordHeader.Length += dataLen
 					}
 				}
-
-
 				if len(datas) > 0 || sMsg.TemplaRecord.FieldCount > 0 {
 					recordHeader.Length += 4
-					
+
 					if sMsg.TemplaRecord.FieldCount > 0 {
 						recordHeader.Length =  4 + 4*sMsg.TemplaRecord.FieldCount
 					}
-
 					var seq uint32 = 0
 					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 					if _, ok := seqMap[key]; ok {
