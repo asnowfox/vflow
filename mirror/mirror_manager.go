@@ -52,12 +52,7 @@ func NewNetflowv9Mirror(mirrorCfg string, logger *log.Logger, mirrorInfIp string
 	}
 	ume.initMap()
 	fmt.Printf("Starting raw socket on interface %s....\n",mirrorInfIp)
-	ume.rawSocket,err = NewRawConn(net.ParseIP(mirrorInfIp))
-	if err != nil {
-		logger.Printf("Mirror interface ip %s is wrong\n",mirrorInfIp)
-		fmt.Printf("Mirror interface ip %s is wrong\n",mirrorInfIp)
-		os.Exit(-1)
-	}
+
 
 	Netflowv9Instance = ume
 	return ume, nil
