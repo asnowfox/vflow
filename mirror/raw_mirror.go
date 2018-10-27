@@ -145,13 +145,14 @@ func (nfv9Mirror *Netflowv9Mirror) saveConfigsTofile() {
 }
 
 func (nfv9Mirror *Netflowv9Mirror) recycleClients() {
-
 	usedClient := make(map[string]string)
 	for _, mirrorConfig := range nfv9Mirror.mirrorConfigs {
 		for _, ecr := range mirrorConfig.Rules {
 			//找到在用的
 			if _, ok := nfv9Mirror.rawSockets[ecr.DistAddress]; ok {
-				usedClient[ecr.DistAddress] = ecr.DistAddress
+				dstAddrs := strings.Split(ecr.DistAddress, ":")
+				dstAddr := dstAddrs[0]
+				usedClient[dstAddr] = ecr.DistAddress
 			}
 		}
 	}
@@ -159,9 +160,12 @@ func (nfv9Mirror *Netflowv9Mirror) recycleClients() {
 	for _, mirrorConfig := range nfv9Mirror.mirrorConfigs {
 		for _, ecr := range mirrorConfig.Rules {
 			//在用的不存在了
-			if _, ok := usedClient[ecr.DistAddress]; !ok {
-				nfv9Mirror.rawSockets[ecr.DistAddress].Close()
-				delete(nfv9Mirror.rawSockets, ecr.DistAddress)
+			dstAddrs := strings.Split(ecr.DistAddress, ":")
+			dstAddr := dstAddrs[0]
+			if _, ok := usedClient[dstAddr]; !ok {
+				raw := nfv9Mirror.rawSockets[dstAddr]
+				raw.Close()
+				delete(nfv9Mirror.rawSockets, dstAddr)
 			}
 		}
 	}
