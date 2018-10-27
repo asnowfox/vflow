@@ -451,7 +451,6 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
 			msg.TemplateRecords = append(msg.TemplateRecords, tr)
-			fmt.Printf(" decoder receive a template record id is %d \n",tr.TemplateID)
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break
