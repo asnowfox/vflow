@@ -191,7 +191,8 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
 						recordHeader.Length += dataLen
-						nfv9Mirror.Logger.Printf("matched, src %d, dst %d, %s.",mRule.InPort,mRule.OutPort,mRule.DistAddress)
+						nfv9Mirror.Logger.Printf("matched, src %d, dst %d, %s ,%d, rule len is %d.",
+							mRule.InPort,mRule.OutPort,mRule.DistAddress, len(ec.Rules))
 					}
 				}
 				if len(datas) > 0  {
