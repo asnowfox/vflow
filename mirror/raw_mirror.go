@@ -17,7 +17,7 @@ import (
 
 var (
 	netflowChannel = make(chan netflow9.Message, 1000)
-	rawSockets = make(map[string]Conn)
+
 	seqMap = make(map[string]uint32)
 )
 
@@ -25,6 +25,7 @@ type Netflowv9Mirror struct {
 	mirrorCfgFile string
 	mirrorConfigs []Config
 	mirrorMaps    map[string]Config
+	rawSockets    map[string]Conn
 	Logger        *log.Logger
 }
 
@@ -51,7 +52,7 @@ func (nfv9Mirror *Netflowv9Mirror) initMap() {
 				fmt.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
 				os.Exit(-1)
 			}
-			rawSockets[remoteAddr] = connect
+			nfv9Mirror.rawSockets[remoteAddr] = connect
 		}
 		nfv9Mirror.mirrorMaps[ec.Source] = ec
 	}
@@ -230,7 +231,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 
 					rBytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
 
-					err := rawSockets[dstAddr].Send(rBytes)
+					err := nfv9Mirror.rawSockets[dstAddr].Send(rBytes)
 					if err != nil {
 						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
 					}
