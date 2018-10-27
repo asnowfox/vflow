@@ -4,7 +4,6 @@ import (
 	"log"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
-	"net"
 	"fmt"
 	"os"
 )
