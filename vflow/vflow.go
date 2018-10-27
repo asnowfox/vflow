@@ -58,7 +58,7 @@ func main() {
 	logger = opts.Logger
 
 	logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
-	nfv9Mirror,err := mirror.NewNetflowv9Mirror(opts.ForwardFile,opts.Logger,opts.MirrorItfIp)
+	nfv9Mirror,err := mirror.NewNetflowv9Mirror(opts.ForwardFile,opts.Logger)
 
 	if err != nil {
 		logger.Printf("can not init mirror. reason %s\n", err)
