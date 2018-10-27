@@ -193,12 +193,11 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						recordHeader.Length += dataLen
 					}
 				}
-				if len(datas) > 0 || sMsg.TemplaRecord.FieldCount > 0 {
+				if len(datas) > 0  {
 					recordHeader.Length += 4
-
-					if sMsg.TemplaRecord.FieldCount > 0 {
-						recordHeader.Length = 4 + 4 + 4*sMsg.TemplaRecord.FieldCount
-					}
+					//if sMsg.TemplaRecord.FieldCount > 0 {
+					//	recordHeader.Length = 4 + 4 + 4*sMsg.TemplaRecord.FieldCount
+					//}
 					var seq uint32 = 0
 					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 					if _, ok := seqMap[key]; ok {
@@ -278,9 +277,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	recordHeader netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
 	buf := new(bytes.Buffer)
 	count := uint16(len(fields))
-	if originalMsg.TemplaRecord.FieldCount > 0{
-		count = count + 1
-	}
+	count = count + uint16(len(originalMsg.TemplaRecord))
 
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
@@ -290,25 +287,28 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, seq)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
-	binary.Write(buf, binary.BigEndian, recordHeader.FlowSetID)
-	binary.Write(buf, binary.BigEndian, recordHeader.Length)
 
-	if originalMsg.TemplaRecord.FieldCount > 0 {
-		nfv9Mirror.Logger.Printf("build a template templateId %d, fieldCount %d,header length is %d.",
-			originalMsg.TemplaRecord.TemplateID,originalMsg.TemplaRecord.FieldCount,recordHeader.Length)
-		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.TemplateID)
-		binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.FieldCount)
-		for _, spec := range originalMsg.TemplaRecord.FieldSpecifiers {
-			binary.Write(buf, binary.BigEndian, spec.ElementID)
-			binary.Write(buf, binary.BigEndian, spec.Length)
-		}
-		if originalMsg.TemplaRecord.ScopeFieldCount > 0 {
-			for _, spec1 := range originalMsg.TemplaRecord.ScopeFieldSpecifiers {
-				binary.Write(buf, binary.BigEndian, spec1.ElementID)
-				binary.Write(buf, binary.BigEndian, spec1.Length)
-			}
-		}
+
+	for _,template := range originalMsg.TemplaRecord {
+		nfv9Mirror.writeTemplate(buf,template)
 	}
+
+	//if originalMsg.TemplaRecord.FieldCount > 0 {
+	//	nfv9Mirror.Logger.Printf("build a template templateId %d, fieldCount %d,header length is %d.",
+	//		originalMsg.TemplaRecord.TemplateID,originalMsg.TemplaRecord.FieldCount,recordHeader.Length)
+	//	binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.TemplateID)
+	//	binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.FieldCount)
+	//	for _, spec := range originalMsg.TemplaRecord.FieldSpecifiers {
+	//		binary.Write(buf, binary.BigEndian, spec.ElementID)
+	//		binary.Write(buf, binary.BigEndian, spec.Length)
+	//	}
+	//	if originalMsg.TemplaRecord.ScopeFieldCount > 0 {
+	//		for _, spec1 := range originalMsg.TemplaRecord.ScopeFieldSpecifiers {
+	//			binary.Write(buf, binary.BigEndian, spec1.ElementID)
+	//			binary.Write(buf, binary.BigEndian, spec1.Length)
+	//		}
+	//	}
+	//}
 
 	for _, field := range fields {
 		for _, item := range field {
@@ -317,4 +317,25 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	}
 	result := buf.Bytes()
 	return result
+}
+
+func (nfv9Mirror *Netflowv9Mirror) writeTemplate(buf *bytes.Buffer,TemplaRecord netflow9.TemplateRecord){
+	if TemplaRecord.FieldCount > 0 {
+		binary.Write(buf, binary.BigEndian, 0)
+		binary.Write(buf, binary.BigEndian, 4 + 4 + 4*TemplaRecord.FieldCount)
+		nfv9Mirror.Logger.Printf("build a template templateId %d, fieldCount %d,header length is %d.",
+			TemplaRecord.TemplateID,TemplaRecord.FieldCount,4 + 4 + 4*TemplaRecord.FieldCount)
+		binary.Write(buf, binary.BigEndian, TemplaRecord.TemplateID)
+		binary.Write(buf, binary.BigEndian,TemplaRecord.FieldCount)
+		for _, spec := range TemplaRecord.FieldSpecifiers {
+			binary.Write(buf, binary.BigEndian, spec.ElementID)
+			binary.Write(buf, binary.BigEndian, spec.Length)
+		}
+		if TemplaRecord.ScopeFieldCount > 0 {
+			for _, spec1 := range TemplaRecord.ScopeFieldSpecifiers {
+				binary.Write(buf, binary.BigEndian, spec1.ElementID)
+				binary.Write(buf, binary.BigEndian, spec1.Length)
+			}
+		}
+	}
 }
