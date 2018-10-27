@@ -12,7 +12,6 @@ import (
 	"net"
 	"strconv"
 	"fmt"
-	"os"
 )
 
 var (
@@ -47,13 +46,17 @@ func (nfv9Mirror *Netflowv9Mirror) initMap() {
 		for _,r := range ec.Rules {
 			fmt.Printf("   rule: input port %6d, dst port %6d ->  %s \n",r.InPort,r.OutPort,r.DistAddress)
 			remoteAddr := strings.Split(r.DistAddress,":")[0]
-			connect,err := NewRawConn(net.ParseIP(remoteAddr))
-			if err != nil {
-				nfv9Mirror.Logger.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
-				fmt.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
-				os.Exit(-1)
+			if _, ok := nfv9Mirror.rawSockets[remoteAddr]; !ok {
+				connect,err := NewRawConn(net.ParseIP(remoteAddr))
+				if err != nil {
+					nfv9Mirror.Logger.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
+					fmt.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
+
+				}else{
+					nfv9Mirror.rawSockets[remoteAddr] = connect
+				}
 			}
-			nfv9Mirror.rawSockets[remoteAddr] = connect
+
 		}
 		nfv9Mirror.mirrorMaps[ec.Source] = ec
 	}
