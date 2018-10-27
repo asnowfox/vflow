@@ -41,6 +41,7 @@ func (nfv9Mirror *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
 
 func (nfv9Mirror *Netflowv9Mirror) initMap() {
 	nfv9Mirror.mirrorMaps = make(map[string]Config)
+	nfv9Mirror.rawSockets = make(map[string]Conn)
 	for _, ec := range nfv9Mirror.mirrorConfigs {
 		fmt.Printf("Router %10s add config rules count is %d\n",ec.Source, len(ec.Rules))
 		for _,r := range ec.Rules {
@@ -230,8 +231,8 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					dstPort, _ := strconv.Atoi(dstAddrs[1])
 
 					rBytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
-
-					err := nfv9Mirror.rawSockets[dstAddr].Send(rBytes)
+					raw := nfv9Mirror.rawSockets[dstAddr]
+					err := raw.Send(rBytes)
 					if err != nil {
 						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
 					}
