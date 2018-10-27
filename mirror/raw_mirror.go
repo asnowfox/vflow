@@ -224,12 +224,13 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					rBytes := nfv9Mirror.toBytes(sMsg, seq, recordHeader, datas)
 					seqMap[key] = seqMap[key] + 1
 
-					dstAddr := strings.Split(mRule.DistAddress, ":")
-					dstPort, _ := strconv.Atoi(dstAddr[1])
+					dstAddrs := strings.Split(mRule.DistAddress, ":")
+					dstAddr := dstAddrs[0]
+					dstPort, _ := strconv.Atoi(dstAddrs[1])
 
-					rBytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, rBytes)
+					rBytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
 
-					err := rawSockets[dstAddr[0]].Send(rBytes)
+					err := rawSockets[dstAddr].Send(rBytes)
 					if err != nil {
 						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
 					}
