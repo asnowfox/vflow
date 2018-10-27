@@ -12,11 +12,11 @@ import (
 	"net"
 	"strconv"
 	"fmt"
+	"sync/atomic"
 )
 
 var (
 	netflowChannel = make(chan netflow9.Message, 1000)
-
 	seqMap = make(map[string]uint32)
 )
 
@@ -26,12 +26,17 @@ type Netflowv9Mirror struct {
 	mirrorMaps    map[string]Config
 	rawSockets    map[string]Conn
 	Logger        *log.Logger
+	stats Netflowv9MirrorStatus
 }
 
-func (nfv9Mirror *Netflowv9Mirror) Status() *Status {
-	status := new(Status)
-	status.QeueSize = int32(len(netflowChannel))
-	return status
+func (nfv9Mirror *Netflowv9Mirror) Status() *Netflowv9MirrorStatus {
+	return &Netflowv9MirrorStatus{
+		QueueSize:            len(netflowChannel),
+		//MessageErrorCount:    atomic.LoadUint64(&nfv9Mirror.stats.MessageErrorCount),
+		MessageReceivedCount: atomic.LoadUint64(&nfv9Mirror.stats.MessageReceivedCount),
+		RawSentCount:         atomic.LoadUint64(&nfv9Mirror.stats.RawSentCount),
+		RawErrorCount:        atomic.LoadUint64(&nfv9Mirror.stats.RawErrorCount),
+	}
 }
 
 func (nfv9Mirror *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
@@ -56,7 +61,6 @@ func (nfv9Mirror *Netflowv9Mirror) initMap() {
 					nfv9Mirror.rawSockets[remoteAddr] = connect
 				}
 			}
-
 		}
 		nfv9Mirror.mirrorMaps[ec.Source] = ec
 	}
@@ -73,7 +77,6 @@ func (nfv9Mirror *Netflowv9Mirror) AddConfig(mirrorConfig Config) (int) {
 	if _, ok := nfv9Mirror.mirrorMaps[mirrorConfig.Source]; ok {
 		return -1
 	}
-
 	nfv9Mirror.mirrorConfigs = append(nfv9Mirror.mirrorConfigs, mirrorConfig)
 	nfv9Mirror.initMap()
 	nfv9Mirror.saveConfigsTofile()
@@ -89,9 +92,7 @@ func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int) {
 	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(rules))
 	mc := nfv9Mirror.mirrorMaps[agentIP]
 	mc.Rules = rules
-
 	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(nfv9Mirror.mirrorMaps[agentIP].Rules))
-
 	nfv9Mirror.initMap()
 	nfv9Mirror.saveConfigsTofile()
 	return len(nfv9Mirror.mirrorMaps[agentIP].Rules)
@@ -144,10 +145,26 @@ func (nfv9Mirror *Netflowv9Mirror) saveConfigsTofile() {
 }
 
 func (nfv9Mirror *Netflowv9Mirror) recycleClients() {
-	//for _,e := range rawSockets {
-	//	e.Close()
-	//}
-	//nfv9Mirror.rawSocket.Close()
+
+	usedClient := make(map[string]string)
+	for _, mirrorConfig := range nfv9Mirror.mirrorConfigs {
+		for _, ecr := range mirrorConfig.Rules {
+			//找到在用的
+			if _, ok := nfv9Mirror.rawSockets[ecr.DistAddress]; ok {
+				usedClient[ecr.DistAddress] = ecr.DistAddress
+			}
+		}
+	}
+
+	for _, mirrorConfig := range nfv9Mirror.mirrorConfigs {
+		for _, ecr := range mirrorConfig.Rules {
+			//在用的不存在了
+			if _, ok := usedClient[ecr.DistAddress]; !ok {
+				nfv9Mirror.rawSockets[ecr.DistAddress].Close()
+				delete(nfv9Mirror.rawSockets, ecr.DistAddress)
+			}
+		}
+	}
 }
 
 func (nfv9Mirror *Netflowv9Mirror) createRawPacket(srcAddress string, srcPort int,
@@ -166,19 +183,19 @@ func (nfv9Mirror *Netflowv9Mirror) createRawPacket(srcAddress string, srcPort in
 	copy(payload[0:ipHLen], ipHdr)
 	copy(payload[ipHLen:ipHLen+8], udpHdr)
 	copy(payload[ipHLen+8:], data)
-
 	return payload[:ipHLen+8+len(data)]
-
 }
 
 func (nfv9Mirror *Netflowv9Mirror) Run() {
 	go func() {
 		for {
 			sMsg := <-netflowChannel
-			if len(netflowChannel) > 10 {
-				nfv9Mirror.Logger.Printf("current mirror channel size is %d.",len(netflowChannel))
+			atomic.AddUint64(&nfv9Mirror.stats.MessageReceivedCount, 1)
+			if _, ok := nfv9Mirror.mirrorMaps[sMsg.AgentID]; !ok {
+				continue
 			}
 			ec := nfv9Mirror.mirrorMaps[sMsg.AgentID]
+
 			var recordHeader netflow9.SetHeader
 			recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
 			recordHeader.Length = 0
@@ -213,8 +230,6 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
 						recordHeader.Length += dataLen
-						//nfv9Mirror.Logger.Printf("matched, src %d, dst %d, %s , rule len is %d.",
-						//	mRule.InPort,mRule.OutPort,mRule.DistAddress, len(ec.Rules))
 					}
 				}
 				if len(datas) > 0  {
@@ -238,9 +253,11 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					raw := nfv9Mirror.rawSockets[dstAddr]
 					err := raw.Send(rBytes)
 					if err != nil {
+						atomic.AddUint64(&nfv9Mirror.stats.RawErrorCount, 1)
 						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
+					}else{
+						atomic.AddUint64(&nfv9Mirror.stats.RawSentCount, 1)
 					}
-
 				}
 			}
 		}
@@ -310,13 +327,9 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	binary.Write(buf, binary.BigEndian, seq)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
-
-
 	for _,template := range originalMsg.TemplateRecords {
 		nfv9Mirror.writeTemplate(buf,template)
 	}
-
-
 	for _, field := range fields {
 		for _, item := range field {
 			binary.Write(buf, binary.BigEndian, item.Value)
