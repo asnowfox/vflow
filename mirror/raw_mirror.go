@@ -172,11 +172,12 @@ func (nfv9Mirror *Netflowv9Mirror) createRawPacket(srcAddress string, srcPort in
 }
 
 func (nfv9Mirror *Netflowv9Mirror) Run() {
-	nfv9Mirror.Logger.Printf("Starting netflow send packet client...")
-	fmt.Printf("Starting netflow send packet client...\n")
 	go func() {
 		for {
 			sMsg := <-netflowChannel
+			if len(netflowChannel) > 10 {
+				nfv9Mirror.Logger.Printf("current mirror channel size is %d.",len(netflowChannel))
+			}
 			ec := nfv9Mirror.mirrorMaps[sMsg.AgentID]
 			var recordHeader netflow9.SetHeader
 			recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
