@@ -40,9 +40,9 @@ func (nfv9Mirror *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
 func (nfv9Mirror *Netflowv9Mirror) initMap() {
 	nfv9Mirror.mirrorMaps = make(map[string]Config)
 	for _, ec := range nfv9Mirror.mirrorConfigs {
-		fmt.Printf("%s add config %d ",ec.Source)
+		fmt.Printf("Router %s add config %d :\n",ec.Source, len(ec.Rules))
 		for _,r := range ec.Rules {
-			fmt.Printf("   rule src %d  dst %d dst %s",r.InPort,r.OutPort,r.DistAddress)
+			fmt.Printf("   rule: input port %d, dst port %d ->  %s \n",r.InPort,r.OutPort,r.DistAddress)
 		}
 		nfv9Mirror.mirrorMaps[ec.Source] = ec
 	}
@@ -195,8 +195,8 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
 						recordHeader.Length += dataLen
-						nfv9Mirror.Logger.Printf("matched, src %d, dst %d, %s , rule len is %d.",
-							mRule.InPort,mRule.OutPort,mRule.DistAddress, len(ec.Rules))
+						//nfv9Mirror.Logger.Printf("matched, src %d, dst %d, %s , rule len is %d.",
+						//	mRule.InPort,mRule.OutPort,mRule.DistAddress, len(ec.Rules))
 					}
 				}
 				if len(datas) > 0  {
@@ -209,17 +209,17 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}else{
 						seqMap[key] = 0
 					}
-					bytes := nfv9Mirror.toBytes(sMsg, seq, recordHeader, datas)
+					rBytes := nfv9Mirror.toBytes(sMsg, seq, recordHeader, datas)
 					seqMap[key] = seqMap[key] + 1
 
 					dstAddr := strings.Split(mRule.DistAddress, ":")
 					dstPort, _ := strconv.Atoi(dstAddr[1])
 
-					bytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, bytes)
+					rBytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, rBytes)
 
-					err := nfv9Mirror.rawSocket.Send(bytes)
+					err := nfv9Mirror.rawSocket.Send(rBytes)
 					if err != nil {
-						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(bytes),err)
+						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
 					}
 
 				}
@@ -281,7 +281,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 	recordHeader netflow9.SetHeader, fields [][]netflow9.DecodedField) []byte {
 	buf := new(bytes.Buffer)
 	count := uint16(len(fields))
-	count = count + uint16(len(originalMsg.TemplaRecord))
+	count = count + uint16(len(originalMsg.TemplateRecords))
 
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
@@ -293,7 +293,7 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 
 
 
-	for _,template := range originalMsg.TemplaRecord {
+	for _,template := range originalMsg.TemplateRecords {
 		nfv9Mirror.writeTemplate(buf,template)
 	}
 
