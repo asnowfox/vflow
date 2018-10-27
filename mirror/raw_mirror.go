@@ -40,6 +40,10 @@ func (nfv9Mirror *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
 func (nfv9Mirror *Netflowv9Mirror) initMap() {
 	nfv9Mirror.mirrorMaps = make(map[string]Config)
 	for _, ec := range nfv9Mirror.mirrorConfigs {
+		fmt.Printf("%s add config %d ",ec.Source)
+		for _,r := range ec.Rules {
+			fmt.Printf("   rule src %d  dst %d dst %s",r.InPort,r.OutPort,r.DistAddress)
+		}
 		nfv9Mirror.mirrorMaps[ec.Source] = ec
 	}
 }
@@ -191,7 +195,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
 						recordHeader.Length += dataLen
-						nfv9Mirror.Logger.Printf("matched, src %d, dst %d, %s ,%d, rule len is %d.",
+						nfv9Mirror.Logger.Printf("matched, src %d, dst %d, %s , rule len is %d.",
 							mRule.InPort,mRule.OutPort,mRule.DistAddress, len(ec.Rules))
 					}
 				}
