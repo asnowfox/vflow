@@ -191,13 +191,12 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
 						recordHeader.Length += dataLen
+						nfv9Mirror.Logger.Printf("matched, src %d, dst %d, %s.",mRule.InPort,mRule.OutPort,mRule.DistAddress)
 					}
 				}
 				if len(datas) > 0  {
 					recordHeader.Length += 4
-					//if sMsg.TemplaRecord.FieldCount > 0 {
-					//	recordHeader.Length = 4 + 4 + 4*sMsg.TemplaRecord.FieldCount
-					//}
+
 					var seq uint32 = 0
 					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 					if _, ok := seqMap[key]; ok {

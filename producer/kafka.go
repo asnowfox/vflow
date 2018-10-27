@@ -140,6 +140,7 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 		}:
 		case err := <-k.producer.Errors():
 			k.logger.Println(err)
+			k.logger.Println(string(msg))
 			*ec++
 		}
 	}
