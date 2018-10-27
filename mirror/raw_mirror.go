@@ -16,6 +16,7 @@ import (
 
 var (
 	netflowChannel = make(chan netflow9.Message, 1000)
+	rawSockets = make(map[string]Conn)
 	seqMap = make(map[string]uint32)
 )
 
@@ -24,7 +25,6 @@ type Netflowv9Mirror struct {
 	mirrorConfigs []Config
 	mirrorMaps    map[string]Config
 	Logger        *log.Logger
-	rawSocket     Conn
 }
 
 func (nfv9Mirror *Netflowv9Mirror) Status() *Status {
@@ -43,6 +43,9 @@ func (nfv9Mirror *Netflowv9Mirror) initMap() {
 		fmt.Printf("Router %s add config %d :\n",ec.Source, len(ec.Rules))
 		for _,r := range ec.Rules {
 			fmt.Printf("   rule: input port %d, dst port %d ->  %s \n",r.InPort,r.OutPort,r.DistAddress)
+			remoteAddr := strings.Split(r.DistAddress,":")[0]
+			connect,_ := NewRawConn(net.ParseIP(remoteAddr))
+			rawSockets[remoteAddr] = connect
 		}
 		nfv9Mirror.mirrorMaps[ec.Source] = ec
 	}
@@ -130,7 +133,10 @@ func (nfv9Mirror *Netflowv9Mirror) saveConfigsTofile() {
 }
 
 func (nfv9Mirror *Netflowv9Mirror) recycleClients() {
-	nfv9Mirror.rawSocket.Close()
+	//for _,e := range rawSockets {
+	//	e.Close()
+	//}
+	//nfv9Mirror.rawSocket.Close()
 }
 
 func (nfv9Mirror *Netflowv9Mirror) createRawPacket(srcAddress string, srcPort int,
@@ -217,7 +223,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 
 					rBytes = nfv9Mirror.createRawPacket(sMsg.AgentID, 9999, dstAddr[0], dstPort, rBytes)
 
-					err := nfv9Mirror.rawSocket.Send(rBytes)
+					err := rawSockets[dstAddr[0]].Send(rBytes)
 					if err != nil {
 						nfv9Mirror.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
 					}
@@ -297,22 +303,6 @@ func (nfv9Mirror *Netflowv9Mirror) toBytes(originalMsg netflow9.Message, seq uin
 		nfv9Mirror.writeTemplate(buf,template)
 	}
 
-	//if originalMsg.TemplaRecord.FieldCount > 0 {
-	//	nfv9Mirror.Logger.Printf("build a template templateId %d, fieldCount %d,header length is %d.",
-	//		originalMsg.TemplaRecord.TemplateID,originalMsg.TemplaRecord.FieldCount,recordHeader.Length)
-	//	binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.TemplateID)
-	//	binary.Write(buf, binary.BigEndian, originalMsg.TemplaRecord.FieldCount)
-	//	for _, spec := range originalMsg.TemplaRecord.FieldSpecifiers {
-	//		binary.Write(buf, binary.BigEndian, spec.ElementID)
-	//		binary.Write(buf, binary.BigEndian, spec.Length)
-	//	}
-	//	if originalMsg.TemplaRecord.ScopeFieldCount > 0 {
-	//		for _, spec1 := range originalMsg.TemplaRecord.ScopeFieldSpecifiers {
-	//			binary.Write(buf, binary.BigEndian, spec1.ElementID)
-	//			binary.Write(buf, binary.BigEndian, spec1.Length)
-	//		}
-	//	}
-	//}
 
 	for _, field := range fields {
 		for _, item := range field {
