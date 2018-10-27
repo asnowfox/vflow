@@ -40,7 +40,7 @@ func (nfv9Mirror *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
 func (nfv9Mirror *Netflowv9Mirror) initMap() {
 	nfv9Mirror.mirrorMaps = make(map[string]Config)
 	for _, ec := range nfv9Mirror.mirrorConfigs {
-		fmt.Printf("Router %10s add config rules count is %d :\n",ec.Source, len(ec.Rules))
+		fmt.Printf("Router %10s add config rules count is %d\n",ec.Source, len(ec.Rules))
 		for _,r := range ec.Rules {
 			fmt.Printf("   rule: input port %6d, dst port %6d ->  %s \n",r.InPort,r.OutPort,r.DistAddress)
 			remoteAddr := strings.Split(r.DistAddress,":")[0]
