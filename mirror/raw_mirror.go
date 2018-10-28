@@ -78,6 +78,7 @@ func (nfv9Mirror *Netflowv9Mirror) GetConfig() ([]Config) {
 
 func (nfv9Mirror *Netflowv9Mirror) AddConfig(mirrorConfig Config) (int) {
 	cfgMutex.Lock()
+	nfv9Mirror.Logger.Printf("add config sourceId %s, configs %d",mirrorConfig.Source, len(mirrorConfig.Rules))
 	if _, ok := nfv9Mirror.mirrorMaps[mirrorConfig.Source]; ok {
 		return -1
 	}
@@ -91,6 +92,8 @@ func (nfv9Mirror *Netflowv9Mirror) AddConfig(mirrorConfig Config) (int) {
 
 func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int) {
 	cfgMutex.Lock()
+	nfv9Mirror.Logger.Printf("add rule sourceId %s, rule dist %s",agentIP, rule.DistAddress)
+
 	if _, ok := nfv9Mirror.mirrorMaps[agentIP]; !ok {
 		nfv9Mirror.Logger.Printf("can not find source of id %s\n", agentIP)
 		return -1
