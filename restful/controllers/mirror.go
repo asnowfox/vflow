@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/astaxie/beego"
 	"../../mirror"
+	"fmt"
 )
 
 
@@ -20,6 +21,7 @@ type MirrorController struct {
 // @Failure 403 :objectId is empty
 // @router /:objectId [get]
 func (o *MirrorController) Get() {
+	fmt.Printf("call get of mirror!\r\n")
 	configs := mirror.Netflowv9Instance.GetConfig()
 	sourceId := o.Ctx.Input.Param(":sourceId")
 	if sourceId != "" {
