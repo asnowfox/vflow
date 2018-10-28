@@ -46,9 +46,12 @@ func (nfv9Mirror *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
 	netflowChannel <- *msg
 }
 
-func (nfv9Mirror *Netflowv9Mirror) initMap() {
+func (nfv9Mirror *Netflowv9Mirror) init(){
 	nfv9Mirror.mirrorMaps = make(map[string]Config)
 	nfv9Mirror.rawSockets = make(map[string]Conn)
+}
+
+func (nfv9Mirror *Netflowv9Mirror) buildMap() {
 	for _, ec := range nfv9Mirror.mirrorConfigs {
 		fmt.Printf("Router %10s add config rules count is %d\n",ec.Source, len(ec.Rules))
 		for _,r := range ec.Rules {
@@ -83,7 +86,7 @@ func (nfv9Mirror *Netflowv9Mirror) AddConfig(mirrorConfig Config) (int,string) {
 		return -1,"Source existed!"
 	}
 	nfv9Mirror.mirrorConfigs = append(nfv9Mirror.mirrorConfigs, mirrorConfig)
-	nfv9Mirror.initMap()
+	nfv9Mirror.buildMap()
 	defer cfgMutex.Unlock()
 
 	nfv9Mirror.saveConfigsTofile()
@@ -99,16 +102,15 @@ func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int,strin
 		return -1,"no resource of "+agentIP
 	}
 
-
-	for _,config := range nfv9Mirror.mirrorConfigs {
+	for index,config := range nfv9Mirror.mirrorConfigs {
 		if config.Source == agentIP {
 			nfv9Mirror.Logger.Printf("find agentIp %s in mirror configs.\n", config.Source)
-			config.Rules = append(config.Rules, rule)
+			nfv9Mirror.mirrorConfigs[index].Rules = append(config.Rules, rule)
 			nfv9Mirror.Logger.Printf("after add rule size is %d\n", len(config.Rules))
 		}
 	}
 
-	nfv9Mirror.initMap()
+	nfv9Mirror.buildMap()
 	nfv9Mirror.Logger.Printf("current rule size is %d.\n", len(nfv9Mirror.mirrorMaps[agentIP].Rules))
 	defer cfgMutex.Unlock()
 
@@ -133,7 +135,7 @@ func (nfv9Mirror *Netflowv9Mirror) DeleteRule(sourceId string, rule Rule) (int) 
 	if index != -1 {
 		copy(nfv9Mirror.mirrorMaps[sourceId].Rules, append(nfv9Mirror.mirrorMaps[sourceId].Rules[:index],
 			nfv9Mirror.mirrorMaps[sourceId].Rules[index+1:]...))
-		nfv9Mirror.initMap()
+		nfv9Mirror.buildMap()
 	}
 	nfv9Mirror.recycleClients()
 	defer cfgMutex.Unlock()
@@ -155,7 +157,7 @@ func (nfv9Mirror *Netflowv9Mirror) DeleteConfig(agentIp string) (int) {
 	if index != -1 {
 		nfv9Mirror.mirrorConfigs = append(nfv9Mirror.mirrorConfigs[:index],
 			nfv9Mirror.mirrorConfigs[index+1:]...)
-		nfv9Mirror.initMap()
+		nfv9Mirror.buildMap()
 	}
 	nfv9Mirror.recycleClients()
 	defer cfgMutex.Unlock()

@@ -57,7 +57,8 @@ func NewNetflowv9Mirror(mirrorCfg string, logger *log.Logger) (*Netflowv9Mirror,
 		os.Exit(-1)
 		return ume, err
 	}
-	ume.initMap()
+	ume.init()
+	ume.buildMap()
 
 	Netflowv9Instance = ume
 	return ume, nil
