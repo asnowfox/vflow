@@ -68,9 +68,10 @@ func (o *MirrorController) Post() {
 	var ob mirror.Config
 	fmt.Printf(string(o.Ctx.Input.RequestBody))
 	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-	index:=mirror.Netflowv9Instance.AddConfig(ob)
+	index,msg:=mirror.Netflowv9Instance.AddConfig(ob)
 	json := map[string]interface{}{}
 	json["result"] = index
+	json["message"] = msg;
 	o.Data["json"] = json
 	o.ServeJSON()
 }
