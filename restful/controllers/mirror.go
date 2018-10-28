@@ -24,7 +24,7 @@ func (o *MirrorController) Get() {
 	fmt.Printf("call get method of mirror!\r\n")
 	configs := mirror.Netflowv9Instance.GetConfig()
 	sourceId := o.GetString("sourceId")
-
+	fmt.Printf("call get method of mirror sourceId is %s\r\n",sourceId)
 	//sourceId := o.Ctx.Input.Param(":sourceId")
 	if sourceId != "" {
 		for _,e := range configs {
