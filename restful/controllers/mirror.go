@@ -69,11 +69,19 @@ func (o *MirrorController) Post() {
 
 	fmt.Printf("add post message is %s, bytes length is %d.\n",
 		string(o.Ctx.Input.RequestBody), len(o.Ctx.Input.RequestBody))
-	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-	index,msg:=mirror.Netflowv9Instance.AddConfig(ob)
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 	json := map[string]interface{}{}
+	if err != nil {
+		json["result"] = -1
+		json["message"] = "parse json error"
+		o.Data["json"] = json
+		o.ServeJSON()
+		return
+	}
+	index,msg:=mirror.Netflowv9Instance.AddConfig(ob)
+
 	json["result"] = index
-	json["message"] = msg;
+	json["message"] = msg
 	o.Data["json"] = json
 	o.ServeJSON()
 }
