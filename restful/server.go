@@ -20,11 +20,9 @@ func NewBeegoServer(logger *log.Logger) (*BegooServer){
 
 func (bs *BegooServer) Run(){
 	go func(){
-		if beego.BConfig.RunMode == "dev" {
-			beego.BConfig.WebConfig.DirectoryIndex = true
-			beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"
-			beego.BConfig.CopyRequestBody = true
-		}
+		beego.BConfig.WebConfig.DirectoryIndex = true
+		beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"
+		beego.BConfig.CopyRequestBody = true
 		beego.Run(":9999")
 	}()
 }
