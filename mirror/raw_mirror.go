@@ -98,7 +98,7 @@ func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int,strin
 		nfv9Mirror.Logger.Printf("can not find source of id %s.\n", agentIP)
 		return -1,"no resource of "+agentIP
 	}
-	
+
 
 	for _,config := range nfv9Mirror.mirrorConfigs {
 		if config.Source == agentIP {

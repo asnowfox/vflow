@@ -51,9 +51,11 @@ func (o *RuleController) Post() {
 		o.ServeJSON()
 		return
 	}
-	index := mirror.Netflowv9Instance.AddRule(sourceId,ob)
+	index,msg := mirror.Netflowv9Instance.AddRule(sourceId,ob)
 
 	json["result"] = index
+	json["message"] = msg
 	o.Data["json"] = json
+
 	o.ServeJSON()
 }
