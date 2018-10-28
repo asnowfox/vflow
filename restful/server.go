@@ -23,6 +23,7 @@ func (bs *BegooServer) Run(){
 		if beego.BConfig.RunMode == "dev" {
 			beego.BConfig.WebConfig.DirectoryIndex = true
 			beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"
+			beego.BConfig.CopyRequestBody = true
 		}
 		beego.Run(":9999")
 	}()
