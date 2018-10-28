@@ -10,9 +10,11 @@ package routers
 import(
 	"github.com/astaxie/beego"
 	"../controllers"
+	"log"
 )
 
 func init() {
+	log.Print("router ininted.")
 	beego.Router("/user", &controllers.UserController{})
 	beego.Router("/mirror", &controllers.MirrorController{})
 }
