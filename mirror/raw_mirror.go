@@ -98,10 +98,14 @@ func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int,strin
 		nfv9Mirror.Logger.Printf("can not find source of id %s.\n", agentIP)
 		return -1,"no resource of "+agentIP
 	}
-	rules := append(nfv9Mirror.mirrorMaps[agentIP].Rules, rule)
-	nfv9Mirror.Logger.Printf("current rule size is %d.\n", len(rules))
-	mc := nfv9Mirror.mirrorMaps[agentIP]
-	mc.Rules = rules
+	
+
+	for _,config := range nfv9Mirror.mirrorConfigs {
+		if config.Source == agentIP {
+			config.Rules = append(config.Rules, rule)
+		}
+	}
+
 
 	nfv9Mirror.initMap()
 	nfv9Mirror.Logger.Printf("current rule size is %d.\n", len(nfv9Mirror.mirrorMaps[agentIP].Rules))
