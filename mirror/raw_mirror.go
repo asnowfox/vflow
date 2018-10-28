@@ -102,10 +102,10 @@ func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int,strin
 
 	for _,config := range nfv9Mirror.mirrorConfigs {
 		if config.Source == agentIP {
+			nfv9Mirror.Logger.Printf("find agentIp %s in mirror cofigs.\n", config.Source)
 			config.Rules = append(config.Rules, rule)
 		}
 	}
-
 
 	nfv9Mirror.initMap()
 	nfv9Mirror.Logger.Printf("current rule size is %d.\n", len(nfv9Mirror.mirrorMaps[agentIP].Rules))
