@@ -27,16 +27,17 @@ func (o *MirrorController) Get() {
 	if sourceId != "" {
 		for _,e := range configs {
 			if e.Source == sourceId {
-				o.Data["configs"] = e
+				o.Data["json"] = e
 				o.ServeJSON()
 				return
 			}
 		}
 	}else{
-		o.Data["configs"] = configs
+		fmt.Printf("serve all configs\r\n")
+		o.Data["json"] = configs
 		o.ServeJSON()
 	}
-	o.Data["configs"] = map[string]interface{}{}
+	o.Data["json"] = map[string]interface{}{}
 	o.ServeJSON()
 	return
 }
