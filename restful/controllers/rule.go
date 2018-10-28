@@ -42,10 +42,17 @@ func (o *RuleController) Delete() {
 func (o *RuleController) Post() {
 	var ob mirror.Rule
 	sourceId := o.GetString("sourceId")
-	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-
-	index := mirror.Netflowv9Instance.AddRule(sourceId,ob)
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 	json := map[string]interface{}{}
+	if err != nil{
+		json["result"] = -1
+		json["message"] = "parse json error"
+		o.Data["json"] = json
+		o.ServeJSON()
+		return
+	}
+	index := mirror.Netflowv9Instance.AddRule(sourceId,ob)
+
 	json["result"] = index
 	o.Data["json"] = json
 	o.ServeJSON()

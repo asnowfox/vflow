@@ -90,24 +90,25 @@ func (nfv9Mirror *Netflowv9Mirror) AddConfig(mirrorConfig Config) (int,string) {
 	return 0,"Add succeed!"
 }
 
-func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int) {
+func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int,string) {
 	cfgMutex.Lock()
-	nfv9Mirror.Logger.Printf("add rule sourceId %s, rule dist %s",agentIP, rule.DistAddress)
+	nfv9Mirror.Logger.Printf("add rule sourceId %s, rule dist %s.",agentIP, rule.DistAddress)
 
 	if _, ok := nfv9Mirror.mirrorMaps[agentIP]; !ok {
-		nfv9Mirror.Logger.Printf("can not find source of id %s\n", agentIP)
-		return -1
+		nfv9Mirror.Logger.Printf("can not find source of id %s.\n", agentIP)
+		return -1,"no resource of "+agentIP
 	}
 	rules := append(nfv9Mirror.mirrorMaps[agentIP].Rules, rule)
-	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(rules))
+	nfv9Mirror.Logger.Printf("current rule size is %d.\n", len(rules))
 	mc := nfv9Mirror.mirrorMaps[agentIP]
 	mc.Rules = rules
-	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(nfv9Mirror.mirrorMaps[agentIP].Rules))
+
 	nfv9Mirror.initMap()
+	nfv9Mirror.Logger.Printf("current rule size is %d.\n", len(nfv9Mirror.mirrorMaps[agentIP].Rules))
 	defer cfgMutex.Unlock()
 
 	nfv9Mirror.saveConfigsTofile()
-	return len(nfv9Mirror.mirrorMaps[agentIP].Rules)
+	return len(nfv9Mirror.mirrorMaps[agentIP].Rules),"add rule succeed."
 
 }
 
