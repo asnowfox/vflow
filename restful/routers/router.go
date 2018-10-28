@@ -17,4 +17,5 @@ func init() {
 	fmt.Printf("router ininted.\n")
 	beego.Router("/user", &controllers.UserController{})
 	beego.Router("/mirror", &controllers.MirrorController{})
+	beego.Router("/rule", &controllers.RuleController{})
 }

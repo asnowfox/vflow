@@ -13,11 +13,14 @@ import (
 	"strconv"
 	"fmt"
 	"sync/atomic"
+	"sync"
 )
 
 var (
-	netflowChannel = make(chan netflow9.Message, 1000)
-	seqMap = make(map[string]uint32)
+	netflowChannel  = make(chan netflow9.Message, 1000)
+	seqMap          = make(map[string]uint32)
+	seqMutex       sync.Mutex
+	cfgMutex       sync.Mutex
 )
 
 type Netflowv9Mirror struct {
@@ -74,16 +77,20 @@ func (nfv9Mirror *Netflowv9Mirror) GetConfig() ([]Config) {
 }
 
 func (nfv9Mirror *Netflowv9Mirror) AddConfig(mirrorConfig Config) (int) {
+	cfgMutex.Lock()
 	if _, ok := nfv9Mirror.mirrorMaps[mirrorConfig.Source]; ok {
 		return -1
 	}
 	nfv9Mirror.mirrorConfigs = append(nfv9Mirror.mirrorConfigs, mirrorConfig)
 	nfv9Mirror.initMap()
+	defer cfgMutex.Unlock()
+
 	nfv9Mirror.saveConfigsTofile()
 	return 0
 }
 
 func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int) {
+	cfgMutex.Lock()
 	if _, ok := nfv9Mirror.mirrorMaps[agentIP]; !ok {
 		nfv9Mirror.Logger.Printf("can not find source of id %s\n", agentIP)
 		return -1
@@ -94,11 +101,15 @@ func (nfv9Mirror *Netflowv9Mirror) AddRule(agentIP string, rule Rule) (int) {
 	mc.Rules = rules
 	nfv9Mirror.Logger.Printf("current rule size is %d\n", len(nfv9Mirror.mirrorMaps[agentIP].Rules))
 	nfv9Mirror.initMap()
+	defer cfgMutex.Unlock()
+
 	nfv9Mirror.saveConfigsTofile()
 	return len(nfv9Mirror.mirrorMaps[agentIP].Rules)
+
 }
 
 func (nfv9Mirror *Netflowv9Mirror) DeleteRule(sourceId string, rule Rule) (int) {
+	cfgMutex.Lock()
 	if _, ok := nfv9Mirror.mirrorMaps[sourceId]; !ok {
 		return -1
 	}
@@ -116,10 +127,14 @@ func (nfv9Mirror *Netflowv9Mirror) DeleteRule(sourceId string, rule Rule) (int) 
 		nfv9Mirror.initMap()
 	}
 	nfv9Mirror.recycleClients()
+	defer cfgMutex.Unlock()
+
+	nfv9Mirror.saveConfigsTofile()
 	return index
 }
 
 func (nfv9Mirror *Netflowv9Mirror) DeleteConfig(agentIp string) (int) {
+	cfgMutex.Lock()
 	var index = -1
 	for i, e := range nfv9Mirror.mirrorConfigs {
 		if e.Source == agentIp {
@@ -134,6 +149,7 @@ func (nfv9Mirror *Netflowv9Mirror) DeleteConfig(agentIp string) (int) {
 		nfv9Mirror.initMap()
 	}
 	nfv9Mirror.recycleClients()
+	defer cfgMutex.Unlock()
 	nfv9Mirror.saveConfigsTofile()
 	return index
 }
@@ -195,11 +211,14 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 		for {
 			sMsg := <-netflowChannel
 			atomic.AddUint64(&nfv9Mirror.stats.MessageReceivedCount, 1)
+			cfgMutex.Lock()
 			if _, ok := nfv9Mirror.mirrorMaps[sMsg.AgentID]; !ok {
+				cfgMutex.Unlock()
 				continue
 			}
-			ec := nfv9Mirror.mirrorMaps[sMsg.AgentID]
 
+
+			ec := nfv9Mirror.mirrorMaps[sMsg.AgentID]
 			var recordHeader netflow9.SetHeader
 			recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
 			recordHeader.Length = 0
@@ -241,6 +260,8 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 
 					var seq uint32 = 0
 					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
+					// add a lock support
+					seqMutex.Lock()
 					if _, ok := seqMap[key]; ok {
 						seq = seqMap[key]
 					}else{
@@ -248,6 +269,7 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 					}
 					rBytes := nfv9Mirror.toBytes(sMsg, seq, recordHeader, datas)
 					seqMap[key] = seqMap[key] + 1
+					seqMutex.Unlock()
 
 					dstAddrs := strings.Split(mRule.DistAddress, ":")
 					dstAddr := dstAddrs[0]
@@ -263,8 +285,9 @@ func (nfv9Mirror *Netflowv9Mirror) Run() {
 						atomic.AddUint64(&nfv9Mirror.stats.RawSentCount, 1)
 					}
 				}
-			}
-		}
+			}//end rule fore
+			cfgMutex.Unlock()
+		}// end loop
 	}()
 }
 
