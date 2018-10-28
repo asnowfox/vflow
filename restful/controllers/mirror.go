@@ -66,7 +66,9 @@ func (o *MirrorController) Delete() {
 // @router / [post]
 func (o *MirrorController) Post() {
 	var ob mirror.Config
-	fmt.Printf(string(o.Ctx.Input.RequestBody))
+
+	fmt.Printf("add post message is %s, bytes length is %d.\n",
+		string(o.Ctx.Input.RequestBody), len(o.Ctx.Input.RequestBody))
 	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 	index,msg:=mirror.Netflowv9Instance.AddConfig(ob)
 	json := map[string]interface{}{}
