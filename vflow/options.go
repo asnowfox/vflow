@@ -127,7 +127,7 @@ func NewOptions() *Options {
 		version:    false,
 		DynWorkers: true,
 		PIDFile:    "/var/run/vflow.pid",
-		ForwardFile: "/etc/vflow/nfv9.forward.conf",
+		ForwardFile: "/etc/vflow/forward.conf",
 		CPUCap:     "100%",
 		Logger:     log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 

@@ -10,8 +10,8 @@ import (
 )
 
 func TestReadConfig(t *testing.T) {
-	nfv9Mirror,_ := NewNetFlowv9Mirror("../scripts/nfv9.forward.conf",
-		log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),)
+
+	Init("../scripts/forward.conf",log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime))
 
 	cfg := Config{}
 	cfg.Source = "192.168.0.1"
@@ -20,12 +20,12 @@ func TestReadConfig(t *testing.T) {
 	rule.InPort = -1
 	rule.OutPort = -1
 	cfg.Rules = append(cfg.Rules, rule)
-	nfv9Mirror.AddConfig(cfg)
+	AddConfig(cfg)
 
 	//nfv9Mirror.DeleteConfig("192.168.0.1")
 	rule.OutPort = 1
 
-	nfv9Mirror.AddRule("192.168.0.1",rule)
+	AddRule("192.168.0.1",rule)
 }
 
 func TestSendUdp(t *testing.T) {
