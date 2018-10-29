@@ -37,6 +37,7 @@ func (t *IPFixMirror) Run() {
 	go func() {
 		for {
 			sMsg := <-ipfixChannel
+			log.Printf("read a message from ipfix channel")
 			atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
 			cfgMutex.Lock()
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {

@@ -236,6 +236,8 @@ LOOP:
 		//TODO IPFIXMESSAGE RECEIVE
 		if i.flowMirror != nil {
 			i.flowMirror.ReceiveMessage(decodedMsg)
+		}else{
+			logger.Printf("flow mirror is nil")
 		}
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
