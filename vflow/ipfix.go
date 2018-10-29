@@ -31,7 +31,7 @@ import (
 	"sync/atomic"
 	"time"
 	"../mirror"
-	"github.com/VerizonDigital/vflow/ipfix"
+	"../ipfix"
 	"github.com/VerizonDigital/vflow/producer"
 )
 
@@ -42,7 +42,7 @@ type IPFIX struct {
 	workers int
 	stop    bool
 	stats   IPFIXStats
-	flowMirror *mirror.Netflowv9Mirror
+	flowMirror *mirror.IPFixMirror
 	pool    chan chan struct{}
 }
 
@@ -81,7 +81,7 @@ var (
 )
 
 // NewIPFIX constructs IPFIX
-func NewIPFIX(flowMirror *mirror.Netflowv9Mirror) *IPFIX {
+func NewIPFIX(flowMirror *mirror.IPFixMirror) *IPFIX {
 	return &IPFIX{
 		port:    opts.IPFIXPort,
 		addr:    opts.IPFIXAddr,
