@@ -90,9 +90,9 @@ func parsePort(value interface{}) uint32{
 		case uint16:
 			return uint32(value.(uint16))
 		default:
-			return -1
+			return 0
 	}
-	return -1
+	return 0
 }
 
 
