@@ -64,13 +64,13 @@ func (t *Netflowv9Mirror) Run() {
 						if id == InputId {
 							inputFound = true
 							port := parsePort(decodedData.Value)
-							if port == uint32(mRule.InPort) || mRule.InPort == -1 {
+							if port == uint32(mRule.InPort) || mRule.InPort == 65535 {
 								inputMatch = true
 							}
 						} else if id == OutputId {
 							outputFound = true
 							port := parsePort(decodedData.Value)
-							if port == uint32(mRule.OutPort) ||  mRule.OutPort == 255 {
+							if port == uint32(mRule.OutPort) ||  mRule.OutPort == 65535 {
 								outputMatch = true
 							}
 						}
