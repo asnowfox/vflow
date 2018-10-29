@@ -71,6 +71,7 @@ func Init(mirrorCfg string,log *log.Logger) error{
 	mirrorCfgFile = mirrorCfg
 	mirrorMaps = make(map[string]Config)
 	rawSockets = make(map[string]Conn)
+	buildMap()
 	return nil
 }
 
@@ -119,9 +120,6 @@ func createRawPacket(srcAddress string, srcPort int,
 func NewNetFlowv9Mirror() (*Netflowv9Mirror, error) {
 	mirrorInstance := new(Netflowv9Mirror)
 	mirrorInstance.Logger = logger
-
-	buildMap()
-
 	Netflowv9MirrorInstance = mirrorInstance
 	return mirrorInstance, nil
 }
@@ -129,9 +127,6 @@ func NewNetFlowv9Mirror() (*Netflowv9Mirror, error) {
 func NewIPFixMirror() (*IPFixMirror, error) {
 	mirrorInstance := new(IPFixMirror)
 	mirrorInstance.Logger = logger
-
-	buildMap()
-
 	IPFixMirrorInstance = mirrorInstance
 	return mirrorInstance, nil
 }
