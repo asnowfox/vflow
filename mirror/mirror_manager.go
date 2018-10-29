@@ -166,7 +166,6 @@ func AddConfig(mirrorConfig Config) (int,string) {
 	mirrorConfigs = append(mirrorConfigs, mirrorConfig)
 	buildMap()
 	defer cfgMutex.Unlock()
-
 	saveConfigsTofile()
 	return 0,"Add succeed!"
 }
