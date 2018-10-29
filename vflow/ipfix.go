@@ -230,11 +230,13 @@ LOOP:
 			logger.Println(err)
 			// in case ipfix message header couldn't decode
 			if decodedMsg == nil {
+				logger.Printf("decoded message is nil")
 				continue
 			}
 		}
 		//TODO IPFIXMESSAGE RECEIVE
 		if i.flowMirror != nil {
+			logger.Printf("ipfix flow mirror will accept a message.")
 			i.flowMirror.ReceiveMessage(decodedMsg)
 		}else{
 			logger.Printf("flow mirror is nil")
