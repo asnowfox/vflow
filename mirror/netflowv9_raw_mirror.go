@@ -63,12 +63,14 @@ func (t *Netflowv9Mirror) Run() {
 						dataLen = dataLen + uint16(binary.Size(decodedData.Value))
 						if id == InputId {
 							inputFound = true
-							if binary.BigEndian.Uint16(decodedData.Value.([]byte)) == mRule.InPort || mRule.InPort == 255 {
+							port := parsePort(decodedData.Value)
+							if port == uint32(mRule.InPort) || mRule.InPort == -1 {
 								inputMatch = true
 							}
 						} else if id == OutputId {
 							outputFound = true
-							if binary.BigEndian.Uint16(decodedData.Value.([]byte)) == mRule.OutPort || mRule.OutPort == 255 {
+							port := parsePort(decodedData.Value)
+							if port == uint32(mRule.OutPort) ||  mRule.OutPort == 255 {
 								outputMatch = true
 							}
 						}

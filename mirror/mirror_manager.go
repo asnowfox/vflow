@@ -11,6 +11,7 @@ import (
 	"sync"
 	"../netflow/v9"
 	"../ipfix"
+	"encoding/binary"
 )
 
 var (
@@ -47,8 +48,8 @@ type Config struct {
 }
 
 type Rule struct {
-	InPort      uint16 `yaml:"inport"`
-	OutPort     uint16 `yaml:"outport"`
+	InPort      int32 `yaml:"inport"`
+	OutPort     int32 `yaml:"outport"`
 	DistAddress string `yaml:"distAddress"`
 }
 
@@ -73,6 +74,25 @@ func Init(mirrorCfg string,log *log.Logger) error{
 	rawSockets = make(map[string]Conn)
 	buildMap()
 	return nil
+}
+
+func parsePort(value interface{}) uint32{
+	switch value.(type){
+		case []byte:
+			bytes := value.([]byte)
+			if len(bytes) == 2 {
+				return uint32(binary.BigEndian.Uint16(value.([]byte)))
+			}else if len(bytes) == 4 {
+				return uint32(binary.BigEndian.Uint32(value.([]byte)))
+			}
+		case uint32:
+			return value.(uint32)
+		case uint16:
+			return uint32(value.(uint16))
+		default:
+			return -1
+	}
+	return -1
 }
 
 
