@@ -230,7 +230,6 @@ LOOP:
 			logger.Println(err)
 			// in case ipfix message header couldn't decode
 			if decodedMsg == nil {
-				logger.Printf("decoded message is nil")
 				continue
 			}
 		}

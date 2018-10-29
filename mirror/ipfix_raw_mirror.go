@@ -37,7 +37,6 @@ func (t *IPFixMirror) Run() {
 	go func() {
 		for {
 			sMsg := <-ipfixChannel
-			log.Printf("read a message from ipfix channel")
 			atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
 			cfgMutex.Lock()
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
@@ -61,6 +60,7 @@ func (t *IPFixMirror) Run() {
 						dataLen = dataLen + uint16(binary.Size(decodedData.Value))
 						if id == InputId {
 							inputFound = true
+							t.Logger.Printf("data is %d",binary.BigEndian.Uint16(decodedData.Value.([]byte)))
 							if binary.BigEndian.Uint16(decodedData.Value.([]byte)) == mRule.InPort || mRule.InPort == 255 {
 								inputMatch = true
 							}
