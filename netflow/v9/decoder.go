@@ -28,7 +28,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-
 	"../../../vflow/ipfix"
 	"../../../vflow/reader"
 )
@@ -191,6 +190,17 @@ func (t *TemplateHeader) unmarshal(r *reader.Reader) error {
 	return nil
 }
 
+// RFC 7011 3.4.2.2.  Options Template Record Format
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |          Set ID = 3           |          Length               |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |         Template ID           |         Field Count = N + M   |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |     Scope Field Count = N     |0|  Scope 1 Infor. Element id. |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 func (t *TemplateHeader) unmarshalOpts(r *reader.Reader) error {
 	var err error
 
@@ -245,25 +255,22 @@ func (f *TemplateFieldSpecifier) unmarshal(r *reader.Reader) error {
 
 func (tr *TemplateRecord) unmarshal(r *reader.Reader) error {
 	var (
-		th  = TemplateHeader{}
-		tf  = TemplateFieldSpecifier{}
-		err error
+		th = TemplateHeader{}
+		tf = TemplateFieldSpecifier{}
 	)
 
-	if err = th.unmarshal(r); err != nil {
+	if err := th.unmarshal(r); err != nil {
 		return err
 	}
-
 	tr.TemplateID = th.TemplateID
 	tr.FieldCount = th.FieldCount
 
 	for i := th.FieldCount; i > 0; i-- {
-		if err = tf.unmarshal(r); err != nil {
+		if err := tf.unmarshal(r); err != nil {
 			return err
 		}
 		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
-
 	return nil
 }
 
@@ -287,33 +294,28 @@ func (tr *TemplateRecord) unmarshal(r *reader.Reader) error {
 
 func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 	var (
-		th  = TemplateHeader{}
-		tf  = TemplateFieldSpecifier{}
-		err error
+		th = TemplateHeader{}
+		tf = TemplateFieldSpecifier{}
 	)
 
-	if err = th.unmarshalOpts(r); err != nil {
+	if err := th.unmarshalOpts(r); err != nil {
 		return err
 	}
-
 	tr.TemplateID = th.TemplateID
 
 	for i := th.OptionScopeLen / 4; i > 0; i-- {
-		if err = tf.unmarshal(r); err != nil {
+		if err := tf.unmarshal(r); err != nil {
 			return err
 		}
-
 		tr.ScopeFieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
 
 	for i := th.OptionLen / 4; i > 0; i-- {
-		if err = tf.unmarshal(r); err != nil {
+		if err := tf.unmarshal(r); err != nil {
 			return err
 		}
-
 		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
-
 	return nil
 }
 
@@ -323,7 +325,6 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		err    error
 		b      []byte
 	)
-
 	r := d.reader
 
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {

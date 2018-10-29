@@ -58,17 +58,17 @@ func main() {
 	logger = opts.Logger
 
 	logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
-	nfv9Mirror,err := mirror.NewNetflowv9Mirror(opts.ForwardFile,opts.Logger)
+	flowMirror,err := mirror.NewNetFlowv9Mirror(opts.ForwardFile,opts.Logger)
 
 	if err != nil {
 		logger.Printf("can not init mirror. reason %s\n", err)
 	}else{
-		nfv9Mirror.Run()
+		flowMirror.Run()
 	}
 
 	sFlow := NewSFlow()
-	ipfix := NewIPFIX()
-	netflow9 := NewNetflowV9(nfv9Mirror)
+	ipfix := NewIPFIX(flowMirror)
+	netflow9 := NewNetflowV9(flowMirror)
 
 	protos := []proto{sFlow, ipfix, netflow9}
 
@@ -80,7 +80,7 @@ func main() {
 		}(p)
 	}
 
-	go statsHTTPServer(ipfix, sFlow, netflow9, nfv9Mirror)
+	go statsHTTPServer(ipfix, sFlow, netflow9, flowMirror)
 
 	beegoServer := restful.NewBeegoServer(logger)
 	beegoServer.Run()

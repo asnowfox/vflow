@@ -10,7 +10,7 @@ import (
 )
 
 func TestReadConfig(t *testing.T) {
-	nfv9Mirror,_ := NewNetflowv9Mirror("../scripts/nfv9.forward.conf",
+	nfv9Mirror,_ := NewNetFlowv9Mirror("../scripts/nfv9.forward.conf",
 		log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),)
 
 	cfg := Config{}

@@ -30,7 +30,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
+	"../mirror"
 	"github.com/VerizonDigital/vflow/ipfix"
 	"github.com/VerizonDigital/vflow/producer"
 )
@@ -42,6 +42,7 @@ type IPFIX struct {
 	workers int
 	stop    bool
 	stats   IPFIXStats
+	flowMirror *mirror.Netflowv9Mirror
 	pool    chan chan struct{}
 }
 
@@ -80,11 +81,12 @@ var (
 )
 
 // NewIPFIX constructs IPFIX
-func NewIPFIX() *IPFIX {
+func NewIPFIX(flowMirror *mirror.Netflowv9Mirror) *IPFIX {
 	return &IPFIX{
 		port:    opts.IPFIXPort,
 		addr:    opts.IPFIXAddr,
 		workers: opts.IPFIXWorkers,
+		flowMirror: flowMirror,
 		pool:    make(chan chan struct{}, maxWorkers),
 	}
 }
@@ -209,10 +211,10 @@ LOOP:
 			}
 		}
 
-		if opts.Verbose {
-			logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
-				msg.raddr, len(msg.body))
-		}
+		//if opts.Verbose {
+		//	logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
+		//		msg.raddr, len(msg.body))
+		//}
 
 		if ipfixMirrorEnabled {
 			mirror.body = ipfixBuffer.Get().([]byte)
@@ -233,6 +235,10 @@ LOOP:
 				continue
 			}
 		}
+		//TODO IPFIXMESSAGE RECEIVE
+		if i.flowMirror != nil {
+			i.flowMirror.ReceiveMessage(decodedMsg)
+		}
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
@@ -248,9 +254,9 @@ LOOP:
 			default:
 			}
 
-			if opts.Verbose {
-				logger.Println(string(b))
-			}
+			//if opts.Verbose {
+			//	logger.Println(string(b))
+			//}
 		}
 
 	}

@@ -20,7 +20,7 @@ type MirrorController struct {
 // @Failure 403 :objectId is empty
 // @router /:objectId [get]
 func (o *MirrorController) Get() {
-	configs := mirror.Netflowv9Instance.GetConfig()
+	configs := mirror.GetConfig()
 	sourceId := o.GetString("sourceId")
 	fmt.Printf("call get method of mirror sourceId is %s\r\n", sourceId)
 	if sourceId != "" {
@@ -32,7 +32,7 @@ func (o *MirrorController) Get() {
 			}
 		}
 	} else {
-		configs := mirror.Netflowv9Instance.GetConfig()
+		configs := mirror.GetConfig()
 		fmt.Printf("serve all configs\r\n")
 		o.Data["json"] = configs
 		o.ServeJSON()
@@ -49,7 +49,7 @@ func (o *MirrorController) Delete() {
 
 	index := -1
 	if sourceId != "" {
-		index = mirror.Netflowv9Instance.DeleteConfig(sourceId)
+		index = mirror.DeleteConfig(sourceId)
 	}
 	json := map[string]interface{}{}
 	json["result"] = index
@@ -78,7 +78,7 @@ func (o *MirrorController) Post() {
 		o.ServeJSON()
 		return
 	}
-	index,msg:=mirror.Netflowv9Instance.AddConfig(ob)
+	index,msg:=mirror.AddConfig(ob)
 
 	json["result"] = index
 	json["message"] = msg

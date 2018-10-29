@@ -23,13 +23,13 @@
 package ipfix
 
 import (
-	"bytes"
-	"errors"
-	"fmt"
-	"io"
 	"net"
 
 	"github.com/VerizonDigital/vflow/reader"
+	"io"
+	"fmt"
+	"bytes"
+	"errors"
 )
 
 // Decoder represents IPFIX payload and remote address
@@ -70,10 +70,13 @@ type TemplateFieldSpecifier struct {
 	EnterpriseNo uint32
 }
 
+
 // Message represents IPFIX decoded data
 type Message struct {
 	AgentID  string
 	Header   MessageHeader
+	TemplateRecords []TemplateRecord
+	SetHeader    SetHeader
 	DataSets [][]DecodedField
 }
 
@@ -94,134 +97,9 @@ type nonfatalError error
 
 var rpcChan = make(chan RPCRequest, 1)
 
-// NewDecoder constructs a decoder
-func NewDecoder(raddr net.IP, b []byte) *Decoder {
-	return &Decoder{raddr, reader.NewReader(b)}
-}
 
-// Decode decodes the IPFIX raw data
-func (d *Decoder) Decode(mem MemCache) (*Message, error) {
-	var msg = new(Message)
 
-	// IPFIX Message Header decoding
-	if err := msg.Header.unmarshal(d.reader); err != nil {
-		return nil, err
-	}
-	// IPFIX Message Header validation
-	if err := msg.Header.validate(); err != nil {
-		return nil, err
-	}
 
-	// Add source IP address as Agent ID
-	msg.AgentID = d.raddr.String()
-
-	// In case there are multiple non-fatal errors, collect them and report all of them.
-	// The rest of the received sets will still be interpreted, until a fatal error is encountered.
-	// A non-fatal error is for example an illegal data record or unknown template id.
-	var decodeErrors []error
-	for d.reader.Len() > 4 {
-		if err := d.decodeSet(mem, msg); err != nil {
-			switch err.(type) {
-			case nonfatalError:
-				decodeErrors = append(decodeErrors, err)
-			default:
-				return nil, err
-			}
-		}
-	}
-
-	return msg, combineErrors(decodeErrors...)
-}
-
-// RFC 7011 - part 3.B IPFIX Message Format
-// +----------------------------------------------------+
-// | Message Header                                     |
-// +----------------------------------------------------+
-// | Set                                                |
-// +----------------------------------------------------+
-// | Set                                                |
-// +----------------------------------------------------+
-//   ...
-// +----------------------------------------------------+
-// | Set                                                |
-// +----------------------------------------------------+
-
-func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
-	startCount := d.reader.ReadCount()
-
-	setHeader := new(SetHeader)
-	if err := setHeader.unmarshal(d.reader); err != nil {
-		return err
-	}
-	if setHeader.Length < 4 {
-		return io.ErrUnexpectedEOF
-	}
-
-	var tr TemplateRecord
-	var err error
-	// This check is somewhat redundant with the switch-clause below, but the retrieve() operation should not be executed inside the loop.
-	if setHeader.SetID > 255 {
-		var ok bool
-		tr, ok = mem.retrieve(setHeader.SetID, d.raddr)
-		if !ok {
-			select {
-			case rpcChan <- RPCRequest{
-				ID: setHeader.SetID,
-				IP: d.raddr,
-			}:
-			default:
-			}
-			err = nonfatalError(fmt.Errorf("%s unknown ipfix template id# %d",
-				d.raddr.String(),
-				setHeader.SetID,
-			))
-		}
-	}
-
-	// the next set should be greater than 4 bytes otherwise that's padding
-	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) && d.reader.Len() > 4 {
-		if setId := setHeader.SetID; setId == 2 || setId == 3 {
-			// Template record or template option record
-
-			// Check if only padding is left in this set. A template id of zero indicates padding bytes, which MUST be zero.
-			templateId, err := d.reader.PeekUint16()
-			if err == nil && templateId == 0 {
-				break
-			}
-
-			tr := TemplateRecord{}
-			if setId == 2 {
-				err = tr.unmarshal(d.reader)
-			} else {
-				err = tr.unmarshalOpts(d.reader)
-			}
-			if err == nil {
-				mem.insert(tr.TemplateID, d.raddr, tr)
-			}
-		} else if setId >= 4 && setId <= 255 {
-			// Reserved set, do not read any records
-			break
-		} else {
-			// Data set
-			var data []DecodedField
-			data, err = d.decodeData(tr)
-			if err == nil {
-				msg.DataSets = append(msg.DataSets, data)
-			}
-		}
-	}
-
-	// Skip the rest of the set in order to properly continue with the next set
-	// This is necessary if the set is padded, has a reserved set ID, or a nonfatal error occurred
-	leftoverBytes := setHeader.Length - uint16(d.reader.ReadCount()-startCount)
-	if leftoverBytes > 0 {
-		_, skipErr := d.reader.Read(int(leftoverBytes))
-		if skipErr != nil {
-			err = skipErr
-		}
-	}
-	return err
-}
 
 // RFC 7011 - part 3.1. Message Header Format
 // 0                   1                   2                   3
@@ -314,7 +192,6 @@ func (t *TemplateHeader) unmarshal(r *reader.Reader) error {
 	}
 
 	return nil
-
 }
 
 // RFC 7011 3.4.2.2.  Options Template Record Format
@@ -344,7 +221,6 @@ func (t *TemplateHeader) unmarshalOpts(r *reader.Reader) error {
 	}
 
 	return nil
-
 }
 
 // RFC 7011
@@ -526,6 +402,135 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 	}
 
 	return fields, nil
+}
+
+// NewDecoder constructs a decoder
+func NewDecoder(raddr net.IP, b []byte) *Decoder {
+	return &Decoder{raddr, reader.NewReader(b)}
+}
+
+// Decode decodes the IPFIX raw data
+func (d *Decoder) Decode(mem MemCache) (*Message, error) {
+	var msg = new(Message)
+
+	// IPFIX Message Header decoding
+	if err := msg.Header.unmarshal(d.reader); err != nil {
+		return nil, err
+	}
+	// IPFIX Message Header validation
+	if err := msg.Header.validate(); err != nil {
+		return nil, err
+	}
+
+	// Add source IP address as Agent ID
+	msg.AgentID = d.raddr.String()
+
+	// In case there are multiple non-fatal errors, collect them and report all of them.
+	// The rest of the received sets will still be interpreted, until a fatal error is encountered.
+	// A non-fatal error is for example an illegal data record or unknown template id.
+	var decodeErrors []error
+	for d.reader.Len() > 4 {
+		if err := d.decodeSet(mem, msg); err != nil {
+			switch err.(type) {
+			case nonfatalError:
+				decodeErrors = append(decodeErrors, err)
+			default:
+				return nil, err
+			}
+		}
+	}
+
+	return msg, combineErrors(decodeErrors...)
+}
+
+// RFC 7011 - part 3.B IPFIX Message Format
+// +----------------------------------------------------+
+// | Message Header                                     |
+// +----------------------------------------------------+
+// | Set                                                |
+// +----------------------------------------------------+
+// | Set                                                |
+// +----------------------------------------------------+
+//   ...
+// +----------------------------------------------------+
+// | Set                                                |
+// +----------------------------------------------------+
+
+func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
+	startCount := d.reader.ReadCount()
+
+	setHeader := new(SetHeader)
+	if err := setHeader.unmarshal(d.reader); err != nil {
+		return err
+	}
+	if setHeader.Length < 4 {
+		return io.ErrUnexpectedEOF
+	}
+
+	var tr TemplateRecord
+	var err error
+	// This check is somewhat redundant with the switch-clause below, but the retrieve() operation should not be executed inside the loop.
+	if setHeader.SetID > 255 {
+		var ok bool
+		tr, ok = mem.retrieve(setHeader.SetID, d.raddr)
+		if !ok {
+			select {
+			case rpcChan <- RPCRequest{
+				ID: setHeader.SetID,
+				IP: d.raddr,
+			}:
+			default:
+			}
+			err = nonfatalError(fmt.Errorf("%s unknown ipfix template id# %d",
+				d.raddr.String(),
+				setHeader.SetID,
+			))
+		}
+	}
+
+	// the next set should be greater than 4 bytes otherwise that's padding
+	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) && d.reader.Len() > 4 {
+		if setId := setHeader.SetID; setId == 2 || setId == 3 {
+			// Template record or template option record
+
+			// Check if only padding is left in this set. A template id of zero indicates padding bytes, which MUST be zero.
+			templateId, err := d.reader.PeekUint16()
+			if err == nil && templateId == 0 {
+				break
+			}
+
+			tr := TemplateRecord{}
+			if setId == 2 {
+				err = tr.unmarshal(d.reader)
+			} else {
+				err = tr.unmarshalOpts(d.reader)
+			}
+			if err == nil {
+				mem.insert(tr.TemplateID, d.raddr, tr)
+			}
+		} else if setId >= 4 && setId <= 255 {
+			// Reserved set, do not read any records
+			break
+		} else {
+			// Data set
+			var data []DecodedField
+			data, err = d.decodeData(tr)
+			if err == nil {
+				msg.DataSets = append(msg.DataSets, data)
+			}
+		}
+	}
+
+	// Skip the rest of the set in order to properly continue with the next set
+	// This is necessary if the set is padded, has a reserved set ID, or a nonfatal error occurred
+	leftoverBytes := int(setHeader.Length) - (d.reader.ReadCount() - startCount)
+	if leftoverBytes > 0 {
+		_, skipErr := d.reader.Read(int(leftoverBytes))
+		if skipErr != nil {
+			err = skipErr
+		}
+	}
+	return err
 }
 
 func combineErrors(errorSlice ...error) (err error) {

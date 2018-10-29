@@ -23,7 +23,7 @@ func (o *RuleController) Delete() {
 
 	index := -1
 	if sourceId != "" {
-		index = mirror.Netflowv9Instance.DeleteRule(sourceId,mirror.Rule{inport,outport,dstAddress})
+		index = mirror.DeleteRule(sourceId,mirror.Rule{inport,outport,dstAddress})
 	}
 
 	json := map[string]interface{}{}
@@ -51,7 +51,7 @@ func (o *RuleController) Post() {
 		o.ServeJSON()
 		return
 	}
-	index,msg := mirror.Netflowv9Instance.AddRule(sourceId,ob)
+	index,msg := mirror.AddRule(sourceId,ob)
 
 	json["result"] = index
 	json["message"] = msg
