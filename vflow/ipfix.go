@@ -235,7 +235,6 @@ LOOP:
 		}
 		//TODO IPFIXMESSAGE RECEIVE
 		if i.flowMirror != nil {
-			logger.Printf("ipfix flow mirror will accept a message.")
 			i.flowMirror.ReceiveMessage(decodedMsg)
 		}else{
 			logger.Printf("flow mirror is nil")
