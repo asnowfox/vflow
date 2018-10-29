@@ -56,18 +56,25 @@ func main() {
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
 	logger = opts.Logger
-
 	logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
-	flowMirror,err := mirror.NewNetFlowv9Mirror()
-	ipfixMirror,err := mirror.NewIPFixMirror()
+	mirror.Init(opts.ForwardFile,logger)
 
-	if err != nil {
-		logger.Printf("can not init mirror. reason %s\n", err)
+	flowMirror,err1 := mirror.NewNetFlowv9Mirror()
+	ipfixMirror,err2 := mirror.NewIPFixMirror()
+
+	if err1 != nil {
+		logger.Printf("can not init netflow mirror. reason %s\n", err1)
 	}else{
 		flowMirror.Run()
 	}
+	if err2 != nil {
+		logger.Printf("can not init ipfix mirror. reason %s\n", err2)
+	}else{
+		ipfixMirror.Run()
+	}
 
 	sFlow := NewSFlow()
+
 	ipfix := NewIPFIX(ipfixMirror)
 	netflow9 := NewNetflowV9(flowMirror)
 
