@@ -16,8 +16,8 @@ type RuleController struct {
 
 func (o *RuleController) Delete() {
 	sourceId := o.GetString("sourceId")
-	inport,_ := o.GetUint16("inport")
-	outport,_ := o.GetUint16("outport")
+	inport,_ := o.GetInt32("inport")
+	outport,_ := o.GetInt32("outport")
 	dstAddress := o.GetString("dstAddress")
 	fmt.Printf("call delete method of mirror controller, sourceId is %s\r\n", sourceId)
 
