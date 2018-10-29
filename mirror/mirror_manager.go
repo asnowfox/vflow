@@ -15,6 +15,7 @@ import (
 
 var (
 	Netflowv9MirrorInstance *Netflowv9Mirror
+	IPFixMirrorInstance *IPFixMirror
 	mirrorConfigs []Config
 	logger *log.Logger
 	mirrorMaps map[string]Config
@@ -122,6 +123,16 @@ func NewNetFlowv9Mirror() (*Netflowv9Mirror, error) {
 	buildMap()
 
 	Netflowv9MirrorInstance = mirrorInstance
+	return mirrorInstance, nil
+}
+
+func NewIPFixMirror() (*IPFixMirror, error) {
+	mirrorInstance := new(IPFixMirror)
+	mirrorInstance.Logger = logger
+
+	buildMap()
+
+	IPFixMirrorInstance = mirrorInstance
 	return mirrorInstance, nil
 }
 

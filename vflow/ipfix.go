@@ -116,7 +116,6 @@ func (i *IPFIX) run() {
 	}
 
 	logger.Printf("ipfix is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
-
 	ipfix.LoadExtElements(opts.VFlowConfigPath)
 
 	mCache = ipfix.GetCache(opts.IPFIXTplCacheFile)
@@ -160,7 +159,6 @@ func (i *IPFIX) run() {
 		atomic.AddUint64(&i.stats.UDPCount, 1)
 		ipfixUDPCh <- IPFIXUDPMsg{raddr, b[:n]}
 	}
-
 }
 
 func (i *IPFIX) shutdown() {
