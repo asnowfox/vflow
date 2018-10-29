@@ -1,7 +1,6 @@
 package mirror
 
 import (
-	"../netflow/v9"
 	"log"
 	"sync/atomic"
 	"encoding/binary"
