@@ -48,8 +48,8 @@ type Config struct {
 }
 
 type Rule struct {
-	InPort      uint32 `yaml:"inport"`
-	OutPort     uint32 `yaml:"outport"`
+	InPort      int32 `yaml:"inport"`
+	OutPort     int32 `yaml:"outport"`
 	DistAddress string `yaml:"distAddress"`
 }
 
