@@ -83,6 +83,7 @@ func (t *Netflowv9Mirror) Run() {
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
 						var recordHeader netflow9.SetHeader
+						t.Logger.Printf("i is %d, setHeader length is %d",i, len(sMsg.SetHeader))
 						recordHeader.FlowSetID = sMsg.SetHeader[i].FlowSetID
 						recordHeader.Length = 4 // self length
 						recordHeader.Length += dataLen
