@@ -50,54 +50,16 @@ func (t *Netflowv9Mirror) Run() {
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var msgFlowSets []netflow9.DataFlowSet
-				var setHeader netflow9.SetHeader
 				for _,flowSet := range sMsg.DataFlowSets {
-					var datas [][]netflow9.DecodedField
-					// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
-					for _, nfData := range flowSet.DataSets { //[]DecodedField
-						inputMatch, outputMatch := false, false
-						inputFound, outputFound := false, false
-						var dataLen uint16 = 0
-						for _, decodedData := range nfData {
-							id := decodedData.ID
-							dataLen = dataLen + uint16(binary.Size(decodedData.Value))
-							if id == InputId {
-								inputFound = true
-								port := parsePort(decodedData.Value)
-								if port == uint32(mRule.InPort) || mRule.InPort == -1 {
-									inputMatch = true
-								}
-							} else if id == OutputId {
-								outputFound = true
-								port := parsePort(decodedData.Value)
-								if port == uint32(mRule.OutPort) ||  mRule.OutPort == -1 {
-									outputMatch = true
-								}
-							}
-						}
-						if !outputFound {
-							outputMatch = true
-						}
-						if !inputFound {
-							inputMatch = true
-						}
-						if inputMatch && outputMatch { // input and output matched
-							datas = append(datas, nfData)
-							setHeader.FlowSetID = flowSet.SetHeader.FlowSetID
-							setHeader.Length += dataLen
-						}
-					}
+					var flowDataSet = t.filterFlowDataSet(mRule,flowSet)
 					//该flowSet中有存在的记录
-					if len(datas) > 0  {
-						setHeader.Length += 4
+					if len(flowDataSet.DataSets) > 0  {
 						foundFlowSet := new (netflow9.DataFlowSet)
-						foundFlowSet.DataSets = datas
-						foundFlowSet.SetHeader = setHeader
 						msgFlowSets = append(msgFlowSets, *foundFlowSet)
 					}
-				}//end flowset for
+				}
 				//no data and no template records continue
-				if setHeader.Length == 0 && len(sMsg.TemplateRecords) == 0{
+				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0{
 					continue
 				}
 				var seq uint32 = 0
@@ -109,10 +71,10 @@ func (t *Netflowv9Mirror) Run() {
 				}else{
 					seqMap[key] = 0
 				}
-				//originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []FlowSet
-				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 				seqMap[key] = seqMap[key] + 1
 				seqMutex.Unlock()
+				//originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []FlowSet
+				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 
 				dstAddrs := strings.Split(mRule.DistAddress, ":")
 				dstAddr := dstAddrs[0]
@@ -133,3 +95,46 @@ func (t *Netflowv9Mirror) Run() {
 	}()
 }
 
+func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule,flowSet netflow9.DataFlowSet)netflow9.DataFlowSet{
+	rtnFlowSet := new(netflow9.DataFlowSet)
+	rtnFlowSet.SetHeader.FlowSetID = flowSet.SetHeader.FlowSetID
+	var datas [][]netflow9.DecodedField
+	// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
+	for _, nfData := range flowSet.DataSets { //[]DecodedField
+		inputMatch, outputMatch := false, false
+		inputFound, outputFound := false, false
+		var dataLen uint16 = 0
+		for _, decodedData := range nfData {
+			id := decodedData.ID
+			dataLen = dataLen + uint16(binary.Size(decodedData.Value))
+			if id == InputId {
+				inputFound = true
+				port := parsePort(decodedData.Value)
+				if port == uint32(mRule.InPort) || mRule.InPort == -1 {
+					inputMatch = true
+				}
+			} else if id == OutputId {
+				outputFound = true
+				port := parsePort(decodedData.Value)
+				if port == uint32(mRule.OutPort) ||  mRule.OutPort == -1 {
+					outputMatch = true
+				}
+			}
+		}
+		if !outputFound {
+			outputMatch = true
+		}
+		if !inputFound {
+			inputMatch = true
+		}
+		if inputMatch && outputMatch { // input and output matched
+			datas = append(datas, nfData)
+			rtnFlowSet.SetHeader.Length+= dataLen
+		}
+	}
+	if rtnFlowSet.SetHeader.Length > 0 {
+		rtnFlowSet.SetHeader.Length+=4
+	}
+	return *rtnFlowSet
+
+}

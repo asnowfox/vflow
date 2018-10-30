@@ -72,7 +72,7 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
 	for _, template := range originalMsg.TemplateRecords {
-		fmt.Printf("write template record field count is %d.",template.FieldCount)
+		fmt.Printf("write template record field count is %d.\n",template.FieldCount)
 		writeTemplate(buf, template)
 	}
 	for _, flowSet := range DataFlowSets {
