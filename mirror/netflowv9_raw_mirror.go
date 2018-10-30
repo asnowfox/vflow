@@ -98,7 +98,7 @@ func (t *Netflowv9Mirror) Run() {
 					}
 				}//end flowset for
 
-				if setHeader.Length == 0 {
+				if setHeader.Length == 0 && len(sMsg.TemplateRecords) == 0{
 					continue
 				}
 				var seq uint32 = 0
