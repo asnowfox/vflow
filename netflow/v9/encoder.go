@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"bytes"
 
+	"fmt"
 )
 
 //   The Packet Header format is specified as:
@@ -71,6 +72,7 @@ func Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []Flow
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
 	for _,template := range originalMsg.TemplateRecords {
+		fmt.Printf("write template into buffer")
 		writeTemplate(buf,template)
 	}
 	for _,flowSet := range flowSets {
@@ -103,5 +105,8 @@ func writeTemplate(buf *bytes.Buffer,TemplaRecord TemplateRecord){
 				binary.Write(buf, binary.BigEndian, spec1.Length)
 			}
 		}
+	}else{
+		fmt.Printf("template record's Field count is 0")
 	}
+
 }

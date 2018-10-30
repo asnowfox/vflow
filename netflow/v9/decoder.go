@@ -460,6 +460,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
 			msg.TemplateRecords = append(msg.TemplateRecords, tr)
+			fmt.Printf("after set msg's templatRecord size is %d", len(msg.TemplateRecords))
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break
