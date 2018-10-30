@@ -48,13 +48,12 @@ func (t *Netflowv9Mirror) Run() {
 			}
 
 			ec := mirrorMaps[sMsg.AgentID]
-			var recordHeader netflow9.SetHeader
-			recordHeader.FlowSetID = sMsg.SetHeader.FlowSetID
-			recordHeader.Length = 0
+
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var datas [][]netflow9.DecodedField
-				for _, nfData := range sMsg.DataSets { //[]DecodedField
+				var headers []netflow9.SetHeader
+				for i, nfData := range sMsg.DataSets { //[]DecodedField
 					inputMatch, outputMatch := false, false
 					inputFound, outputFound := false, false
 					var dataLen uint16 = 0
@@ -83,12 +82,18 @@ func (t *Netflowv9Mirror) Run() {
 					}
 					if inputMatch && outputMatch { // input and output matched
 						datas = append(datas, nfData)
+						var recordHeader netflow9.SetHeader
+						recordHeader.FlowSetID = sMsg.SetHeader[i].FlowSetID
+						recordHeader.Length = 4 // self length
 						recordHeader.Length += dataLen
+						headers = append(headers, recordHeader)
 					}
 				}
 				if len(datas) > 0  {
-					recordHeader.Length += 4
-
+					//recordHeader.Length += 4
+					if len(datas) != len(headers) {
+						t.Logger.Printf("Encode %s netflow message error!",sMsg.AgentID)
+					}
 					var seq uint32 = 0
 					key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 					// add a lock support
@@ -98,7 +103,7 @@ func (t *Netflowv9Mirror) Run() {
 					}else{
 						seqMap[key] = 0
 					}
-					rBytes := netflow9.Encode(sMsg, seq,  datas)
+					rBytes := netflow9.Encode(sMsg, seq, headers, datas)
 					seqMap[key] = seqMap[key] + 1
 					seqMutex.Unlock()
 

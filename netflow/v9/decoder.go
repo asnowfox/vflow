@@ -90,7 +90,7 @@ type Message struct {
 	AgentID      string
 	Header       PacketHeader
 	TemplateRecords []TemplateRecord
-	SetHeader    SetHeader
+	SetHeader[]    SetHeader
 	DataSets     [][]DecodedField
 }
 
@@ -437,7 +437,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			))
 		}
 	}
-	msg.SetHeader = *setHeader
+	msg.SetHeader = append(msg.SetHeader, *setHeader)
 	// the next set should be greater than 4 bytes otherwise that's padding
 	for err == nil && (int(setHeader.Length)-(d.reader.ReadCount()-startCount) > 4) && d.reader.Len() > 4 {
 		if setId := setHeader.FlowSetID; setId == 0 || setId == 1 {

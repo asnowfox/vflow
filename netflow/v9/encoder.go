@@ -53,7 +53,7 @@ import (
 // |        Field Type             |         Field Length          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func  Encode(originalMsg Message, seq uint32, fields [][]DecodedField) []byte {
+func  Encode(originalMsg Message, seq uint32, rHeader []SetHeader, fields [][]DecodedField) []byte {
 	buf := new(bytes.Buffer)
 	count := uint16(len(fields))
 	count = count + uint16(len(originalMsg.TemplateRecords))
@@ -69,7 +69,9 @@ func  Encode(originalMsg Message, seq uint32, fields [][]DecodedField) []byte {
 	for _,template := range originalMsg.TemplateRecords {
 		writeTemplate(buf,template)
 	}
-	for _, field := range fields {
+	for i, field := range fields {
+		binary.Write(buf,binary.BigEndian,rHeader[i].FlowSetID)
+		binary.Write(buf,binary.BigEndian,rHeader[i].Length)
 		for _, item := range field {
 			binary.Write(buf, binary.BigEndian, item.Value)
 		}
