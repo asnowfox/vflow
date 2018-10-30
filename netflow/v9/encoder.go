@@ -72,7 +72,6 @@ func Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []Flow
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
 	for _,template := range originalMsg.TemplateRecords {
-		fmt.Printf("write template into buffer")
 		writeTemplate(buf,template)
 	}
 	for _,flowSet := range flowSets {
@@ -92,7 +91,7 @@ func writeTemplate(buf *bytes.Buffer,TemplaRecord TemplateRecord){
 	if TemplaRecord.FieldCount > 0 {
 		binary.Write(buf, binary.BigEndian, 0)
 		binary.Write(buf, binary.BigEndian, 4 + 4 + 4*TemplaRecord.FieldCount)
-
+		fmt.Printf("encode template record's Field count is %d\n",TemplaRecord.FieldCount)
 		binary.Write(buf, binary.BigEndian, TemplaRecord.TemplateID)
 		binary.Write(buf, binary.BigEndian,TemplaRecord.FieldCount)
 		for _, spec := range TemplaRecord.FieldSpecifiers {
@@ -106,7 +105,6 @@ func writeTemplate(buf *bytes.Buffer,TemplaRecord TemplateRecord){
 			}
 		}
 	}else{
-		fmt.Printf("template record's Field count is 0")
+		fmt.Printf("template record's Field count is 0\n")
 	}
-
 }

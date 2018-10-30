@@ -269,7 +269,7 @@ func (tr *TemplateRecord) unmarshal(r *reader.Reader) error {
 	}
 	tr.TemplateID = th.TemplateID
 	tr.FieldCount = th.FieldCount
-	fmt.Printf("template id is %d, field count is %d\r\n",tr.TemplateID,tr.FieldCount)
+	//fmt.Printf("template id is %d, field count is %d\r\n",tr.TemplateID,tr.FieldCount)
 	for i := th.FieldCount; i > 0; i-- {
 		if err := tf.unmarshal(r); err != nil {
 			return err
@@ -460,7 +460,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
 			msg.TemplateRecords = append(msg.TemplateRecords, tr)
-			fmt.Printf("after set msg's templatRecord size is %d", len(msg.TemplateRecords))
+			fmt.Printf("after set msg's templatRecord size is %d\n", len(msg.TemplateRecords))
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break

@@ -97,7 +97,7 @@ func (t *Netflowv9Mirror) Run() {
 						msgFlowSets = append(msgFlowSets, *foundFlowSet)
 					}
 				}//end flowset for
-
+				//no data and no template records continue
 				if setHeader.Length == 0 && len(sMsg.TemplateRecords) == 0{
 					continue
 				}
