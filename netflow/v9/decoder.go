@@ -90,10 +90,14 @@ type Message struct {
 	AgentID      string
 	Header       PacketHeader
 	TemplateRecords []TemplateRecord
-	SetHeader[]    SetHeader
-	DataSets     [][]DecodedField
+
+	FlowSets []FlowSet
 }
 
+type FlowSet struct {
+	SetHeader    SetHeader
+	DataSets     [][]DecodedField
+}
 //   The Packet Header format is specified as:
 //
 //    0                   1                   2                   3
@@ -417,6 +421,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	startCount := d.reader.ReadCount()
 
 	setHeader := new(SetHeader)
+	dataRecord := new(FlowSet)
 	if err := setHeader.unmarshal(d.reader); err != nil {
 		return err
 	}
@@ -437,7 +442,8 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			))
 		}
 	}
-	msg.SetHeader = append(msg.SetHeader, *setHeader)
+
+	//msg.SetHeader = append(msg.SetHeader, *setHeader)
 	// the next set should be greater than 4 bytes otherwise that's padding
 	for err == nil && (int(setHeader.Length)-(d.reader.ReadCount()-startCount) > 4) && d.reader.Len() > 4 {
 		if setId := setHeader.FlowSetID; setId == 0 || setId == 1 {
@@ -460,11 +466,12 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			var data []DecodedField
 			data, err = d.decodeData(tr)
 			if err == nil {
-				msg.DataSets = append(msg.DataSets, data)
+				dataRecord.DataSets = append(dataRecord.DataSets,data)
+			//	msg.DataSets = append(msg.DataSets, data)
 			}
 		}
 	}
-
+	msg.FlowSets = append(msg.FlowSets,*dataRecord)
 	// Skip the rest of the set in order to properly continue with the next set
 	// This is necessary if the set is padded, has a reserved set ID, or a nonfatal error occurred
 	leftoverBytes := int(setHeader.Length) - (d.reader.ReadCount() - startCount)

@@ -53,9 +53,13 @@ import (
 // |        Field Type             |         Field Length          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func  Encode(originalMsg Message, seq uint32, rHeader []SetHeader, fields [][]DecodedField) []byte {
+func  Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []FlowSet) []byte {
 	buf := new(bytes.Buffer)
-	count := uint16(len(fields))
+	count := uint16(0)
+	for _,e := range flowSets {
+		count += uint16(len(e.DataSets))
+	}
+
 	count = count + uint16(len(originalMsg.TemplateRecords))
 
 	//orginal flow header
@@ -69,11 +73,13 @@ func  Encode(originalMsg Message, seq uint32, rHeader []SetHeader, fields [][]De
 	for _,template := range originalMsg.TemplateRecords {
 		writeTemplate(buf,template)
 	}
-	for i, field := range fields {
-		binary.Write(buf,binary.BigEndian,rHeader[i].FlowSetID)
-		binary.Write(buf,binary.BigEndian,rHeader[i].Length)
-		for _, item := range field {
-			binary.Write(buf, binary.BigEndian, item.Value)
+	for _,flowSet := range flowSets {
+		for _, field := range flowSet.DataSets {
+			binary.Write(buf, binary.BigEndian, rHeader.FlowSetID)
+			binary.Write(buf, binary.BigEndian, rHeader.Length)
+			for _, item := range field {
+				binary.Write(buf, binary.BigEndian, item.Value)
+			}
 		}
 	}
 	result := buf.Bytes()
