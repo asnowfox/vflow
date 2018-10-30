@@ -53,7 +53,7 @@ import (
 // |        Field Type             |         Field Length          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func  Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []FlowSet) []byte {
+func Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []FlowSet) []byte {
 	buf := new(bytes.Buffer)
 	count := uint16(0)
 	for _,e := range flowSets {

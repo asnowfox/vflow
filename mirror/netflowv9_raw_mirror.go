@@ -98,6 +98,9 @@ func (t *Netflowv9Mirror) Run() {
 					}
 				}//end flowset for
 
+				if setHeader.Length == 0 {
+					continue
+				}
 				var seq uint32 = 0
 				key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 				// add a lock support
