@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 
@@ -49,8 +48,6 @@ func (t *Netflowv9Mirror) Run() {
 				}
 			ec := mirrorMaps[sMsg.AgentID]
 			for _, mRule := range ec.Rules {
-				fmt.Printf(" all rule size is %d \n", len(ec.Rules))
-				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var msgFlowSets []netflow9.DataFlowSet
 				for _,flowSet := range sMsg.DataFlowSets {
 					flowDataSet := t.filterFlowDataSet(mRule,flowSet)
