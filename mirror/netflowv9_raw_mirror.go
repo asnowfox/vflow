@@ -56,7 +56,6 @@ func (t *Netflowv9Mirror) Run() {
 
 					//该flowSet中有存在的记录
 					if len(flowDataSet.DataSets) > 0  {
-						fmt.Printf("find a data count is %d.", len(flowDataSet.DataSets))
 						msgFlowSets = append(msgFlowSets, flowDataSet)
 					}
 				}
@@ -132,6 +131,7 @@ func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule,flowSet netflow9.DataFlow
 		if inputMatch && outputMatch { // input and output matched
 			datas = append(datas, nfData)
 			rtnFlowSet.SetHeader.Length+= dataLen
+			rtnFlowSet.DataSets = datas;
 		}
 	}
 	if rtnFlowSet.SetHeader.Length > 0 {
