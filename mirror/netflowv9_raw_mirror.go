@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 
@@ -54,8 +55,7 @@ func (t *Netflowv9Mirror) Run() {
 					var flowDataSet = t.filterFlowDataSet(mRule,flowSet)
 					//该flowSet中有存在的记录
 					if len(flowDataSet.DataSets) > 0  {
-						foundFlowSet := new (netflow9.DataFlowSet)
-						msgFlowSets = append(msgFlowSets, *foundFlowSet)
+						msgFlowSets = append(msgFlowSets, flowDataSet)
 					}
 				}
 				//no data and no template records continue
@@ -73,7 +73,7 @@ func (t *Netflowv9Mirror) Run() {
 				}
 				seqMap[key] = seqMap[key] + 1
 				seqMutex.Unlock()
-				//originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []FlowSet
+				fmt.Printf("i will encode flow set for rule &s\n",mRule.DistAddress)
 				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 
 				dstAddrs := strings.Split(mRule.DistAddress, ":")

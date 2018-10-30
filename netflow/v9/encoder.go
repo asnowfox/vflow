@@ -90,8 +90,8 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 
 func writeTemplate(buf *bytes.Buffer, TemplaRecord TemplateRecord) {
 	if TemplaRecord.FieldCount > 0 {
-		binary.Write(buf, binary.BigEndian, 0)
-		binary.Write(buf, binary.BigEndian, 4+4+4*TemplaRecord.FieldCount)
+		binary.Write(buf, binary.BigEndian, uint16(0))
+		binary.Write(buf, binary.BigEndian,  uint16(4+4+4*TemplaRecord.FieldCount))
 		binary.Write(buf, binary.BigEndian, TemplaRecord.TemplateID)
 		binary.Write(buf, binary.BigEndian, TemplaRecord.FieldCount)
 		for _, spec := range TemplaRecord.FieldSpecifiers {
