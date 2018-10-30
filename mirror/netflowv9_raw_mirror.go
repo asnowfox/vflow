@@ -52,9 +52,11 @@ func (t *Netflowv9Mirror) Run() {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var msgFlowSets []netflow9.DataFlowSet
 				for _,flowSet := range sMsg.DataFlowSets {
-					var flowDataSet = t.filterFlowDataSet(mRule,flowSet)
+					flowDataSet := t.filterFlowDataSet(mRule,flowSet)
+
 					//该flowSet中有存在的记录
 					if len(flowDataSet.DataSets) > 0  {
+						fmt.Printf("find a data count is %d.", len(flowDataSet.DataSets))
 						msgFlowSets = append(msgFlowSets, flowDataSet)
 					}
 				}
