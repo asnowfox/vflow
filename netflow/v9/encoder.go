@@ -54,10 +54,10 @@ import (
 // |        Field Type             |         Field Length          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []FlowSet) []byte {
+func Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets []FlowSet) []byte {
 	buf := new(bytes.Buffer)
 	count := uint16(0)
-	for _,e := range flowSets {
+	for _, e := range flowSets {
 		count += uint16(len(e.DataSets))
 	}
 
@@ -71,10 +71,11 @@ func Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []Flow
 	binary.Write(buf, binary.BigEndian, seq)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
-	for _,template := range originalMsg.TemplateRecords {
-		writeTemplate(buf,template)
+	for _, template := range originalMsg.TemplateRecords {
+		fmt.Printf("write template record field count is %d.",template.FieldCount)
+		writeTemplate(buf, template)
 	}
-	for _,flowSet := range flowSets {
+	for _, flowSet := range flowSets {
 		binary.Write(buf, binary.BigEndian, rHeader.FlowSetID)
 		binary.Write(buf, binary.BigEndian, rHeader.Length)
 		for _, field := range flowSet.DataSets {
@@ -87,13 +88,12 @@ func Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []Flow
 	return result
 }
 
-func writeTemplate(buf *bytes.Buffer,TemplaRecord TemplateRecord){
+func writeTemplate(buf *bytes.Buffer, TemplaRecord TemplateRecord) {
 	if TemplaRecord.FieldCount > 0 {
 		binary.Write(buf, binary.BigEndian, 0)
-		binary.Write(buf, binary.BigEndian, 4 + 4 + 4*TemplaRecord.FieldCount)
-		fmt.Printf("encode template record's Field count is %d\n",TemplaRecord.FieldCount)
+		binary.Write(buf, binary.BigEndian, 4+4+4*TemplaRecord.FieldCount)
 		binary.Write(buf, binary.BigEndian, TemplaRecord.TemplateID)
-		binary.Write(buf, binary.BigEndian,TemplaRecord.FieldCount)
+		binary.Write(buf, binary.BigEndian, TemplaRecord.FieldCount)
 		for _, spec := range TemplaRecord.FieldSpecifiers {
 			binary.Write(buf, binary.BigEndian, spec.ElementID)
 			binary.Write(buf, binary.BigEndian, spec.Length)
@@ -104,7 +104,7 @@ func writeTemplate(buf *bytes.Buffer,TemplaRecord TemplateRecord){
 				binary.Write(buf, binary.BigEndian, spec1.Length)
 			}
 		}
-	}else{
+	} else {
 		fmt.Printf("template record's Field count is 0\n")
 	}
 }

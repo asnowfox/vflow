@@ -45,7 +45,7 @@ func (t *Netflowv9Mirror) Run() {
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
 				cfgMutex.Unlock()
 				continue
-			}
+				}
 			ec := mirrorMaps[sMsg.AgentID]
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
