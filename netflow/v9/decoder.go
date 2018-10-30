@@ -87,13 +87,13 @@ type Decoder struct {
 
 // Message represents Netflow decoded data
 type Message struct {
-	AgentID      string
-	Header       PacketHeader
+	AgentID         string
+	Header          PacketHeader
 	TemplateRecords []TemplateRecord
-	FlowSets []FlowSet
+	DataFlowSets    []DataFlowSet
 }
 
-type FlowSet struct {
+type DataFlowSet struct {
 	SetHeader    SetHeader
 	DataSets     [][]DecodedField
 }
@@ -422,7 +422,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	startCount := d.reader.ReadCount()
 
 	setHeader := new(SetHeader)
-	decodedFlowSet := new(FlowSet)
+	decodedFlowSet := new(DataFlowSet)
 	if err := setHeader.unmarshal(d.reader); err != nil {
 		return err
 	}
@@ -475,7 +475,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		}
 	}
 	if decodedFlowSet.SetHeader.Length > 0 {
-		msg.FlowSets = append(msg.FlowSets, *decodedFlowSet)
+		msg.DataFlowSets = append(msg.DataFlowSets, *decodedFlowSet)
 	}
 	// Skip the rest of the set in order to properly continue with the next set
 	// This is necessary if the set is padded, has a reserved set ID, or a nonfatal error occurred

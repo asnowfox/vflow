@@ -67,9 +67,7 @@ type NetflowV9Stats struct {
 var (
 	netflowV9UDPCh = make(chan NetflowV9UDPMsg, 1000)
 	netflowV9MQCh  = make(chan []byte, 1000)
-
 	mCacheNF9 netflow9.MemCache
-
 	// ipfix udp payload pool
 	netflowV9Buffer = &sync.Pool{
 		New: func() interface{} {
@@ -215,8 +213,8 @@ LOOP:
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
-		if decodedMsg.FlowSets != nil {
-			for _,e := range decodedMsg.FlowSets {
+		if decodedMsg.DataFlowSets != nil {
+			for _,e := range decodedMsg.DataFlowSets {
 				b, err = decodedMsg.JSONMarshal(buf,e.DataSets)
 				if err != nil {
 					logger.Println(err)
