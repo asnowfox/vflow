@@ -269,7 +269,7 @@ func (tr *TemplateRecord) unmarshal(r *reader.Reader) error {
 	}
 	tr.TemplateID = th.TemplateID
 	tr.FieldCount = th.FieldCount
-
+	fmt.Printf("template id is %d, field count is %d\r\n",tr.TemplateID,tr.FieldCount)
 	for i := th.FieldCount; i > 0; i-- {
 		if err := tf.unmarshal(r); err != nil {
 			return err
@@ -449,6 +449,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	for err == nil && (int(setHeader.Length)-(d.reader.ReadCount()-startCount) > 4) && d.reader.Len() > 4 {
 		if setId := setHeader.FlowSetID; setId == 0 || setId == 1 {
 			// Template record or template option record
+
 			tr := TemplateRecord{}
 			if setId == 0 {
 				err = tr.unmarshal(d.reader)

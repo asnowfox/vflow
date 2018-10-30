@@ -128,7 +128,6 @@ func (t *Netflowv9Mirror) Run() {
 				}else{
 					atomic.AddUint64(&t.stats.RawSentCount, 1)
 				}
-
 			}//end rule fore
 			cfgMutex.Unlock()
 		}// end loop
