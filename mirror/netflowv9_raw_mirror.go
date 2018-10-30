@@ -52,9 +52,10 @@ func (t *Netflowv9Mirror) Run() {
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var msgFlowSets []netflow9.FlowSet
+				var setHeader netflow9.SetHeader
 				for _,flowSet := range sMsg.FlowSets {
 					var datas [][]netflow9.DecodedField
-					var setHeader netflow9.SetHeader
+
 					// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
 					for _, nfData := range flowSet.DataSets { //[]DecodedField
 						inputMatch, outputMatch := false, false
@@ -114,7 +115,8 @@ func (t *Netflowv9Mirror) Run() {
 				}else{
 					seqMap[key] = 0
 				}
-				rBytes := netflow9.Encode(sMsg, seq,  msgFlowSets )
+				//originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []FlowSet
+				rBytes := netflow9.Encode(sMsg, seq,  setHeader,msgFlowSets )
 				seqMap[key] = seqMap[key] + 1
 				seqMutex.Unlock()
 
