@@ -46,16 +46,13 @@ func (t *Netflowv9Mirror) Run() {
 				cfgMutex.Unlock()
 				continue
 			}
-
 			ec := mirrorMaps[sMsg.AgentID]
-
 			for _, mRule := range ec.Rules {
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var msgFlowSets []netflow9.FlowSet
 				var setHeader netflow9.SetHeader
 				for _,flowSet := range sMsg.FlowSets {
 					var datas [][]netflow9.DecodedField
-
 					// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
 					for _, nfData := range flowSet.DataSets { //[]DecodedField
 						inputMatch, outputMatch := false, false
@@ -86,9 +83,7 @@ func (t *Netflowv9Mirror) Run() {
 						}
 						if inputMatch && outputMatch { // input and output matched
 							datas = append(datas, nfData)
-							//t.Logger.Printf("i is %d, setHeader length is %d",i, len(sMsg.SetHeader))
 							setHeader.FlowSetID = flowSet.SetHeader.FlowSetID
-							//setHeader.Length = 4 // self length
 							setHeader.Length += dataLen
 
 						}
@@ -96,13 +91,10 @@ func (t *Netflowv9Mirror) Run() {
 					//该flowSet中有存在的记录
 					if len(datas) > 0  {
 						setHeader.Length += 4
-						findedFlowSet := new (netflow9.FlowSet)
-						findedFlowSet.DataSets = datas
-						findedFlowSet.SetHeader = setHeader
-
-						msgFlowSets = append(msgFlowSets, *findedFlowSet)
-
-
+						foundFlowSet := new (netflow9.FlowSet)
+						foundFlowSet.DataSets = datas
+						foundFlowSet.SetHeader = setHeader
+						msgFlowSets = append(msgFlowSets, *foundFlowSet)
 					}
 				}//end flowset for
 

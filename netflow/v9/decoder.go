@@ -90,7 +90,6 @@ type Message struct {
 	AgentID      string
 	Header       PacketHeader
 	TemplateRecords []TemplateRecord
-
 	FlowSets []FlowSet
 }
 
@@ -98,6 +97,8 @@ type FlowSet struct {
 	SetHeader    SetHeader
 	DataSets     [][]DecodedField
 }
+
+
 //   The Packet Header format is specified as:
 //
 //    0                   1                   2                   3
@@ -467,12 +468,13 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			data, err = d.decodeData(tr)
 			if err == nil {
 				decodedFlowSet.SetHeader = *setHeader
-				decodedFlowSet.DataSets = append(decodedFlowSet.DataSets,data)
-			//	msg.DataSets = append(msg.DataSets, data)
+				decodedFlowSet.DataSets = append(decodedFlowSet.DataSets, data)
 			}
 		}
 	}
-	msg.FlowSets = append(msg.FlowSets,*decodedFlowSet)
+	if decodedFlowSet.SetHeader.Length > 0 {
+		msg.FlowSets = append(msg.FlowSets, *decodedFlowSet)
+	}
 	// Skip the rest of the set in order to properly continue with the next set
 	// This is necessary if the set is padded, has a reserved set ID, or a nonfatal error occurred
 	leftoverBytes := int(setHeader.Length) - (d.reader.ReadCount() - startCount)
