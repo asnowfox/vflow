@@ -49,11 +49,11 @@ func (t *Netflowv9Mirror) Run() {
 				}
 			ec := mirrorMaps[sMsg.AgentID]
 			for _, mRule := range ec.Rules {
+				fmt.Printf(" all rule size is %d ", len(ec.Rules))
 				//sMsg.Msg.DataSets 很多记录[[]DecodedField,[]DecodedField,[]DecodedField] --> 转化为
 				var msgFlowSets []netflow9.DataFlowSet
 				for _,flowSet := range sMsg.DataFlowSets {
 					flowDataSet := t.filterFlowDataSet(mRule,flowSet)
-
 					//该flowSet中有存在的记录
 					if len(flowDataSet.DataSets) > 0  {
 						msgFlowSets = append(msgFlowSets, flowDataSet)
@@ -74,7 +74,8 @@ func (t *Netflowv9Mirror) Run() {
 				}
 				seqMap[key] = seqMap[key] + 1
 				seqMutex.Unlock()
-				fmt.Printf("i will encode flow set for rule%s -> %d %d %s\n",ec.Source,mRule.InPort,mRule.OutPort,mRule.DistAddress)
+				fmt.Printf("I will encode flow set for rule,%s -> %d %d %s\n",
+					ec.Source,mRule.InPort,mRule.OutPort,mRule.DistAddress)
 				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 
 				dstAddrs := strings.Split(mRule.DistAddress, ":")
