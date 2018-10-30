@@ -421,7 +421,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	startCount := d.reader.ReadCount()
 
 	setHeader := new(SetHeader)
-	dataRecord := new(FlowSet)
+	decodedFlowSet := new(FlowSet)
 	if err := setHeader.unmarshal(d.reader); err != nil {
 		return err
 	}
@@ -466,12 +466,13 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			var data []DecodedField
 			data, err = d.decodeData(tr)
 			if err == nil {
-				dataRecord.DataSets = append(dataRecord.DataSets,data)
+				decodedFlowSet.SetHeader = *setHeader
+				decodedFlowSet.DataSets = append(decodedFlowSet.DataSets,data)
 			//	msg.DataSets = append(msg.DataSets, data)
 			}
 		}
 	}
-	msg.FlowSets = append(msg.FlowSets,*dataRecord)
+	msg.FlowSets = append(msg.FlowSets,*decodedFlowSet)
 	// Skip the rest of the set in order to properly continue with the next set
 	// This is necessary if the set is padded, has a reserved set ID, or a nonfatal error occurred
 	leftoverBytes := int(setHeader.Length) - (d.reader.ReadCount() - startCount)
