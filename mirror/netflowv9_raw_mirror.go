@@ -73,7 +73,7 @@ func (t *Netflowv9Mirror) Run() {
 				}
 				seqMap[key] = seqMap[key] + 1
 				seqMutex.Unlock()
-				fmt.Printf("i will encode flow set for rule &s\n",mRule.DistAddress)
+				fmt.Printf("i will encode flow set for rule%s -> %d %d %s\n",ec.Source,mRule.InPort,mRule.OutPort,mRule.DistAddress)
 				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 
 				dstAddrs := strings.Split(mRule.DistAddress, ":")
