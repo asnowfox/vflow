@@ -62,7 +62,8 @@ func  Encode(originalMsg Message, seq uint32, fields [][]DecodedField) []byte {
 	binary.Write(buf, binary.BigEndian, uint16(0)) //TODO this is length
 
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.ExportTime)
-	binary.Write(buf, binary.BigEndian, seq)
+	binary.Write(buf, binary.BigEndian, originalMsg.Header.SequenceNo)
+	//binary.Write(buf, binary.BigEndian, seq)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.DomainID)
 
 	for _,template := range originalMsg.TemplateRecords {
