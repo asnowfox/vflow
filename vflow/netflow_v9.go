@@ -215,17 +215,20 @@ LOOP:
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
-		if decodedMsg.DataSets != nil {
-			b, err = decodedMsg.JSONMarshal(buf)
-			if err != nil {
-				logger.Println(err)
-				continue
+		if decodedMsg.FlowSets != nil {
+			for _,e := range decodedMsg.FlowSets {
+				b, err = decodedMsg.JSONMarshal(buf,e.DataSets)
+				if err != nil {
+					logger.Println(err)
+					continue
+				}
+
+				select {
+				case netflowV9MQCh <- append([]byte{}, b...):
+				default:
+				}
 			}
 
-			select {
-			case netflowV9MQCh <- append([]byte{}, b...):
-			default:
-			}
 		}
 	}
 
