@@ -54,12 +54,12 @@ import (
 
 func  Encode(originalMsg Message, seq uint32, fields [][]DecodedField) []byte {
 	buf := new(bytes.Buffer)
-	count := uint16(len(fields))
-	count = count + uint16(len(originalMsg.TemplateRecords))
+	//count := uint16(len(fields))
+	//count = count + uint16(len(originalMsg.TemplateRecords))
 
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
-	binary.Write(buf, binary.BigEndian, uint16(count)) //TODO this islength
+	binary.Write(buf, binary.BigEndian, uint16(0)) //TODO this is length
 
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.ExportTime)
 	binary.Write(buf, binary.BigEndian, seq)
@@ -74,6 +74,11 @@ func  Encode(originalMsg Message, seq uint32, fields [][]DecodedField) []byte {
 		}
 	}
 	result := buf.Bytes()
+	len := uint16(len(buf.Bytes()))
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, len)
+	result[2] = b[0]
+	result[3] = b[1]
 	return result
 }
 

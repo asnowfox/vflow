@@ -17,7 +17,6 @@ type IPFixMirror struct {
 func (t *IPFixMirror) Status() *FlowMirrorStatus {
 	return &FlowMirrorStatus{
 		QueueSize:            len(netflowChannel),
-		//MessageErrorCount:    atomic.LoadUint64(&t.stats.MessageErrorCount),
 		MessageReceivedCount: atomic.LoadUint64(&t.stats.MessageReceivedCount),
 		RawSentCount:         atomic.LoadUint64(&t.stats.RawSentCount),
 		RawErrorCount:        atomic.LoadUint64(&t.stats.RawErrorCount),
