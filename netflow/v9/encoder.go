@@ -74,9 +74,9 @@ func  Encode(originalMsg Message, seq uint32, rHeader SetHeader, flowSets  []Flo
 		writeTemplate(buf,template)
 	}
 	for _,flowSet := range flowSets {
+		binary.Write(buf, binary.BigEndian, rHeader.FlowSetID)
+		binary.Write(buf, binary.BigEndian, rHeader.Length)
 		for _, field := range flowSet.DataSets {
-			binary.Write(buf, binary.BigEndian, rHeader.FlowSetID)
-			binary.Write(buf, binary.BigEndian, rHeader.Length)
 			for _, item := range field {
 				binary.Write(buf, binary.BigEndian, item.Value)
 			}
