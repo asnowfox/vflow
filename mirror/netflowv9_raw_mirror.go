@@ -9,18 +9,14 @@ import (
 	"strings"
 )
 
-
-
 type Netflowv9Mirror struct {
 	Logger *log.Logger
 	stats  FlowMirrorStatus
 }
 
-
 func (t *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
 	netflowChannel <- *msg
 }
-
 
 func (t *Netflowv9Mirror) Status() *FlowMirrorStatus {
 	return &FlowMirrorStatus{
@@ -64,8 +60,8 @@ func (t *Netflowv9Mirror) Run() {
 				key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 				// add a lock support
 				seqMutex.Lock()
-				if _, ok := seqMap[key]; ok {
-					seq = seqMap[key]
+				if a, ok := seqMap[key]; ok {
+					seq = a
 				}else{
 					seqMap[key] = 0
 				}
@@ -87,6 +83,7 @@ func (t *Netflowv9Mirror) Run() {
 				}else{
 					atomic.AddUint64(&t.stats.RawSentCount, 1)
 				}
+				
 			}//end rule fore
 			cfgMutex.Unlock()
 		}// end loop
