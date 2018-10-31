@@ -449,7 +449,6 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	for err == nil && (int(setHeader.Length)-(d.reader.ReadCount()-startCount) > 4) && d.reader.Len() > 4 {
 		if setId := setHeader.FlowSetID; setId == 0 || setId == 1 {
 			// Template record or template option record
-
 			tr := TemplateRecord{}
 			if setId == 0 {
 				err = tr.unmarshal(d.reader)
@@ -458,9 +457,12 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			}
 			if err == nil {
 				mem.insert(tr.TemplateID, d.raddr, tr)
+				msg.TemplateRecords = append(msg.TemplateRecords, tr)
+				fmt.Printf("after set %s msg's templatRecord size is %d\n",msg.AgentID, len(msg.TemplateRecords))
+			}else{
+				fmt.Printf("unable unmarshal %s's template record.\n",msg.AgentID)
 			}
-			msg.TemplateRecords = append(msg.TemplateRecords, tr)
-			fmt.Printf("after set msg's templatRecord size is %d\n", len(msg.TemplateRecords))
+
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break
