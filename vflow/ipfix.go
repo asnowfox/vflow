@@ -214,7 +214,6 @@ LOOP:
 			mirror.body = ipfixBuffer.Get().([]byte)
 			mirror.raddr = msg.raddr
 			mirror.body = append(mirror.body[:0], msg.body...)
-
 			select {
 			case ipfixMCh <- mirror:
 			default:
@@ -246,7 +245,6 @@ LOOP:
 						logger.Println(err)
 						continue
 					}
-
 					select {
 					case ipfixMQCh <- append([]byte{}, b...):
 					default:

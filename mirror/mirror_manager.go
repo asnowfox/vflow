@@ -24,9 +24,7 @@ var (
 	mirrorCfgFile string
 	seqMutex       sync.Mutex
 	cfgMutex       sync.Mutex
-
 	seqMap          = make(map[string]uint32)
-
 	ipfixChannel  = make(chan ipfix.Message, 1000)
 	netflowChannel  = make(chan netflow9.Message, 1000)
 )
