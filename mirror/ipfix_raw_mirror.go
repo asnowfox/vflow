@@ -103,6 +103,7 @@ func (t *IPFixMirror) filterFlowDataSet(mRule Rule,flowSet ipfix.DataFlowSet)ipf
 		for _, decodedData := range nfData {
 			id := decodedData.ID
 			dataLen = dataLen + uint16(binary.Size(decodedData.Value))
+			t.Logger.Printf("id is %d, value is %s",id,decodedData.Value)
 			if id == InputId {
 				inputFound = true
 				port := parsePort(decodedData.Value)
