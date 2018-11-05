@@ -35,7 +35,6 @@ func (t *IPFixMirror) Run() {
 	go func() {
 		for {
 			sMsg := <-ipfixChannel
-
 			atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
 			//cfgMutex.Lock()
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
@@ -55,7 +54,6 @@ func (t *IPFixMirror) Run() {
 				}
 				//no data and no template records continue
 				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0{
-					t.Logger.Printf("matched both 0")
 					continue
 				}
 				var seq uint32 = 0
@@ -103,7 +101,6 @@ func (t *IPFixMirror) filterFlowDataSet(mRule Rule,flowSet ipfix.DataFlowSet)ipf
 		for _, decodedData := range nfData {
 			id := decodedData.ID
 			dataLen = dataLen + uint16(binary.Size(decodedData.Value))
-			t.Logger.Printf("id is %d, value is %s",id,decodedData.Value)
 			if id == InputId {
 				inputFound = true
 				port := parsePort(decodedData.Value)
