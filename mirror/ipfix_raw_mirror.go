@@ -35,11 +35,11 @@ func (t *IPFixMirror) Run() {
 	go func() {
 		for {
 			sMsg := <-ipfixChannel
-			t.Logger.Printf("raw receive a message")
+
 			atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
-			cfgMutex.Lock()
+			//cfgMutex.Lock()
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
-				cfgMutex.Unlock()
+			//	cfgMutex.Unlock()
 				t.Logger.Printf("Can not find agent cache, %s. ",sMsg.AgentID)
 				continue
 			}
@@ -55,6 +55,7 @@ func (t *IPFixMirror) Run() {
 				}
 				//no data and no template records continue
 				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0{
+					t.Logger.Printf("matched both 0")
 					continue
 				}
 				var seq uint32 = 0
@@ -84,9 +85,8 @@ func (t *IPFixMirror) Run() {
 				}else{
 					atomic.AddUint64(&t.stats.RawSentCount, 1)
 				}
-
 			}//end rule for
-			cfgMutex.Unlock()
+			//cfgMutex.Unlock()
 		}// end loop
 	}()
 }
