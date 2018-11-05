@@ -73,7 +73,7 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 	}
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
-	binary.Write(buf, binary.BigEndian, length) //TODO this is length
+	binary.Write(buf, binary.BigEndian, length)
 
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.ExportTime)
 	binary.Write(buf, binary.BigEndian, seq)

@@ -205,10 +205,10 @@ LOOP:
 			}
 		}
 
-		//if opts.Verbose {
-		//	logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
-		//		msg.raddr, len(msg.body))
-		//}
+		if opts.Verbose {
+			logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
+				msg.raddr, len(msg.body))
+		}
 
 		if ipfixMirrorEnabled {
 			mirror.body = ipfixBuffer.Get().([]byte)
