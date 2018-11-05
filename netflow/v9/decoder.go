@@ -146,13 +146,11 @@ func (h *PacketHeader) unmarshal(r *reader.Reader) error {
 	return nil
 }
 
-func (h *PacketHeader) validate() error {
+func (h *PacketHeader) validate(agentId string) error {
 	if h.Version != 9 {
-		return fmt.Errorf("invalid netflow version (%d)", h.Version)
+		return fmt.Errorf("invalid netflow version (%d),%s", h.Version,agentId)
 	}
-
 	// TODO: needs more validation
-
 	return nil
 }
 

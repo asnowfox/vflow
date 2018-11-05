@@ -97,16 +97,7 @@ type DataFlowSet struct {
 	DataSets     [][]DecodedField
 }
 
-
-
-
-
-
 var rpcChan = make(chan RPCRequest, 1)
-
-
-
-
 
 // RFC 7011 - part 3.1. Message Header Format
 // 0                   1                   2                   3
@@ -147,9 +138,9 @@ func (h *MessageHeader) unmarshal(r *reader.Reader) error {
 	return nil
 }
 
-func (h *MessageHeader) validate() error {
+func (h *MessageHeader) validate(agentId string) error {
 	if h.Version != 0x000a {
-		return fmt.Errorf("invalid ipfix version (%d)", h.Version)
+		return fmt.Errorf("invalid ipfix version (%d),%s", h.Version,agentId)
 	}
 
 	// TODO: needs more validation
@@ -425,7 +416,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		return nil, err
 	}
 	// IPFIX Message Header validation
-	if err := msg.Header.validate(); err != nil {
+	if err := msg.Header.validate(msg.AgentID); err != nil {
 		return nil, err
 	}
 
