@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"../ipfix"
-	"github.com/VerizonDigital/vflow/netflow/v9"
 )
 
 type IPFixMirror struct {
