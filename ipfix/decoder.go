@@ -140,7 +140,7 @@ func (h *MessageHeader) unmarshal(r *reader.Reader) error {
 
 func (h *MessageHeader) validate(agentId string) error {
 	if h.Version != 0x000a {
-		return fmt.Errorf("invalid ipfix version (%d),%s", h.Version,agentId)
+		return fmt.Errorf("invalid ipfix version (%d), agent Id is %s", h.Version,agentId)
 	}
 
 	// TODO: needs more validation
@@ -416,7 +416,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		return nil, err
 	}
 	// IPFIX Message Header validation
-	if err := msg.Header.validate(msg.AgentID); err != nil {
+	if err := msg.Header.validate(d.raddr.String()); err != nil {
 		return nil, err
 	}
 

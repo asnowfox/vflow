@@ -392,7 +392,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		return nil, err
 	}
 	// IPFIX Message Header validation
-	if err := msg.Header.validate(msg.AgentID); err != nil {
+	if err := msg.Header.validate(d.raddr.String()); err != nil {
 		return nil, err
 	}
 
