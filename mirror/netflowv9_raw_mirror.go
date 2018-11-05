@@ -41,7 +41,7 @@ func (t *Netflowv9Mirror) Run() {
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
 				cfgMutex.Unlock()
 				continue
-				}
+			}
 			ec := mirrorMaps[sMsg.AgentID]
 			for _, mRule := range ec.Rules {
 				var msgFlowSets []netflow9.DataFlowSet
@@ -84,7 +84,7 @@ func (t *Netflowv9Mirror) Run() {
 					atomic.AddUint64(&t.stats.RawSentCount, 1)
 				}
 
-			}//end rule fore
+			}//end rule for
 			cfgMutex.Unlock()
 		}// end loop
 	}()
@@ -132,5 +132,4 @@ func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule,flowSet netflow9.DataFlow
 		rtnFlowSet.SetHeader.Length+=4
 	}
 	return *rtnFlowSet
-
 }

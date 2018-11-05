@@ -3,6 +3,8 @@ package ipfix
 import (
 	"encoding/binary"
 	"bytes"
+	"fmt"
+	"reflect"
 )
 
 //   The Packet Header format is specified as:
@@ -52,44 +54,54 @@ import (
 // |        Field Type             |         Field Length          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func  Encode(originalMsg Message, seq uint32, fields [][]DecodedField) []byte {
+func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte {
 	buf := new(bytes.Buffer)
-	//count := uint16(len(fields))
-	//count = count + uint16(len(originalMsg.TemplateRecords))
+	length := uint16(16) //header 16 bytes
+	for _,tempR := range originalMsg.TemplateRecords {
+		//template 长度？
+		length+=uint16(4+4+4*tempR.FieldCount)
+	}
 
+	//data长度计算
+	for _, e := range DataFlowSets {
+		length += 4//e.SetHeader 4 bytes
+		for _,dataset := range e.DataSets {
+			for _,data := range dataset {
+				length += uint16(reflect.TypeOf(data.Value).Size())
+			}
+		}
+	}
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
-	binary.Write(buf, binary.BigEndian, uint16(0)) //TODO this is length
+	binary.Write(buf, binary.BigEndian, length) //TODO this is length
 
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.ExportTime)
-	binary.Write(buf, binary.BigEndian, originalMsg.Header.SequenceNo)
-	//binary.Write(buf, binary.BigEndian, seq)
+	binary.Write(buf, binary.BigEndian, seq)
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.DomainID)
 
-	for _,template := range originalMsg.TemplateRecords {
-		writeTemplate(buf,template)
+	for _, template := range originalMsg.TemplateRecords {
+		fmt.Printf("write template record template id is %d, field count is %d.\n", template.TemplateID, template.FieldCount)
+		writeTemplate(buf, template)
 	}
-	for _, field := range fields {
-		for _, item := range field {
-			binary.Write(buf, binary.BigEndian, item.Value)
+	for _, flowSet := range DataFlowSets {
+		binary.Write(buf, binary.BigEndian, flowSet.SetHeader.SetID)
+		binary.Write(buf, binary.BigEndian, flowSet.SetHeader.Length)
+		for _, field := range flowSet.DataSets {
+			for _, item := range field {
+				binary.Write(buf, binary.BigEndian, item.Value)
+			}
 		}
 	}
 	result := buf.Bytes()
-	len := uint16(len(buf.Bytes()))
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, len)
-	result[2] = b[0]
-	result[3] = b[1]
 	return result
 }
 
-func writeTemplate(buf *bytes.Buffer,TemplaRecord TemplateRecord){
+func writeTemplate(buf *bytes.Buffer, TemplaRecord TemplateRecord) {
 	if TemplaRecord.FieldCount > 0 {
-		binary.Write(buf, binary.BigEndian, 0)
-		binary.Write(buf, binary.BigEndian, 4 + 4 + 4*TemplaRecord.FieldCount)
-
+		binary.Write(buf, binary.BigEndian, uint16(0))
+		binary.Write(buf, binary.BigEndian, uint16(4+4+4*TemplaRecord.FieldCount))
 		binary.Write(buf, binary.BigEndian, TemplaRecord.TemplateID)
-		binary.Write(buf, binary.BigEndian,TemplaRecord.FieldCount)
+		binary.Write(buf, binary.BigEndian, TemplaRecord.FieldCount)
 		for _, spec := range TemplaRecord.FieldSpecifiers {
 			binary.Write(buf, binary.BigEndian, spec.ElementID)
 			binary.Write(buf, binary.BigEndian, spec.Length)
@@ -100,6 +112,7 @@ func writeTemplate(buf *bytes.Buffer,TemplaRecord TemplateRecord){
 				binary.Write(buf, binary.BigEndian, spec1.Length)
 			}
 		}
+	} else {
+		fmt.Printf("template record's Field count is 0\n")
 	}
 }
-
