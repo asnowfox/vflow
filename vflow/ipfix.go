@@ -242,22 +242,30 @@ LOOP:
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
-		if len(decodedMsg.DataSets) > 0 {
-			b, err = decodedMsg.JSONMarshal(buf)
-			if err != nil {
-				logger.Println(err)
-				continue
+		if decodedMsg.DataFlowSets != nil {
+			for _,e := range decodedMsg.DataFlowSets {
+
+
+				if len(e.DataSets) > 0 {
+					b, err = decodedMsg.JSONMarshal(buf,e.DataSets)
+					if err != nil {
+						logger.Println(err)
+						continue
+					}
+
+					select {
+					case ipfixMQCh <- append([]byte{}, b...):
+					default:
+					}
+
+					//if opts.Verbose {
+					//	logger.Println(string(b))
+					//}
+				}
+			}
 			}
 
-			select {
-			case ipfixMQCh <- append([]byte{}, b...):
-			default:
-			}
 
-			//if opts.Verbose {
-			//	logger.Println(string(b))
-			//}
-		}
 
 	}
 }

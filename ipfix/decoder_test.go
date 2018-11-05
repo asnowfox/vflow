@@ -186,7 +186,7 @@ func TestMultiMessage(t *testing.T) {
 	if err != nil {
 		t.Error("unexpected error happened:", err)
 	}
-	if l := len(r.DataSets); l != 3 {
+	if l := len(r.DataFlowSets[0].DataSets); l != 3 {
 		t.Error("Expected 3 datasets, but received", l)
 	}
 	expectedSets := []int{256, 257, 262, 263, 264, 265, 266, 267, 268, 512}
@@ -201,7 +201,7 @@ func TestUnknownDatasetsMessage(t *testing.T) {
 	mCache := GetCache("cache.file")
 	d := NewDecoder(ip, unknownDatasetMessage)
 	r, err := d.Decode(mCache)
-	if l := len(r.DataSets); l != 0 {
+	if l := len(r.DataFlowSets[0].DataSets); l != 0 {
 		t.Error("Did not expect any result datasets, but got", l)
 	}
 	expectedErrorStr := `Multiple errors:

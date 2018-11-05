@@ -49,42 +49,47 @@ var mockDecodedMsg = Message{
 		SequenceNo: 2563920489,
 		DomainID:   34560,
 	},
-	DataSets: [][]DecodedField{
+	DataFlowSets: []DataFlowSet{
 		{
-			{ID: 0x8, Value: net.IP{0x5b, 0x7d, 0x82, 0x79}},
-			{ID: 0xc, Value: net.IP{0xc0, 0xe5, 0xdc, 0x85}},
-			{ID: 0x5, Value: 0x0},
-			{ID: 0x4, Value: 0x6},
-			{ID: 0x7, Value: 0xecba},
-			{ID: 0xb, Value: 0x1bb},
-			{ID: 0x20, Value: 0x0},
-			{ID: 0xa, Value: 0x503},
-			{ID: 0x3a, Value: 0x0},
-			{ID: 0x9, Value: 0x10},
-			{ID: 0xd, Value: 0x18},
-			{ID: 0x10, Value: 0x1ad7},
-			{ID: 0x11, Value: 0x3b1d},
-			{ID: 0xf, Value: net.IP{0xc0, 0x10, 0x1c, 0x58}},
-			{ID: 0x6, Value: []uint8{0x10}},
-			{ID: 0xe, Value: 0x4f6},
-			{ID: 0x1, Value: 0x28},
-			{ID: 0x2, Value: 0x1},
-			{ID: 0x34, Value: 0x3a},
-			{ID: 0x35, Value: 0x3a},
-			{ID: 0x98, Value: 1483484685331},
-			{ID: 0x99, Value: 1483484685331},
-			{ID: 0x88, Value: 0x1},
-			{ID: 0xf3, Value: 0x0},
-			{ID: 0xf5, Value: 0x0},
+			DataSets: [][]DecodedField{
+				{
+					{ID: 0x8, Value: net.IP{0x5b, 0x7d, 0x82, 0x79}},
+					{ID: 0xc, Value: net.IP{0xc0, 0xe5, 0xdc, 0x85}},
+					{ID: 0x5, Value: 0x0},
+					{ID: 0x4, Value: 0x6},
+					{ID: 0x7, Value: 0xecba},
+					{ID: 0xb, Value: 0x1bb},
+					{ID: 0x20, Value: 0x0},
+					{ID: 0xa, Value: 0x503},
+					{ID: 0x3a, Value: 0x0},
+					{ID: 0x9, Value: 0x10},
+					{ID: 0xd, Value: 0x18},
+					{ID: 0x10, Value: 0x1ad7},
+					{ID: 0x11, Value: 0x3b1d},
+					{ID: 0xf, Value: net.IP{0xc0, 0x10, 0x1c, 0x58}},
+					{ID: 0x6, Value: []uint8{0x10}},
+					{ID: 0xe, Value: 0x4f6},
+					{ID: 0x1, Value: 0x28},
+					{ID: 0x2, Value: 0x1},
+					{ID: 0x34, Value: 0x3a},
+					{ID: 0x35, Value: 0x3a},
+					{ID: 0x98, Value: 1483484685331},
+					{ID: 0x99, Value: 1483484685331},
+					{ID: 0x88, Value: 0x1},
+					{ID: 0xf3, Value: 0x0},
+					{ID: 0xf5, Value: 0x0},
+				},
+			},
 		},
 	},
+
 }
 
 func TestJSONMarshal(t *testing.T) {
 	buf := new(bytes.Buffer)
 	msg := TestMessage{}
 
-	b, err := mockDecodedMsg.JSONMarshal(buf)
+	b, err := mockDecodedMsg.JSONMarshal(buf,mockDecodedMsg.DataFlowSets[0].DataSets)
 	if err != nil {
 		t.Error("unexpected error", err)
 	}
@@ -105,7 +110,7 @@ func TestJSONMarshalDataSets(t *testing.T) {
 	buf := new(bytes.Buffer)
 	msg := TestMessage{}
 
-	b, _ := mockDecodedMsg.JSONMarshal(buf)
+	b, _ := mockDecodedMsg.JSONMarshal(buf,mockDecodedMsg.DataFlowSets[0].DataSets)
 	json.Unmarshal(b, &msg)
 
 	for _, ds := range msg.DataSets {

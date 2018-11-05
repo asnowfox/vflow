@@ -32,6 +32,11 @@ import (
 	"../../../vflow/reader"
 )
 
+// Decoder represents Netflow payload and remote address
+type Decoder struct {
+	raddr  net.IP
+	reader *reader.Reader
+}
 type nonfatalError error
 
 // PacketHeader represents Netflow v9  packet header
@@ -79,11 +84,7 @@ type DecodedField struct {
 	Value interface{}
 }
 
-// Decoder represents Netflow payload and remote address
-type Decoder struct {
-	raddr  net.IP
-	reader *reader.Reader
-}
+
 
 // Message represents Netflow decoded data
 type Message struct {

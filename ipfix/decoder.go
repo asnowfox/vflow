@@ -37,6 +37,7 @@ type Decoder struct {
 	raddr  net.IP
 	reader *reader.Reader
 }
+type nonfatalError error
 
 // MessageHeader represents IPFIX message header
 type MessageHeader struct {
@@ -45,6 +46,12 @@ type MessageHeader struct {
 	ExportTime uint32 // Time at which the IPFIX Message Header leaves the Exporter
 	SequenceNo uint32 // Incremental sequence counter modulo 2^32
 	DomainID   uint32 // A 32-bit id that is locally unique to the Exporting Process
+}
+
+// SetHeader represents set header fields
+type SetHeader struct {
+	SetID  uint16
+	Length uint16 // Total length of this FlowSet
 }
 
 // TemplateHeader represents template fields
@@ -62,7 +69,12 @@ type TemplateRecord struct {
 	ScopeFieldCount      uint16
 	ScopeFieldSpecifiers []TemplateFieldSpecifier
 }
-
+// DecodedField represents a decoded field
+type DecodedField struct {
+	ID           uint16
+	Value        interface{}
+	EnterpriseNo uint32
+}
 // TemplateFieldSpecifier represents field properties
 type TemplateFieldSpecifier struct {
 	ElementID    uint16
@@ -70,30 +82,25 @@ type TemplateFieldSpecifier struct {
 	EnterpriseNo uint32
 }
 
-
 // Message represents IPFIX decoded data
 type Message struct {
 	AgentID  string
 	Header   MessageHeader
 	TemplateRecords []TemplateRecord
+	//SetHeader    SetHeader
+	//DataSets [][]DecodedField
+	DataFlowSets    []DataFlowSet
+}
+
+type DataFlowSet struct {
 	SetHeader    SetHeader
-	DataSets [][]DecodedField
+	DataSets     [][]DecodedField
 }
 
-// DecodedField represents a decoded field
-type DecodedField struct {
-	ID           uint16
-	Value        interface{}
-	EnterpriseNo uint32
-}
 
-// SetHeader represents set header fields
-type SetHeader struct {
-	SetID  uint16
-	Length uint16
-}
 
-type nonfatalError error
+
+
 
 var rpcChan = make(chan RPCRequest, 1)
 
@@ -514,9 +521,13 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		} else {
 			// Data set
 			var data []DecodedField
+			dataFlowSet := new(DataFlowSet)
 			data, err = d.decodeData(tr)
 			if err == nil {
-				msg.DataSets = append(msg.DataSets, data)
+				dataFlowSet.DataSets = append(dataFlowSet.DataSets, data)
+				dataFlowSet.SetHeader = *setHeader
+
+				//msg.DataSets = append(msg.DataSets, data)
 			}
 		}
 	}
