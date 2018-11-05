@@ -31,7 +31,6 @@ func (t *IPFixMirror) shutdown() {
 
 }
 
-
 func (t *IPFixMirror) Run() {
 	go func() {
 		for {
@@ -40,6 +39,7 @@ func (t *IPFixMirror) Run() {
 			cfgMutex.Lock()
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
 				cfgMutex.Unlock()
+				t.Logger.Printf("Can not find agent cach, %s. ",sMsg.AgentID)
 				continue
 			}
 			ec := mirrorMaps[sMsg.AgentID]

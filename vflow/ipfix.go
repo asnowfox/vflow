@@ -37,13 +37,13 @@ import (
 
 // IPFIX represents IPFIX collector
 type IPFIX struct {
-	port    int
-	addr    string
-	workers int
-	stop    bool
-	stats   IPFIXStats
+	port       int
+	addr       string
+	workers    int
+	stop       bool
+	stats      IPFIXStats
 	flowMirror *mirror.IPFixMirror
-	pool    chan chan struct{}
+	pool       chan chan struct{}
 }
 
 // IPFIXUDPMsg represents IPFIX UDP data
@@ -83,11 +83,11 @@ var (
 // NewIPFIX constructs IPFIX
 func NewIPFIX(flowMirror *mirror.IPFixMirror) *IPFIX {
 	return &IPFIX{
-		port:    opts.IPFIXPort,
-		addr:    opts.IPFIXAddr,
-		workers: opts.IPFIXWorkers,
+		port:       opts.IPFIXPort,
+		addr:       opts.IPFIXAddr,
+		workers:    opts.IPFIXWorkers,
 		flowMirror: flowMirror,
-		pool:    make(chan chan struct{}, maxWorkers),
+		pool:       make(chan chan struct{}, maxWorkers),
 	}
 }
 
@@ -167,17 +167,14 @@ func (i *IPFIX) shutdown() {
 		logger.Println("ipfix disabled")
 		return
 	}
-
 	// stop reading from UDP listener
 	i.stop = true
 	logger.Println("stopping ipfix service gracefully ...")
 	time.Sleep(1 * time.Second)
-
 	// dump the templates to storage
 	if err := mCache.Dump(opts.IPFIXTplCacheFile); err != nil {
 		logger.Println("couldn't not dump template", err)
 	}
-
 	// logging and close UDP channel
 	logger.Println("ipfix has been shutdown")
 	close(ipfixUDPCh)
@@ -196,7 +193,6 @@ func (i *IPFIX) ipfixWorker(wQuit chan struct{}) {
 
 LOOP:
 	for {
-
 		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 		buf.Reset()
 
@@ -236,18 +232,16 @@ LOOP:
 		//TODO IPFIXMESSAGE RECEIVE
 		if i.flowMirror != nil {
 			i.flowMirror.ReceiveMessage(decodedMsg)
-		}else{
+		} else {
 			logger.Printf("flow mirror is nil")
 		}
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
 		if decodedMsg.DataFlowSets != nil {
-			for _,e := range decodedMsg.DataFlowSets {
-
-
+			for _, e := range decodedMsg.DataFlowSets {
 				if len(e.DataSets) > 0 {
-					b, err = decodedMsg.JSONMarshal(buf,e.DataSets)
+					b, err = decodedMsg.JSONMarshal(buf, e.DataSets)
 					if err != nil {
 						logger.Println(err)
 						continue
@@ -258,15 +252,12 @@ LOOP:
 					default:
 					}
 
-					//if opts.Verbose {
-					//	logger.Println(string(b))
-					//}
+					if opts.Verbose {
+						logger.Println(string(b))
+					}
 				}
 			}
-			}
-
-
-
+		}
 	}
 }
 
