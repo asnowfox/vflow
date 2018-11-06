@@ -198,7 +198,7 @@ LOOP:
 		}
 		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {
-			logger.Println(err)
+			logger.Println("decode data error %s,%s",msg.raddr.IP.String(),err.Error())
 			if decodedMsg == nil {
 				continue
 			}
