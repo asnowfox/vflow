@@ -101,7 +101,7 @@ func writeTemplate(buf *bytes.Buffer, TemplaRecord TemplateRecord) {
 		}
 	} else if TemplaRecord.SetId == 1{
 		binary.Write(buf, binary.BigEndian, uint16(TemplaRecord.SetId))
-		binary.Write(buf, binary.BigEndian, uint16(4+4+4*TemplaRecord.ScopeFieldCount)) //length
+		binary.Write(buf, binary.BigEndian, uint16(4 + 4 + 2 + 4*len(TemplaRecord.ScopeFieldSpecifiers) + 4*len(TemplaRecord.FieldSpecifiers))) //length
 		binary.Write(buf, binary.BigEndian, TemplaRecord.Header.TemplateID)
 		binary.Write(buf, binary.BigEndian, TemplaRecord.Header.OptionScopeLen)
 		binary.Write(buf, binary.BigEndian, TemplaRecord.Header.OptionLen)
