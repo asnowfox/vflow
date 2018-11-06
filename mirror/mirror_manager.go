@@ -116,14 +116,14 @@ func  buildMap() {
 }
 
 func createRawPacket(srcAddress string, srcPort int,
-	dstAddress string, dstPort int, data []byte) []byte {
+	dstAddress string, dstPort int, data []byte) []byte{
 	ipHLen := IPv4HLen
 	udp := UDP{srcPort, dstPort, 0, 0}
 	udpHdr := udp.Marshal()
 
 	ip := NewIPv4HeaderTpl(UDPProto)
 	ipHdr := ip.Marshal()
-	payload := make([]byte, 1500)
+	payload := make([]byte, ipHLen+8+len(data))
 	udp.SetLen(udpHdr, len(data))
 
 	ip.SetAddrs(ipHdr, net.ParseIP(srcAddress), net.ParseIP(dstAddress))
@@ -131,7 +131,7 @@ func createRawPacket(srcAddress string, srcPort int,
 	copy(payload[0:ipHLen], ipHdr)
 	copy(payload[ipHLen:ipHLen+8], udpHdr)
 	copy(payload[ipHLen+8:], data)
-	return payload[:ipHLen+8+len(data)]
+	return payload
 }
 
 

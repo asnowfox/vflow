@@ -71,6 +71,7 @@ type TemplateFieldSpecifier struct {
 
 // TemplateRecord represents template fields
 type TemplateRecord struct {
+	SetId                uint16
 	TemplateID           uint16
 	FieldCount           uint16
 	FieldSpecifiers      []TemplateFieldSpecifier
@@ -451,13 +452,16 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			tr := TemplateRecord{}
 			if setId == 0 {
 				err = tr.unmarshal(d.reader)
+				tr.SetId = 0
 			} else {
 				err = tr.unmarshalOpts(d.reader)
+				tr.SetId = 1
 			}
 			if err == nil {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 				msg.TemplateRecords = append(msg.TemplateRecords, tr)
-				fmt.Printf("after set %s msg's templatRecord size is %d\n",msg.AgentID, len(msg.TemplateRecords))
+				fmt.Printf("after set %s, setId is %d, msg's templatRecord size is %d\n",msg.AgentID,
+					setId,len(msg.TemplateRecords))
 			}else{
 				fmt.Printf("unable unmarshal %s's template record.\n",msg.AgentID)
 			}
