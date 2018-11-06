@@ -72,7 +72,8 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
 	for _, template := range originalMsg.TemplateRecords {
-		fmt.Printf("write template record template id is %d, field count is %d.\n", template.TemplateID, template.FieldCount)
+		fmt.Printf("write template record template id is %d, field count is %d.\n",
+			template.Header.TemplateID, template.Header.FieldCount)
 		writeTemplate(buf, template)
 	}
 	for _, flowSet := range DataFlowSets {
@@ -89,21 +90,30 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 }
 
 func writeTemplate(buf *bytes.Buffer, TemplaRecord TemplateRecord) {
-	if TemplaRecord.FieldCount > 0 {
+	if TemplaRecord.Header.FieldCount > 0 && TemplaRecord.SetId == 0 {
 		binary.Write(buf, binary.BigEndian, uint16(TemplaRecord.SetId))
-		binary.Write(buf, binary.BigEndian, uint16(4+4+4*TemplaRecord.FieldCount))
-		binary.Write(buf, binary.BigEndian, TemplaRecord.TemplateID)
-		binary.Write(buf, binary.BigEndian, TemplaRecord.FieldCount)
+		binary.Write(buf, binary.BigEndian, uint16(4+4+4*TemplaRecord.Header.FieldCount))
+		binary.Write(buf, binary.BigEndian, TemplaRecord.Header.TemplateID)
+		binary.Write(buf, binary.BigEndian, TemplaRecord.Header.FieldCount)
 		for _, spec := range TemplaRecord.FieldSpecifiers {
 			binary.Write(buf, binary.BigEndian, spec.ElementID)
 			binary.Write(buf, binary.BigEndian, spec.Length)
 		}
-		if TemplaRecord.ScopeFieldCount > 0 {
-			for _, spec1 := range TemplaRecord.ScopeFieldSpecifiers {
-				binary.Write(buf, binary.BigEndian, spec1.ElementID)
-				binary.Write(buf, binary.BigEndian, spec1.Length)
-			}
+	} else if TemplaRecord.SetId == 1{
+		binary.Write(buf, binary.BigEndian, uint16(TemplaRecord.SetId))
+		binary.Write(buf, binary.BigEndian, uint16(4+4+4*TemplaRecord.ScopeFieldCount)) //length
+		binary.Write(buf, binary.BigEndian, TemplaRecord.Header.TemplateID)
+		binary.Write(buf, binary.BigEndian, TemplaRecord.Header.OptionScopeLen)
+		binary.Write(buf, binary.BigEndian, TemplaRecord.Header.OptionLen)
+		for _,sfs := range TemplaRecord.ScopeFieldSpecifiers {
+			binary.Write(buf,binary.BigEndian,sfs.ElementID)
+			binary.Write(buf,binary.BigEndian,sfs.Length)
 		}
+		for _, spec := range TemplaRecord.FieldSpecifiers {
+			binary.Write(buf, binary.BigEndian, spec.ElementID)
+			binary.Write(buf, binary.BigEndian, spec.Length)
+		}
+
 	} else {
 		fmt.Printf("template record's Field count is 0\n")
 	}

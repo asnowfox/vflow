@@ -71,9 +71,10 @@ type TemplateFieldSpecifier struct {
 
 // TemplateRecord represents template fields
 type TemplateRecord struct {
+	Header 				 TemplateHeader
 	SetId                uint16
-	TemplateID           uint16
-	FieldCount           uint16
+	//TemplateID           uint16
+	//FieldCount           uint16
 	FieldSpecifiers      []TemplateFieldSpecifier
 	ScopeFieldCount      uint16
 	ScopeFieldSpecifiers []TemplateFieldSpecifier
@@ -267,8 +268,7 @@ func (tr *TemplateRecord) unmarshal(r *reader.Reader) error {
 	if err := th.unmarshal(r); err != nil {
 		return err
 	}
-	tr.TemplateID = th.TemplateID
-	tr.FieldCount = th.FieldCount
+	tr.Header = th
 	//fmt.Printf("template id is %d, field count is %d\r\n",tr.TemplateID,tr.FieldCount)
 	for i := th.FieldCount; i > 0; i-- {
 		if err := tf.unmarshal(r); err != nil {
@@ -306,7 +306,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 	if err := th.unmarshalOpts(r); err != nil {
 		return err
 	}
-	tr.TemplateID = th.TemplateID
+	tr.Header = th
 
 	for i := th.OptionScopeLen / 4; i > 0; i-- {
 		if err := tf.unmarshal(r); err != nil {
@@ -321,6 +321,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 		}
 		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
+
 	return nil
 }
 
@@ -458,7 +459,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 				tr.SetId = 1
 			}
 			if err == nil {
-				mem.insert(tr.TemplateID, d.raddr, tr)
+				mem.insert(tr.Header.TemplateID, d.raddr, tr)
 				msg.TemplateRecords = append(msg.TemplateRecords, tr)
 				fmt.Printf("after set %s, setId is %d, msg's templatRecord size is %d\n",msg.AgentID,
 					setId,len(msg.TemplateRecords))
