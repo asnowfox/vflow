@@ -44,12 +44,12 @@ type Config struct {
 	Source string `yaml:"source"`
 	Rules  []Rule `yaml:"rules"`
 }
-
-type Rule struct {
-	InPort      int32 `yaml:"inport"`
-	OutPort     int32 `yaml:"outport"`
-	DistAddress string `yaml:"distAddress"`
-}
+//
+//type Rule struct {
+//	InPort      int32 `yaml:"inport"`
+//	OutPort     int32 `yaml:"outport"`
+//	DistAddress string `yaml:"distAddress"`
+//}
 
 func Init(mirrorCfg string,log *log.Logger) error{
 	logger = log
