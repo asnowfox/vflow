@@ -32,7 +32,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"github.com/Shopify/sarama"
 	"gopkg.in/yaml.v2"
 )
@@ -127,23 +126,43 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 	k.logger.Printf("start producer: Kafka, brokers: %+v, topic: %s\n",
 		k.config.Brokers, topic)
 
+	go func() {
+		for err := range k.producer.Errors() {
+			k.logger.Println(err)
+			str := string(msg[:])
+			k.logger.Println(str)
+			*ec++
+		}
+	}()
 	for {
 		msg, ok = <-mCh
 		if !ok {
 			break
 		}
 
-		select {
-		case k.producer.Input() <- &sarama.ProducerMessage{
+		//k.producer.Input() <- &sarama.ProducerMessage{
+		//	Topic: topic,
+		//	Value: sarama.ByteEncoder(msg),
+		//}
+		//err := <-k.producer.Errors()
+		//if err != nil {
+		//	k.logger.Println(err)
+		//	str := string(msg[:])
+		//	k.logger.Println(str)
+		//	*ec++
+		//}
+		//time.Sleep(1*time.Nanosecond)
+		kMsg := &sarama.ProducerMessage{
 			Topic: topic,
 			Value: sarama.ByteEncoder(msg),
-		}:
-		case err := <-k.producer.Errors():
-			k.logger.Println(err)
-			str := string(msg[:])
-			k.logger.Println(str)
-			*ec++
 		}
+		select {
+		case k.producer.Input() <- kMsg:
+
+		//default:
+		//	time.Sleep(1*time.Nanosecond)
+		}
+
 	}
 
 	k.producer.Close()
