@@ -37,9 +37,9 @@ func (t *Netflowv9Mirror) Run() {
 		for {
 			sMsg := <-netflowChannel
 			atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
-			cfgMutex.Lock()
+			cfgMutex.RLock()
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
-				cfgMutex.Unlock()
+				cfgMutex.RUnlock()
 				continue
 			}
 			ec := mirrorMaps[sMsg.AgentID]
@@ -85,7 +85,7 @@ func (t *Netflowv9Mirror) Run() {
 				}
 
 			}//end rule for
-			cfgMutex.Unlock()
+			cfgMutex.RUnlock()
 		}// end loop
 	}()
 }
