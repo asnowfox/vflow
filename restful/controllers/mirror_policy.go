@@ -8,7 +8,7 @@ import (
 )
 
 // Operations about object
-type MirrorController struct {
+type PolicyController struct {
 	beego.Controller
 	MirrorService mirror.Netflowv9Mirror
 }
@@ -19,20 +19,20 @@ type MirrorController struct {
 // @Success 200 {object} models.Object
 // @Failure 403 :objectId is empty
 // @router /:objectId [get]
-func (o *MirrorController) Get() {
-	configs := mirror.GetConfig()
-	sourceId := o.GetString("sourceId")
-	fmt.Printf("call get method of mirror sourceId is %s\r\n", sourceId)
-	if sourceId != "" {
-		for _, e := range configs {
-			if e.Source == sourceId {
+func (o *PolicyController) Get() {
+	policies := mirror.GetPolicies()
+	policyId := o.GetString("policyId")
+	fmt.Printf("call get method of policy policyId is %s\r\n", policyId)
+	if policyId != "" {
+		for _, e := range policies {
+			if e.PolicyId == policyId {
 				o.Data["json"] = e
 				o.ServeJSON()
 				return
 			}
 		}
 	} else {
-		configs := mirror.GetConfig()
+		configs := mirror.GetPolicies()
 		fmt.Printf("serve all configs\r\n")
 		o.Data["json"] = configs
 		o.ServeJSON()
@@ -43,13 +43,13 @@ func (o *MirrorController) Get() {
 	return
 }
 
-func (o *MirrorController) Delete() {
-	sourceId := o.GetString("sourceId")
-	fmt.Printf("call delete method of mirror controller, sourceId is %s\r\n", sourceId)
+func (o *PolicyController) Delete() {
+	policyId := o.GetString("policyId")
+	fmt.Printf("call delete method of mirror controller, sourceId is %s\r\n", policyId)
 
 	index := -1
-	if sourceId != "" {
-		index = mirror.DeleteConfig(sourceId)
+	if policyId != "" {
+		index = mirror.DeletePolicy(policyId)
 	}
 	json := map[string]interface{}{}
 	json["result"] = index
@@ -64,8 +64,8 @@ func (o *MirrorController) Delete() {
 // @Success 200 {string} models.Object.Id
 // @Failure 403 body is empty
 // @router / [post]
-func (o *MirrorController) Post() {
-	var ob mirror.Config
+func (o *PolicyController) Post() {
+	var ob mirror.Policy
 
 	fmt.Printf("add post message is %s, bytes length is %d.\n",
 		string(o.Ctx.Input.RequestBody), len(o.Ctx.Input.RequestBody))
@@ -78,7 +78,7 @@ func (o *MirrorController) Post() {
 		o.ServeJSON()
 		return
 	}
-	index,msg:=mirror.AddConfig(ob)
+	index,msg:=mirror.AddPolicy(ob)
 
 	json["result"] = index
 	json["message"] = msg

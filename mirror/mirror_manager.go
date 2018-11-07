@@ -17,9 +17,8 @@ import (
 var (
 	Netflowv9MirrorInstance *Netflowv9Mirror
 	IPFixMirrorInstance *IPFixMirror
-	mirrorConfigs []Config
 	logger *log.Logger
-	mirrorMaps map[string]Config
+	mirrorMaps map[string][]Rule
 	rawSockets map[string]Conn
 	mirrorCfgFile string
 	seqMutex       sync.Mutex
@@ -39,28 +38,10 @@ type FlowMirrorStatus struct {
 	RawErrorCount        uint64
 }
 
-
-type Config struct {
-	Source string `yaml:"source"`
-	Rules  []Rule `yaml:"rules"`
-}
-//
-//type Rule struct {
-//	InPort      int32 `yaml:"inport"`
-//	OutPort     int32 `yaml:"outport"`
-//	DistAddress string `yaml:"distAddress"`
-//}
-
 func Init(mirrorCfg string,log *log.Logger) error{
 	logger = log
-	b, err := ioutil.ReadFile(mirrorCfg)
-	if err != nil {
-		logger.Printf("No Mirror config file is defined. \n")
-		fmt.Printf("No Mirror config file is defined. \n")
-		//os.Exit(-1)
-		return  err
-	}
-	err = yaml.Unmarshal(b, &mirrorConfigs)
+
+	err := LoadPolicy(mirrorCfg)
 	if err != nil {
 		logger.Printf("Mirror config file is worong, exit! \n")
 		fmt.Printf("Mirror config file is worong,exit! \n")
@@ -68,7 +49,7 @@ func Init(mirrorCfg string,log *log.Logger) error{
 		return  err
 	}
 	mirrorCfgFile = mirrorCfg
-	mirrorMaps = make(map[string]Config)
+	mirrorMaps = make(map[string][]Rule)
 	rawSockets = make(map[string]Conn)
 	buildMap()
 	return nil
@@ -95,9 +76,14 @@ func parsePort(value interface{}) uint32{
 
 
 func  buildMap() {
-	for _, ec := range mirrorConfigs {
-		fmt.Printf("Router %10s add config rules count is %d\n",ec.Source, len(ec.Rules))
+	mirrorMaps = make(map[string][]Rule)
+	for _, ec := range policyConfigs {
+		//fmt.Printf("Router %10s add config rules count is %d\n",ec.Source, len(ec.Rules))
 		for _,r := range ec.Rules {
+			if _, ok :=mirrorMaps[r.Source]; !ok {
+				mirrorMaps[r.Source] = make([]Rule,0)
+			}
+			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
 			fmt.Printf("   rule: input port %6d, dst port %6d ->  %s \n",r.InPort,r.OutPort,r.DistAddress)
 			remoteAddr := strings.Split(r.DistAddress,":")[0]
 			if _, ok :=rawSockets[remoteAddr]; !ok {
@@ -105,13 +91,11 @@ func  buildMap() {
 				if err != nil {
 					logger.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
 					fmt.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
-
 				}else{
 					rawSockets[remoteAddr] = connect
 				}
 			}
 		}
-		mirrorMaps[ec.Source] = ec
 	}
 }
 
@@ -151,53 +135,56 @@ func NewIPFixMirror() (*IPFixMirror, error) {
 
 
 
-func GetConfig() ([]Config) {
-	return mirrorConfigs
+func GetPolicies() ([]Policy) {
+	return policyConfigs
 }
 
-func AddConfig(mirrorConfig Config) (int,string) {
+func AddPolicy(policy Policy) (int,string) {
 	cfgMutex.Lock()
-	logger.Printf("add config sourceId %s, configs %d",mirrorConfig.Source, len(mirrorConfig.Rules))
-	if _, ok := mirrorMaps[mirrorConfig.Source]; ok {
-		return -1,"Source existed!"
-	}
-	mirrorConfigs = append(mirrorConfigs, mirrorConfig)
+	logger.Printf("add config sourceId %s, configs %d",policy.PolicyId, len(policy.Rules))
+
+	policyConfigs = append(policyConfigs, policy)
+	//mirrorConfigs = append(mirrorConfigs, mirrorConfig)
 	buildMap()
 	defer cfgMutex.Unlock()
 	saveConfigsTofile()
 	return 0,"Add succeed!"
 }
 
-func AddRule(agentIP string, rule Rule) (int,string) {
+func AddRule(policyId string, rule Rule) (int,string) {
 	cfgMutex.Lock()
-	logger.Printf("add rule sourceId %s, rule dist %s.",agentIP, rule.DistAddress)
-
-	if _, ok := mirrorMaps[agentIP]; !ok {
-		logger.Printf("can not find source of id %s.\n", agentIP)
-		return -1,"no resource of "+agentIP
-	}
-
-	for index,config := range mirrorConfigs {
-		if config.Source == agentIP {
-			mirrorConfigs[index].Rules = append(config.Rules, rule)
+	logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.DistAddress)
+	curLen := 0
+	for index,config := range policyConfigs {
+		if config.PolicyId == policyId {
+			policyConfigs[index].Rules = append(config.Rules, rule)
 		}
+		logger.Printf("current rule size is %d.\n", len(policyConfigs[index].Rules))
+		curLen = len(policyConfigs[index].Rules)
 	}
 
 	buildMap()
-	logger.Printf("current rule size is %d.\n", len(mirrorMaps[agentIP].Rules))
+
 	defer cfgMutex.Unlock()
 
 	saveConfigsTofile()
-	return len(mirrorMaps[agentIP].Rules),"add rule succeed."
+	return curLen,"add rule succeed."
 }
 
-func DeleteRule(sourceId string, rule Rule) (int) {
+func DeleteRule(policyId string, rule Rule) (int) {
 	cfgMutex.Lock()
-	if _, ok := mirrorMaps[sourceId]; !ok {
+	var pid = -1
+	for i, e := range policyConfigs {
+		if e.PolicyId == policyId {
+			pid = i
+			break
+		}
+	}
+	if pid == -1 {
 		return -1
 	}
 	var index = -1
-	for i, r := range mirrorMaps[sourceId].Rules {
+	for i, r := range policyConfigs[pid].Rules {
 		if r.OutPort == rule.OutPort &&
 			r.InPort == rule.InPort &&
 			r.DistAddress == rule.DistAddress {
@@ -205,8 +192,8 @@ func DeleteRule(sourceId string, rule Rule) (int) {
 		}
 	}
 	if index != -1 {
-		copy(mirrorMaps[sourceId].Rules, append(mirrorMaps[sourceId].Rules[:index],
-			mirrorMaps[sourceId].Rules[index+1:]...))
+		copy(policyConfigs[pid].Rules, append(policyConfigs[pid].Rules[:index],
+			policyConfigs[pid].Rules[index+1:]...))
 		buildMap()
 	}
 	recycleClients()
@@ -216,19 +203,19 @@ func DeleteRule(sourceId string, rule Rule) (int) {
 	return index
 }
 
-func DeleteConfig(agentIp string) (int) {
+func DeletePolicy(policyId string) (int) {
 	cfgMutex.Lock()
 	var index = -1
-	for i, e := range mirrorConfigs {
-		if e.Source == agentIp {
+	for i, e := range policyConfigs {
+		if e.PolicyId == policyId {
 			index = i
 			break
 		}
 	}
-	logger.Printf("delete %s find index %d ", agentIp, index)
+	logger.Printf("delete %s find index %d ", policyId ,index)
 	if index != -1 {
-		mirrorConfigs = append(mirrorConfigs[:index],
-			mirrorConfigs[index+1:]...)
+		policyConfigs = append(policyConfigs[:index],
+			policyConfigs[index+1:]...)
 		buildMap()
 	}
 	recycleClients()
@@ -237,7 +224,7 @@ func DeleteConfig(agentIp string) (int) {
 	return index
 }
 func saveConfigsTofile() {
-	b, err := yaml.Marshal(mirrorConfigs)
+	b, err := yaml.Marshal(policyConfigs)
 	if err == nil {
 		ioutil.WriteFile(mirrorCfgFile, b, 0x777)
 	}
@@ -245,8 +232,8 @@ func saveConfigsTofile() {
 
 func  recycleClients() {
 	usedClient := make(map[string]string)
-	for _, mirrorConfig := range mirrorConfigs {
-		for _, ecr := range mirrorConfig.Rules {
+	for _, policy := range policyConfigs {
+		for _, ecr := range policy.Rules {
 			//找到在用的
 			if _, ok := rawSockets[ecr.DistAddress]; ok {
 				dstAddrs := strings.Split(ecr.DistAddress, ":")
@@ -256,7 +243,7 @@ func  recycleClients() {
 		}
 	}
 
-	for _, mirrorConfig := range mirrorConfigs {
+	for _, mirrorConfig := range policyConfigs {
 		for _, ecr := range mirrorConfig.Rules {
 			//在用的不存在了
 			dstAddrs := strings.Split(ecr.DistAddress, ":")
