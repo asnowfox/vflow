@@ -20,6 +20,7 @@ var (
 	logger *log.Logger
 	mirrorMaps map[string][]Rule
 	rawSockets map[string]Conn
+	policyConfigs []Policy
 	mirrorCfgFile string
 	seqMutex       sync.Mutex
 	cfgMutex       sync.Mutex

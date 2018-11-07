@@ -11,9 +11,7 @@ type Policy struct {
 	PolicyId string `yaml:"policyId"`
 	Rules  []Rule `yaml:"rules"`
 }
-var(
-	policyConfigs []Policy
-)
+
 
 type Rule struct {
 	Source      string `yaml:"source""`
