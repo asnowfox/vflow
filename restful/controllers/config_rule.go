@@ -23,7 +23,7 @@ func (o *RuleController) Delete() {
 
 	index := -1
 	if sourceId != "" {
-		index = mirror.DeleteRule(sourceId,mirror.Rule{inport,outport,dstAddress})
+		index = mirror.DeleteRule(sourceId,mirror.Rule{sourceId,inport,outport,dstAddress})
 	}
 
 	json := map[string]interface{}{}
