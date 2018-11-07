@@ -43,7 +43,7 @@ func (t *Netflowv9Mirror) Run() {
 				continue
 			}
 			ec := mirrorMaps[sMsg.AgentID]
-			for _, mRule := range ec.Rules {
+			for _, mRule := range ec {
 				var msgFlowSets []netflow9.DataFlowSet
 				for _,flowSet := range sMsg.DataFlowSets {
 					flowDataSet := t.filterFlowDataSet(mRule,flowSet)

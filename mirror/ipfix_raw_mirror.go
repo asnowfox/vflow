@@ -43,7 +43,7 @@ func (t *IPFixMirror) Run() {
 				continue
 			}
 			ec := mirrorMaps[sMsg.AgentID]
-			for _, mRule := range ec.Rules {
+			for _, mRule := range ec{
 				var msgFlowSets []ipfix.DataFlowSet
 				for _,flowSet := range sMsg.DataFlowSets {
 					flowDataSet := t.filterFlowDataSet(mRule,flowSet)
