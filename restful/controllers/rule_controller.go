@@ -41,7 +41,7 @@ func (o *RuleController) Delete() {
 // @router / [post]
 func (o *RuleController) Post() {
 	var ob mirror.Rule
-	sourceId := o.GetString("sourceId")
+	policyId := o.GetString("policyId")
 	err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 	json := map[string]interface{}{}
 	if err != nil{
@@ -51,7 +51,7 @@ func (o *RuleController) Post() {
 		o.ServeJSON()
 		return
 	}
-	index,msg := mirror.AddRule(sourceId,ob)
+	index,msg := mirror.AddRule(policyId,ob)
 
 	json["result"] = index
 	json["message"] = msg
