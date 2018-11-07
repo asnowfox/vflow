@@ -15,18 +15,24 @@ type RuleController struct {
 
 
 func (o *RuleController) Delete() {
-	sourceId := o.GetString("sourceId")
-	inport,_ := o.GetInt32("inport")
-	outport,_ := o.GetInt32("outport")
-	dstAddress := o.GetString("dstAddress")
-	fmt.Printf("call delete method of mirror controller, sourceId is %s\r\n", sourceId)
+	var ob mirror.Rule
+	policyId := o.GetString("policyId")
+	err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
+	json := map[string]interface{}{}
+	if err != nil{
+		json["result"] = -1
+		json["message"] = "parse json error"
+		o.Data["json"] = json
+		o.ServeJSON()
+		return
+	}
+	fmt.Printf("call delete method of mirror controller, sourceId is %s\r\n", policyId)
 
 	index := -1
-	if sourceId != "" {
-		index = mirror.DeleteRule(sourceId,mirror.Rule{sourceId,inport,outport,dstAddress})
+	if policyId != "" {
+		index = mirror.DeleteRule(policyId,ob)
 	}
 
-	json := map[string]interface{}{}
 	json["result"] = index
 	o.Data["json"] = json
 	o.ServeJSON()
