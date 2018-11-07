@@ -9,14 +9,14 @@ import (
 
 type Policy struct {
 	PolicyId string `yaml:"policyId"`
-	Policies  []Rule `yaml:"rules"`
+	Rules  []Rule `yaml:"policies"`
 }
 var(
 	policyConfigs []Policy
 )
 
 type Rule struct {
-	Source      string `source`
+	Source      string `yaml:"source""`
 	InPort      int32 `yaml:"inport"`
 	OutPort     int32 `yaml:"outport"`
 	DistAddress string `yaml:"distAddress"`
