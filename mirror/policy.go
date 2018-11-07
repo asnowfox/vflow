@@ -9,7 +9,7 @@ import (
 
 type Policy struct {
 	PolicyId string `yaml:"policyId"`
-	Rules  []Rule `yaml:"policies"`
+	Rules  []Rule `yaml:"rules"`
 }
 var(
 	policyConfigs []Policy
@@ -36,6 +36,5 @@ func LoadPolicy(mirrorCfg string) error{
 		os.Exit(-1)
 		return  err
 	}
-	fmt.Printf("policy size is %d", len(policyConfigs))
 	return nil
 }
