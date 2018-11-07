@@ -13,19 +13,6 @@ func TestReadConfig(t *testing.T) {
 
 	Init("../scripts/forward.conf",log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime))
 
-	//cfg := Config{}
-	//cfg.Source = "192.168.0.1"
-	//rule := Rule{}
-	//rule.DistAddress = "10.0.0.1:2222"
-	//rule.InPort = -1
-	//rule.OutPort = -1
-	//cfg.Rules = append(cfg.Rules, rule)
-	//AddConfig(cfg)
-	//
-	////nfv9Mirror.DeleteConfig("192.168.0.1")
-	//rule.OutPort = 1
-	//
-	//AddRule("192.168.0.1",rule)
 }
 
 func TestSendUdp(t *testing.T) {
