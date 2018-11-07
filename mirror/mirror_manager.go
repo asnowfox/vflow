@@ -78,7 +78,7 @@ func parsePort(value interface{}) uint32{
 func  buildMap() {
 	mirrorMaps = make(map[string][]Rule)
 	for _, ec := range policyConfigs {
-		//fmt.Printf("Router %10s add config rules count is %d\n",ec.Source, len(ec.Rules))
+		fmt.Printf("Policy id %10s add config rules count is %d\n",ec.PolicyId, len(ec.Rules))
 		for _,r := range ec.Rules {
 			if _, ok :=mirrorMaps[r.Source]; !ok {
 				mirrorMaps[r.Source] = make([]Rule,0)
