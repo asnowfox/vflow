@@ -11,7 +11,7 @@ import (
 	"../netflow/v9"
 	"../ipfix"
 	"encoding/binary"
-	"gopkg.in/yaml.v2"
+	"encoding/json"
 )
 
 var (
