@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"strings"
+	"errors"
 )
 
 type PacketStatistics struct {
@@ -19,7 +20,7 @@ func NewPacketStatistics() (*PacketStatistics) {
 	}
 }
 
-func (i *PacketStatistics) getLost(agentId string) uint32 {
+func (i *PacketStatistics) getLost(agentId string) (uint32,error) {
 	var cnt uint32 = 0
 	found := false
 	for key,value := range i.IdCurrentLostMap {
@@ -29,9 +30,9 @@ func (i *PacketStatistics) getLost(agentId string) uint32 {
 		}
 	}
 	if !found{
-		return -1
+		return 0,errors.New("can not find agent")
 	}
-	return cnt
+	return cnt,nil
 }
 
 func (i *PacketStatistics) recordSeq(agentId string, source uint32, seq uint32) {
