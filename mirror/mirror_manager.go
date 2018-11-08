@@ -85,7 +85,7 @@ func  buildMap() {
 				mirrorMaps[r.Source] = make([]Rule,0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
-			fmt.Printf("   rule: input port %6d, dst port %6d ->  %s \n",r.InPort,r.OutPort,r.DistAddress)
+			fmt.Printf("   source:%15s, rule: inputPort %5d, outputPort %5d ->  %s \n",r.Source,r.InPort,r.OutPort,r.DistAddress)
 			remoteAddr := strings.Split(r.DistAddress,":")[0]
 			if _, ok :=rawSockets[remoteAddr]; !ok {
 				connect,err := NewRawConn(net.ParseIP(remoteAddr))
