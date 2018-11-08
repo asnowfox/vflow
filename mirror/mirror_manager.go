@@ -154,27 +154,42 @@ func AddPolicy(policy Policy) (int,string) {
 
 func AddRule(policyId string, rule Rule) (int,string) {
 	cfgMutex.Lock()
+	defer cfgMutex.Unlock()
 	logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.DistAddress)
 	curLen := 0
 	for index,config := range policyConfigs {
 		if config.PolicyId == policyId {
+
+			for _,r := range config.Rules {
+				if isSameRule(rule,r){
+					return -1,"already has same rule."
+				}
+			}
+
 			policyConfigs[index].Rules = append(config.Rules, rule)
 			logger.Printf("current rule size is %d.\n", len(policyConfigs[index].Rules))
 			curLen = len(policyConfigs[index].Rules)
 			break
 		}
 	}
-
 	if curLen == 0{
 		return -1,"no policy id "+policyId
 	}
-
 	buildMap()
-
-	defer cfgMutex.Unlock()
-
 	saveConfigsTofile()
 	return curLen,"add rule succeed."
+}
+
+func isSameRule(r1 Rule,r2 Rule) bool{
+	if r1.Source == r2.Source &&
+		r1.DistAddress == r2.DistAddress &&
+		r1.InPort == r2.InPort &&
+		r1.OutPort == r2.OutPort{
+			return true
+	}
+
+
+	return false
 }
 
 func DeleteRule(policyId string, rule Rule) (int,string) {
