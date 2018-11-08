@@ -70,7 +70,7 @@ func (t *IPFixMirror) Run() {
 
 				rBytes := ipfix.Encode(sMsg, seq, msgFlowSets)
 
-				dstAddrs := strings.Split(mRule.DistAddress, ":")
+				dstAddrs := strings.Split(mRule.distAddress, ":")
 				dstAddr := dstAddrs[0]
 				dstPort, _ := strconv.Atoi(dstAddrs[1])
 
@@ -104,13 +104,13 @@ func (t *IPFixMirror) filterFlowDataSet(mRule Rule,flowSet ipfix.DataFlowSet)ipf
 			if id == InputId {
 				inputFound = true
 				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.InPort) || mRule.InPort == -1 {
+				if port == uint32(mRule.inPort) || mRule.inPort == -1 {
 					inputMatch = true
 				}
 			} else if id == OutputId {
 				outputFound = true
 				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.OutPort) ||  mRule.OutPort == -1 {
+				if port == uint32(mRule.outPort) ||  mRule.outPort == -1 {
 					outputMatch = true
 				}
 			}
