@@ -21,6 +21,6 @@ func Init(netflowv9 *vflow.NetflowV9) {
 	beego.Router("/rule", &controllers.RuleController{})
 
 	controller := &controllers.StatsController{}
-	controller.Init(*netflowv9)
+	controller.InitService(*netflowv9)
 	beego.Router("/stats",controller)
 }

@@ -13,7 +13,7 @@ type StatsController struct {
 	netflowv9 vflow.NetflowV9
 }
 
-func (o *StatsController) Init(netflowv9 vflow.NetflowV9){
+func (o *StatsController) InitService(netflowv9 vflow.NetflowV9){
 	o.netflowv9 = netflowv9
 }
 // @Title Get
