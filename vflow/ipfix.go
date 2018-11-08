@@ -125,20 +125,23 @@ func (i *IPFIX) run() {
 	})
 
 	go mirrorIPFIXDispatcher(ipfixMCh)
+	if mqEnabled {
+		go func() {
+			p := producer.NewProducer(opts.MQName)
 
-	go func() {
-		p := producer.NewProducer(opts.MQName)
+			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
+			p.MQErrorCount = &i.stats.MQErrorCount
+			p.Logger = logger
+			p.Chan = ipfixMQCh
+			p.Topic = opts.IPFIXTopic
 
-		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
-		p.MQErrorCount = &i.stats.MQErrorCount
-		p.Logger = logger
-		p.Chan = ipfixMQCh
-		p.Topic = opts.IPFIXTopic
-
-		if err := p.Run(); err != nil {
-			logger.Fatal(err)
-		}
-	}()
+			if err := p.Run(); err != nil {
+				logger.Fatal(err)
+			}
+		}()
+	}else{
+		logger.Printf("disable json mq transfer")
+	}
 
 	go func() {
 		if !opts.DynWorkers {
@@ -237,7 +240,7 @@ LOOP:
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
-		if decodedMsg.DataFlowSets != nil {
+		if decodedMsg.DataFlowSets != nil && mqEnabled {
 			for _, e := range decodedMsg.DataFlowSets {
 				if len(e.DataSets) > 0 {
 					b, err = decodedMsg.JSONMarshal(buf, e.DataSets)

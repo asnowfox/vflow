@@ -65,7 +65,6 @@ type NetflowV9Stats struct {
 var (
 	netflowV9UDPCh = make(chan NetflowV9UDPMsg, 1000)
 	netflowV9MQCh  = make(chan []byte, 1000)
-	mqEnabled = false
 	mCacheNF9      netflow9.MemCache
 	// ipfix udp payload pool
 	netflowV9Buffer = &sync.Pool{
@@ -113,8 +112,7 @@ func (i *NetflowV9) run() {
 	logger.Printf("netflow v9 is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 
 	mCacheNF9 = netflow9.GetCache(opts.NetflowV9TplCacheFile)
-	if opts.MQConfigFile != "none" {
-		mqEnabled = true
+	if mqEnabled {
 		go func() {
 			p := producer.NewProducer(opts.MQName)
 
@@ -129,8 +127,8 @@ func (i *NetflowV9) run() {
 			}
 		}()
 	}else{
-		mqEnabled = false
-		logger.Printf("disable json mq transfer")
+
+		logger.Printf("disable netflow v9 json mq transfer")
 	}
 
 

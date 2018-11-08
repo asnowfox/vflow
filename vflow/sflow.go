@@ -26,14 +26,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"net"
-	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
-
+	"../sflow"
 	"github.com/VerizonDigital/vflow/producer"
-	"github.com/VerizonDigital/vflow/sflow"
+	"path"
 )
 
 // SFUDPMsg represents sFlow UDP message
@@ -110,20 +109,22 @@ func (s *SFlow) run() {
 	}
 
 	logger.Printf("sFlow is running (UDP: listening on [::]:%d workers#: %d)", s.port, s.workers)
+	if mqEnabled{
+		go func() {
+			p := producer.NewProducer(opts.MQName)
 
-	go func() {
-		p := producer.NewProducer(opts.MQName)
+			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
+			p.MQErrorCount = &s.stats.MQErrorCount
+			p.Logger = logger
+			p.Chan = sFlowMQCh
+			p.Topic = opts.SFlowTopic
 
-		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
-		p.MQErrorCount = &s.stats.MQErrorCount
-		p.Logger = logger
-		p.Chan = sFlowMQCh
-		p.Topic = opts.SFlowTopic
+			if err := p.Run(); err != nil {
+				logger.Fatal(err)
+			}
+		}()
+	}
 
-		if err := p.Run(); err != nil {
-			logger.Fatal(err)
-		}
-	}()
 
 	go func() {
 		if !opts.DynWorkers {
@@ -201,12 +202,12 @@ LOOP:
 		if opts.Verbose {
 			logger.Println(string(b))
 		}
-
-		select {
-		case sFlowMQCh <- append([]byte{}, b...):
-		default:
+		if mqEnabled{
+			select {
+			case sFlowMQCh <- append([]byte{}, b...):
+			default:
+			}
 		}
-
 		sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 	}
 }

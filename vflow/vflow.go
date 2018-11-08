@@ -37,6 +37,7 @@ import (
 var (
 	opts   *Options
 	logger *log.Logger
+	mqEnabled = false
 )
 
 type proto interface {
@@ -51,6 +52,9 @@ func main() {
 	)
 
 	opts = GetOptions()
+	if opts.MQName != "none" {
+		mqEnabled = true
+	}
 	runtime.GOMAXPROCS(opts.GetCPU())
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	logger = opts.Logger
