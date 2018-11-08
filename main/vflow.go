@@ -30,10 +30,10 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
-	"./restful"
-	"./mirror"
-	"./vflow"
-	"./vlogger"
+	"../restful"
+	"../mirror"
+	"../vflow"
+	"../vlogger"
 )
 
 var (
