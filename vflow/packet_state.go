@@ -1,4 +1,4 @@
-package main
+package vflow
 
 import (
 	"fmt"
@@ -41,3 +41,4 @@ func (i *PacketStatistics) recordSeq(agentId string, source uint32, seq uint32) 
 	i.IdCurrentLostMap[key] = i.IdCurrentLostMap[key] + (seq - i.IdCurrentSeqMap[key] - 1)
 	i.IdCurrentSeqMap[key] = seq
 }
+

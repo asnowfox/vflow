@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-package main
+package vflow
 
 import (
 	"bytes"
@@ -31,6 +31,7 @@ import (
 	"time"
 	"../netflow/v9"
 	"../mirror"
+	"../vlogger"
 	"github.com/VerizonDigital/vflow/producer"
 	"path"
 )
@@ -69,6 +70,7 @@ var (
 	netflowV9UDPCh = make(chan NetflowV9UDPMsg, 1000)
 	netflowV9MQCh  = make(chan []byte, 1000)
 	mCacheNF9      netflow9.MemCache
+	NetflowInstance *NetflowV9
 	// ipfix udp payload pool
 	netflowV9Buffer = &sync.Pool{
 		New: func() interface{} {
@@ -88,19 +90,20 @@ func NewNetflowV9(exc *mirror.Netflowv9Mirror) *NetflowV9 {
 }
 
 func (i *NetflowV9) run() {
-	//TODO
+
 	// exit if the netflow v9 is disabled
 	if !opts.NetflowV9Enabled {
-		logger.Println("netflowv9 has been disabled")
+		vlogger.Logger.Println("netflowv9 has been disabled")
 		return
 	}
 	i.pktStat = *NewPacketStatistics()
+
 	hostPort := net.JoinHostPort(i.addr, strconv.Itoa(i.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
 
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-		logger.Fatal(err)
+		vlogger.Logger.Fatal(err)
 	}
 
 	atomic.AddInt32(&i.stats.Workers, int32(i.workers))
@@ -112,7 +115,7 @@ func (i *NetflowV9) run() {
 		}()
 	}
 
-	logger.Printf("netflow v9 is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
+	vlogger.Logger.Printf("netflow v9 is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 	i.stats.StartTime = time.Now().Unix()
 
 	mCacheNF9 = netflow9.GetCache(opts.NetflowV9TplCacheFile)
@@ -122,21 +125,21 @@ func (i *NetflowV9) run() {
 
 			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 			p.MQErrorCount = &i.stats.MQErrorCount
-			p.Logger = logger
+			p.Logger = vlogger.Logger
 			p.Chan = netflowV9MQCh
 			p.Topic = opts.NetflowV9Topic
 
 			if err := p.Run(); err != nil {
-				logger.Fatal(err)
+				vlogger.Logger.Fatal(err)
 			}
 		}()
 	}else{
 
-		logger.Printf("disable netflow v9 json mq transfer")
+		vlogger.Logger.Printf("disable netflow v9 json mq transfer")
 	}
 	go func() {
 		if !opts.DynWorkers {
-			logger.Println("netflow v9 dynamic worker disabled")
+			vlogger.Logger.Println("netflow v9 dynamic worker disabled")
 			return
 		}
 
@@ -158,22 +161,22 @@ func (i *NetflowV9) run() {
 func (i *NetflowV9) shutdown() {
 	// exit if the netflow v9 is disabled
 	if !opts.NetflowV9Enabled {
-		logger.Println("netflow v9 disabled")
+		vlogger.Logger.Println("netflow v9 disabled")
 		return
 	}
 
 	// stop reading from UDP listener
 	i.stop = true
-	logger.Println("stopping netflow v9 service gracefully ...")
+	vlogger.Logger.Println("stopping netflow v9 service gracefully ...")
 	time.Sleep(1 * time.Second)
 
 	// dump the templates to storage
 	if err := mCacheNF9.Dump(opts.NetflowV9TplCacheFile); err != nil {
-		logger.Println("couldn't not dump template", err)
+		vlogger.Logger.Println("couldn't not dump template", err)
 	}
 
 	// logging and close UDP channel
-	logger.Println("netflow v9 has been shutdown")
+	vlogger.Logger.Println("netflow v9 has been shutdown")
 	close(netflowV9UDPCh)
 }
 
@@ -202,7 +205,7 @@ LOOP:
 		}
 		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {
-			logger.Println("decode data error",msg.raddr.IP.String(),err.Error())
+			vlogger.Logger.Println("decode data error",msg.raddr.IP.String(),err.Error())
 			if decodedMsg == nil {
 				continue
 			}
@@ -217,7 +220,7 @@ LOOP:
 			for _, e := range decodedMsg.DataFlowSets {
 				b, err = decodedMsg.JSONMarshal(buf, e.DataSets)
 				if err != nil {
-					logger.Println(err)
+					vlogger.Logger.Println(err)
 					continue
 				}
 				select {
@@ -271,7 +274,7 @@ func (i *NetflowV9) dynWorkers() {
 
 			workers = int(atomic.LoadInt32(&i.stats.Workers))
 			if workers+newWorkers > maxWorkers {
-				logger.Println("netflow v9 :: max out workers")
+				vlogger.Logger.Println("netflow v9 :: max out workers")
 				continue
 			}
 
@@ -304,4 +307,8 @@ func (i *NetflowV9) dynWorkers() {
 			nSeq = 0
 		}
 	}
+}
+
+func NetflowPacketLoss(agentId string) uint32{
+	return NetflowInstance.pktStat.getLost(agentId)
 }

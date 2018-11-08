@@ -11,11 +11,15 @@ type BegooServer struct {
 	logger *log.Logger
 
 }
+var(
+	BeegoInstance *BegooServer
+)
 
 func NewBeegoServer(logger *log.Logger) (*BegooServer){
-	return &BegooServer{
+	BeegoInstance = &BegooServer{
 		logger:logger,
 	}
+	return BeegoInstance
 }
 
 func (bs *BegooServer) Run(){

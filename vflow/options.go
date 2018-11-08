@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-package main
+package vflow
 
 import (
 	"flag"
@@ -43,6 +43,10 @@ var (
 )
 
 type arrUInt32Flags []uint32
+var opts *Options
+
+var mqEnabled = false
+
 
 // Options represents options
 type Options struct {
@@ -169,7 +173,7 @@ func NewOptions() *Options {
 
 // GetOptions gets options through cmd and file
 func GetOptions() *Options {
-	opts := NewOptions()
+	opts = NewOptions()
 
 	opts.vFlowFlagSet()
 	opts.vFlowVersion()
@@ -196,7 +200,9 @@ func GetOptions() *Options {
 
 	opts.Logger.Printf("Welcome to vFlow v.%s Apache License 2.0", version)
 	opts.Logger.Printf("Copyright (C) 2018 Verizon. github.com/VerizonDigital/vflow")
-
+	if opts.MQName != "none" {
+		mqEnabled = true
+	}
 	return opts
 }
 

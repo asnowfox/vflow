@@ -20,7 +20,7 @@
 //: ----------------------------------------------------------------------------
 // +build !windows
 
-package main
+package vflow
 
 import (
 	"github.com/VerizonDigital/vflow/mirror"

@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-package main
+package vflow
 
 import (
 	"encoding/json"
@@ -139,3 +139,4 @@ func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger 
 		logger.Fatal(err)
 	}
 }
+

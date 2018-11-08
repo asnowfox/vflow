@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-package main
+package vflow
 
 import (
 	"bytes"
@@ -33,6 +33,7 @@ import (
 	"../mirror"
 	"../ipfix"
 	"github.com/VerizonDigital/vflow/producer"
+	"../vlogger"
 )
 
 // IPFIX represents IPFIX collector
@@ -94,7 +95,7 @@ func NewIPFIX(flowMirror *mirror.IPFixMirror) *IPFIX {
 func (i *IPFIX) run() {
 	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
-		logger.Println("ipfix has been disabled")
+		vlogger.Logger.Println("ipfix has been disabled")
 		return
 	}
 
@@ -103,7 +104,7 @@ func (i *IPFIX) run() {
 
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-		logger.Fatal(err)
+		vlogger.Logger.Fatal(err)
 	}
 
 	atomic.AddInt32(&i.stats.Workers, int32(i.workers))
@@ -115,13 +116,13 @@ func (i *IPFIX) run() {
 		}()
 	}
 
-	logger.Printf("ipfix is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
+	vlogger.Logger.Printf("ipfix is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 	ipfix.LoadExtElements(opts.VFlowConfigPath)
 
 	mCache = ipfix.GetCache(opts.IPFIXTplCacheFile)
 	go ipfix.RPC(mCache, &ipfix.RPCConfig{
 		Enabled: opts.IPFIXRPCEnabled,
-		Logger:  logger,
+		Logger:  vlogger.Logger,
 	})
 
 	go mirrorIPFIXDispatcher(ipfixMCh)
@@ -131,21 +132,21 @@ func (i *IPFIX) run() {
 
 			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 			p.MQErrorCount = &i.stats.MQErrorCount
-			p.Logger = logger
+			p.Logger = vlogger.Logger
 			p.Chan = ipfixMQCh
 			p.Topic = opts.IPFIXTopic
 
 			if err := p.Run(); err != nil {
-				logger.Fatal(err)
+				vlogger.Logger.Fatal(err)
 			}
 		}()
 	}else{
-		logger.Printf("disable json mq transfer")
+		vlogger.Logger.Printf("disable json mq transfer")
 	}
 
 	go func() {
 		if !opts.DynWorkers {
-			logger.Println("IPFIX dynamic worker disabled")
+			vlogger.Logger.Println("IPFIX dynamic worker disabled")
 			return
 		}
 
@@ -167,19 +168,19 @@ func (i *IPFIX) run() {
 func (i *IPFIX) shutdown() {
 	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
-		logger.Println("ipfix disabled")
+		vlogger.Logger.Println("ipfix disabled")
 		return
 	}
 	// stop reading from UDP listener
 	i.stop = true
-	logger.Println("stopping ipfix service gracefully ...")
+	vlogger.Logger.Println("stopping ipfix service gracefully ...")
 	time.Sleep(1 * time.Second)
 	// dump the templates to storage
 	if err := mCache.Dump(opts.IPFIXTplCacheFile); err != nil {
-		logger.Println("couldn't not dump template", err)
+		vlogger.Logger.Println("couldn't not dump template", err)
 	}
 	// logging and close UDP channel
-	logger.Println("ipfix has been shutdown")
+	vlogger.Logger.Println("ipfix has been shutdown")
 	close(ipfixUDPCh)
 }
 
@@ -209,7 +210,7 @@ LOOP:
 		}
 
 		if opts.Verbose {
-			logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
+			vlogger.Logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
 
@@ -225,7 +226,7 @@ LOOP:
 
 		d := ipfix.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCache); err != nil {
-			logger.Println(err)
+			vlogger.Logger.Println(err)
 			// in case ipfix message header couldn't decode
 			if decodedMsg == nil {
 				continue
@@ -235,7 +236,7 @@ LOOP:
 		if i.flowMirror != nil {
 			i.flowMirror.ReceiveMessage(decodedMsg)
 		} else {
-			logger.Printf("flow mirror is nil")
+			vlogger.Logger.Printf("flow mirror is nil")
 		}
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
@@ -245,7 +246,7 @@ LOOP:
 				if len(e.DataSets) > 0 {
 					b, err = decodedMsg.JSONMarshal(buf, e.DataSets)
 					if err != nil {
-						logger.Println(err)
+						vlogger.Logger.Println(err)
 						continue
 					}
 					select {
@@ -254,7 +255,7 @@ LOOP:
 					}
 
 					if opts.Verbose {
-						logger.Println(string(b))
+						vlogger.Logger.Println(string(b))
 					}
 				}
 			}
@@ -303,7 +304,7 @@ func (i *IPFIX) dynWorkers() {
 
 			workers = int(atomic.LoadInt32(&i.stats.Workers))
 			if workers+newWorkers > maxWorkers {
-				logger.Println("ipfix :: max out workers")
+				vlogger.Logger.Println("ipfix :: max out workers")
 				continue
 			}
 

@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-package main
+package vflow
 
 import (
 	"bytes"
@@ -33,6 +33,7 @@ import (
 	"../sflow"
 	"github.com/VerizonDigital/vflow/producer"
 	"path"
+	"../vlogger"
 )
 
 // SFUDPMsg represents sFlow UDP message
@@ -75,7 +76,6 @@ var (
 
 // NewSFlow constructs sFlow collector
 func NewSFlow() *SFlow {
-	logger = opts.Logger
 
 	return &SFlow{
 		port:    opts.SFlowPort,
@@ -87,7 +87,7 @@ func NewSFlow() *SFlow {
 func (s *SFlow) run() {
 	// exit if the sflow is disabled
 	if !opts.SFlowEnabled {
-		logger.Println("sflow has been disabled")
+		vlogger.Logger.Println("sflow has been disabled")
 		return
 	}
 
@@ -96,7 +96,7 @@ func (s *SFlow) run() {
 
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-		logger.Fatal(err)
+		vlogger.Logger.Fatal(err)
 	}
 
 	atomic.AddInt32(&s.stats.Workers, int32(s.workers))
@@ -108,19 +108,19 @@ func (s *SFlow) run() {
 		}()
 	}
 
-	logger.Printf("sFlow is running (UDP: listening on [::]:%d workers#: %d)", s.port, s.workers)
+	vlogger.Logger.Printf("sFlow is running (UDP: listening on [::]:%d workers#: %d)", s.port, s.workers)
 	if mqEnabled{
 		go func() {
 			p := producer.NewProducer(opts.MQName)
 
 			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 			p.MQErrorCount = &s.stats.MQErrorCount
-			p.Logger = logger
+			p.Logger = vlogger.Logger
 			p.Chan = sFlowMQCh
 			p.Topic = opts.SFlowTopic
 
 			if err := p.Run(); err != nil {
-				logger.Fatal(err)
+				vlogger.Logger.Fatal(err)
 			}
 		}()
 	}
@@ -128,7 +128,7 @@ func (s *SFlow) run() {
 
 	go func() {
 		if !opts.DynWorkers {
-			logger.Println("sFlow dynamic worker disabled")
+			vlogger.Logger.Println("sFlow dynamic worker disabled")
 			return
 		}
 
@@ -151,9 +151,9 @@ func (s *SFlow) run() {
 
 func (s *SFlow) shutdown() {
 	s.stop = true
-	logger.Println("stopping sflow service gracefully ...")
+	vlogger.Logger.Println("stopping sflow service gracefully ...")
 	time.Sleep(1 * time.Second)
-	logger.Println("vFlow has been shutdown")
+	vlogger.Logger.Println("vFlow has been shutdown")
 	close(sFlowUDPCh)
 }
 
@@ -178,7 +178,7 @@ LOOP:
 		}
 
 		if opts.Verbose {
-			logger.Printf("rcvd sflow data from: %s, size: %d bytes",
+			vlogger.Logger.Printf("rcvd sflow data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
 
@@ -193,14 +193,14 @@ LOOP:
 		b, err = json.Marshal(datagram)
 		if err != nil {
 			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
-			logger.Println(err)
+			vlogger.Logger.Println(err)
 			continue
 		}
 
 		atomic.AddUint64(&s.stats.DecodedCount, 1)
 
 		if opts.Verbose {
-			logger.Println(string(b))
+			vlogger.Logger.Println(string(b))
 		}
 		if mqEnabled{
 			select {
@@ -252,7 +252,7 @@ func (s *SFlow) dynWorkers() {
 
 			workers = int(atomic.LoadInt32(&s.stats.Workers))
 			if workers+newWorkers > maxWorkers {
-				logger.Println("sflow :: max out workers")
+				vlogger.Logger.Println("sflow :: max out workers")
 				continue
 			}
 

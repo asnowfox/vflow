@@ -20,7 +20,6 @@ type PolicyController struct {
 // @Failure 403 :objectId is empty
 // @router /:objectId [get]
 func (o *PolicyController) Get() {
-
 	policyId := o.GetString("policyId")
 	fmt.Printf("call get method of policy policyId is %s\r\n", policyId)
 	if policyId != "" {

@@ -30,14 +30,16 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
-	"../restful"
-	"../mirror"
+	"./restful"
+	"./mirror"
+	"./vflow"
+	"./vlogger"
 )
 
 var (
-	opts   *Options
+	opts   *vflow.Options
 	logger *log.Logger
-	mqEnabled = false
+
 )
 
 type proto interface {
@@ -51,13 +53,12 @@ func main() {
 		signalCh = make(chan os.Signal, 1)
 	)
 
-	opts = GetOptions()
-	if opts.MQName != "none" {
-		mqEnabled = true
-	}
+	opts = vflow.GetOptions()
+
 	runtime.GOMAXPROCS(opts.GetCPU())
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	logger = opts.Logger
+	vlogger.Logger = logger
 	logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
 	mirror.Init(opts.ForwardFile,logger)
 
@@ -75,10 +76,11 @@ func main() {
 		ipfixMirror.Run()
 	}
 
-	sFlow := NewSFlow()
+	sFlow := vflow.NewSFlow()
 
-	ipfix := NewIPFIX(ipfixMirror)
-	netflow9 := NewNetflowV9(flowMirror)
+	ipfix := vflow.NewIPFIX(ipfixMirror)
+	netflow9 := vflow.NewNetflowV9(flowMirror)
+
 
 	protos := []proto{sFlow, ipfix, netflow9}
 
@@ -90,9 +92,9 @@ func main() {
 		}(p)
 	}
 
-	go statsHTTPServer(ipfix, sFlow, netflow9, flowMirror)
+	//go statsHTTPServer(ipfix, sFlow, netflow9, flowMirror)
 
-	beegoServer := restful.NewBeegoServer(logger)
+	beegoServer := restful.NewBeegoServer(logger,netflow9)
 	beegoServer.Run()
 
 	<-signalCh

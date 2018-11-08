@@ -20,7 +20,7 @@
 //: ----------------------------------------------------------------------------
 // +build windows
 
-package main
+package vflow
 
 func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 	return
