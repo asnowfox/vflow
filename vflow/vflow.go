@@ -21,7 +21,7 @@
 //: ----------------------------------------------------------------------------
 
 // Package main is the vflow binary
-package main
+package vflow
 
 import (
 	"log"
@@ -32,12 +32,11 @@ import (
 	"syscall"
 	"../restful"
 	"../mirror"
-	"../vflow"
-	"../vlogger"
+	"../flows"
 )
 
 var (
-	opts   *vflow.Options
+	opts   *flows.Options
 	logger *log.Logger
 )
 
@@ -49,12 +48,12 @@ func main() {
 		signalCh = make(chan os.Signal, 1)
 	)
 
-	opts = vflow.GetOptions()
+	opts = flows.GetOptions()
 
 	runtime.GOMAXPROCS(opts.GetCPU())
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	logger = opts.Logger
-	vlogger.Logger = logger
+
 	logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
 	mirror.Init(opts.ForwardFile,logger)
 
@@ -72,17 +71,17 @@ func main() {
 		ipfixMirror.Run()
 	}
 
-	sFlow := vflow.NewSFlow()
+	sFlow := flows.NewSFlow()
 
-	ipfix := vflow.NewIPFIX(ipfixMirror)
-	netflow9 := vflow.NewNetflowV9(flowMirror)
+	ipfix := flows.NewIPFIX(ipfixMirror)
+	netflow9 := flows.NewNetflowV9(flowMirror)
 
 
-	protos := []vflow.Proto{sFlow, ipfix, netflow9}
+	protos := []flows.Proto{sFlow, ipfix, netflow9}
 
 	for _, p := range protos {
 		wg.Add(1)
-		go func(p vflow.Proto) {
+		go func(p flows.Proto) {
 			defer wg.Done()
 			p.Run()
 		}(p)
@@ -97,7 +96,7 @@ func main() {
 
 	for _, p := range protos {
 		wg.Add(1)
-		go func(p vflow.Proto) {
+		go func(p flows.Proto) {
 			defer wg.Done()
 			p.Shutdown()
 		}(p)

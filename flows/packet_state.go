@@ -1,4 +1,4 @@
-package vflow
+package flows
 
 import (
 	"fmt"

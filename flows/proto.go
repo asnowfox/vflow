@@ -1,4 +1,4 @@
-package vflow
+package flows
 
 type Proto interface {
 	Run()

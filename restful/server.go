@@ -13,7 +13,7 @@ var(
 	BeegoInstance *BegooServer
 )
 
-func NewBeegoServer(netflowv9 *vflow.NetflowV9) (*BegooServer){
+func NewBeegoServer(netflowv9 *flows.NetflowV9) (*BegooServer){
 	BeegoInstance = &BegooServer{
 
 	}

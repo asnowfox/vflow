@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-package vflow
+package flows
 
 import (
 	"flag"
@@ -33,7 +33,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-
+	"../vlogger"
 	"gopkg.in/yaml.v2"
 )
 
@@ -57,7 +57,7 @@ type Options struct {
 	PIDFile     string `yaml:"pid-file"`
 	CPUCap      string `yaml:"cpu-cap"`
 	DynWorkers  bool   `yaml:"dynamic-workers"`
-	Logger      *log.Logger
+	//Logger      *log.Logger
 	version     bool
 
 	// stats options
@@ -133,7 +133,6 @@ func NewOptions() *Options {
 		PIDFile:    "/var/run/vflow.pid",
 		ForwardFile: "/etc/vflow/forward.conf",
 		CPUCap:     "100%",
-		Logger:     log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
 		StatsEnabled:  true,
 		StatsHTTPPort: "8081",
@@ -179,27 +178,27 @@ func GetOptions() *Options {
 	opts.vFlowVersion()
 
 	if opts.Verbose {
-		opts.Logger.Printf("the full logging enabled")
-		opts.Logger.SetFlags(log.LstdFlags | log.Lshortfile)
+		vlogger.Logger.Printf("the full logging enabled")
+		vlogger.Logger.SetFlags(log.LstdFlags | log.Lshortfile)
 	}
 
 	if opts.LogFile != "" {
 		f, err := os.OpenFile(opts.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			opts.Logger.Println(err)
+			vlogger.Logger.Println(err)
 		} else {
-			opts.Logger.SetOutput(f)
+			vlogger.Logger.SetOutput(f)
 		}
 	}
 
 	if ok := opts.vFlowIsRunning(); ok {
-		opts.Logger.Fatal("the vFlow already is running!")
+		vlogger.Logger.Fatal("the vFlow already is running!")
 	}
 
 	opts.vFlowPIDWrite()
 
-	opts.Logger.Printf("Welcome to vFlow v.%s Apache License 2.0", version)
-	opts.Logger.Printf("Copyright (C) 2018 Verizon. github.com/VerizonDigital/vflow")
+	vlogger.Logger.Printf("Welcome to vFlow v.%s Apache License 2.0", version)
+	vlogger.Logger.Printf("Copyright (C) 2018 Verizon. github.com/VerizonDigital/vflow")
 	if opts.MQName != "none" {
 		mqEnabled = true
 	}
@@ -209,13 +208,13 @@ func GetOptions() *Options {
 func (opts Options) vFlowPIDWrite() {
 	f, err := os.OpenFile(opts.PIDFile, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
-		opts.Logger.Println(err)
+		vlogger.Logger.Println(err)
 		return
 	}
 
 	_, err = fmt.Fprintf(f, "%d", os.Getpid())
 	if err != nil {
-		opts.Logger.Println(err)
+		vlogger.Logger.Println(err)
 	}
 }
 
@@ -255,22 +254,22 @@ func (opts Options) GetCPU() int {
 
 		pctInt, err := strconv.Atoi(pctStr)
 		if err != nil {
-			opts.Logger.Fatalf("invalid CPU cap")
+			vlogger.Logger.Fatalf("invalid CPU cap")
 		}
 
 		if pctInt < 1 || pctInt > 100 {
-			opts.Logger.Fatalf(invalCPUErr)
+			vlogger.Logger.Fatalf(invalCPUErr)
 		}
 
 		numCPU = int(float32(availCPU) * (float32(pctInt) / 100))
 	} else {
 		numInt, err := strconv.Atoi(opts.CPUCap)
 		if err != nil {
-			opts.Logger.Fatalf("invalid CPU cap")
+			vlogger.Logger.Fatalf("invalid CPU cap")
 		}
 
 		if numInt < 1 {
-			opts.Logger.Fatalf(numCPUErr)
+			vlogger.Logger.Fatalf(numCPUErr)
 		}
 
 		numCPU = numInt
@@ -372,11 +371,11 @@ func vFlowLoadCfg(opts *Options) {
 
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		opts.Logger.Println(err)
+		vlogger.Logger.Println(err)
 		return
 	}
 	err = yaml.Unmarshal(b, opts)
 	if err != nil {
-		opts.Logger.Println(err)
+		vlogger.Logger.Println(err)
 	}
 }

@@ -14,7 +14,7 @@ import(
 	"../../vflow"
 )
 
-func Init(netflowv9 *vflow.NetflowV9) {
+func Init(netflowv9 *flows.NetflowV9) {
 	fmt.Printf("router ininted.\n")
 	beego.Router("/user", &controllers.UserController{})
 	beego.Router("/policy", &controllers.PolicyController{})

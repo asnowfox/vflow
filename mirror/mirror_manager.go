@@ -1,7 +1,6 @@
 package mirror
 
 import (
-	"log"
 	"io/ioutil"
 	"fmt"
 	"os"
@@ -12,12 +11,12 @@ import (
 	"../ipfix"
 	"encoding/binary"
 	"encoding/json"
+	"../vlogger"
 )
 
 var (
 	Netflowv9MirrorInstance *Netflowv9Mirror
 	IPFixMirrorInstance *IPFixMirror
-	logger *log.Logger
 	mirrorMaps map[string][]Rule
 	rawSockets map[string]Conn
 	policyConfigs []Policy
@@ -39,12 +38,11 @@ type FlowMirrorStatus struct {
 	RawErrorCount        uint64
 }
 
-func Init(mirrorCfg string,log *log.Logger) error{
-	logger = log
+func Init(mirrorCfg string) error{
 
 	err := LoadPolicy(mirrorCfg)
 	if err != nil {
-		logger.Printf("Mirror config file is worong, exit! \n")
+		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
 		fmt.Printf("Mirror config file is worong,exit! \n")
 		os.Exit(-1)
 		return  err
@@ -90,7 +88,7 @@ func  buildMap() {
 			if _, ok :=rawSockets[remoteAddr]; !ok {
 				connect,err := NewRawConn(net.ParseIP(remoteAddr))
 				if err != nil {
-					logger.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
+					vlogger.Logger.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
 					fmt.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
 				}else{
 					rawSockets[remoteAddr] = connect
@@ -149,7 +147,7 @@ func GetPolicyById(policyId string) (*Policy){
 }
 
 func AddPolicy(policy Policy) (int,string) {
-	logger.Printf("add config sourceId %s, configs %d",policy.PolicyId, len(policy.Rules))
+	vlogger.Logger.Printf("add config sourceId %s, configs %d",policy.PolicyId, len(policy.Rules))
 	for _,config := range policyConfigs {
 		if config.PolicyId == policy.PolicyId {
 			return -1,"already have this policy "+policy.PolicyId
@@ -166,7 +164,7 @@ func AddPolicy(policy Policy) (int,string) {
 func AddRule(policyId string, rule Rule) (int,string) {
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
-	logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.DistAddress)
+	vlogger.Logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.DistAddress)
 	curLen := 0
 	for index,config := range policyConfigs {
 		if config.PolicyId == policyId {
@@ -176,7 +174,7 @@ func AddRule(policyId string, rule Rule) (int,string) {
 				}
 			}
 			policyConfigs[index].Rules = append(config.Rules, rule)
-			logger.Printf("current rule size is %d.\n", len(policyConfigs[index].Rules))
+			vlogger.Logger.Printf("current rule size is %d.\n", len(policyConfigs[index].Rules))
 			curLen = len(policyConfigs[index].Rules)
 			break
 		}
@@ -241,7 +239,7 @@ func DeletePolicy(policyId string) (int,string) {
 			break
 		}
 	}
-	logger.Printf("delete %s find index %d ", policyId ,index)
+	vlogger.Logger.Printf("delete %s find index %d ", policyId ,index)
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	if index != -1 {

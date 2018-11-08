@@ -10,10 +10,10 @@ import (
 // Operations about object
 type StatsController struct {
 	beego.Controller
-	netflowv9 vflow.NetflowV9
+	netflowv9 flows.NetflowV9
 }
 
-func (o *StatsController) InitService(netflowv9 vflow.NetflowV9){
+func (o *StatsController) InitService(netflowv9 flows.NetflowV9){
 	o.netflowv9 = netflowv9
 }
 // @Title Get
