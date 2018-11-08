@@ -308,11 +308,11 @@ func (i *NetflowV9) dynWorkers() {
 	}
 }
 
-func (i *NetflowV9) NetflowPacketLoss(agentId string) int{
+func (i *NetflowV9) NetflowPacketLoss(agentId string) (int,error){
 	rtn,err:= i.pktStat.getLost(agentId)
 	if err != nil{
-		return -1
+		return -1,err
 	}else {
-		return int(rtn+0)
+		return int(rtn+0),nil
 	}
 }

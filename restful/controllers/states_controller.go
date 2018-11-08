@@ -24,7 +24,7 @@ func (o *StatsController) InitService(netflowv9 vflow.NetflowV9){
 // @router /:objectId [get]
 func (o *StatsController) Get() {
 	agentId := o.GetString("agentId")
-	fmt.Printf("call get method of policy policyId is %s\r\n",agentId)
+	fmt.Printf("call get packet loss. agentId is %s\r\n",agentId)
 	if agentId != "" {
 		loss := o.netflowv9.NetflowPacketLoss(agentId)
 

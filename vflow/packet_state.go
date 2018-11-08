@@ -42,6 +42,7 @@ func (i *PacketStatistics) recordSeq(agentId string, source uint32, seq uint32) 
 	if _, ok := i.IdCurrentLostMap[key]; !ok {
 		i.IdCurrentLostMap[key] = 0
 		i.IdCurrentSeqMap[key] = seq
+		fmt.Printf("record agentId %s, source %d.\n",agentId,source)
 		return
 	}
 	i.IdCurrentLostMap[key] = i.IdCurrentLostMap[key] + (seq - i.IdCurrentSeqMap[key] - 1)
