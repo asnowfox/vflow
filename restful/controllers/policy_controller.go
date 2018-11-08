@@ -47,12 +47,19 @@ func (o *PolicyController) Delete() {
 	policyId := o.GetString("policyId")
 	fmt.Printf("call delete method of mirror controller, sourceId is %s\r\n", policyId)
 
-	index := -1
 	if policyId != "" {
-		index = mirror.DeletePolicy(policyId)
+		index,msg := mirror.DeletePolicy(policyId)
+		json := map[string]interface{}{}
+		json["result"] = index
+		json["message"] =  msg
+		o.Data["json"] = json
+		o.ServeJSON()
+		return
 	}
+
 	json := map[string]interface{}{}
-	json["result"] = index
+	json["result"] = -1
+	json["message"] = "no policy Id defined"
 	o.Data["json"] = json
 	o.ServeJSON()
 	return
