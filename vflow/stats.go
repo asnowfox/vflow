@@ -29,6 +29,7 @@ import (
 	"runtime"
 	"time"
 	"../mirror"
+	"../vlogger"
 )
 
 var startTime = time.Now().Unix()
@@ -72,11 +73,11 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 
 	j, err := json.Marshal(data)
 	if err != nil {
-		logger.Println(err)
+		vlogger.Logger.Println(err)
 	}
 
 	if _, err = w.Write(j); err != nil {
-		logger.Println(err)
+		vlogger.Logger.Println(err)
 	}
 }
 
@@ -97,11 +98,11 @@ func StatsFlowHandler(i *IPFIX, s *SFlow, n *NetflowV9) http.HandlerFunc {
 
 		j, err := json.Marshal(data)
 		if err != nil {
-			logger.Println(err)
+			vlogger.Logger.Println(err)
 		}
 
 		if _, err = w.Write(j); err != nil {
-			logger.Println(err)
+			vlogger.Logger.Println(err)
 		}
 	}
 }
@@ -109,11 +110,11 @@ func StatsForwardHandler(exchanger *mirror.Netflowv9Mirror) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		j, err := json.Marshal(exchanger.Status())
 		if err != nil {
-			logger.Println(err)
+			vlogger.Logger.Println(err)
 		}
 
 		if _, err = w.Write(j); err != nil {
-			logger.Println(err)
+			vlogger.Logger.Println(err)
 		}
 	}
 }
@@ -133,10 +134,10 @@ func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger 
 
 	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
 
-	logger.Println("starting stats web server ...")
+	vlogger.Logger.Println("starting stats web server ...")
 	err := http.ListenAndServe(addr, mux)
 	if err != nil {
-		logger.Fatal(err)
+		vlogger.Logger.Fatal(err)
 	}
 }
 
