@@ -256,7 +256,7 @@ func DeletePolicy(policyId string) (int,string) {
 	}
 }
 func saveConfigsTofile() {
-	b, err := yaml.Marshal(policyConfigs)
+	b, err := json.Marshal(policyConfigs)
 	if err == nil {
 		ioutil.WriteFile(mirrorCfgFile, b, 0x777)
 	}
