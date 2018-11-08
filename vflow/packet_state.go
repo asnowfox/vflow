@@ -13,7 +13,10 @@ type PacketStatistics struct {
 }
 
 func NewPacketStatistics() (*PacketStatistics) {
-	return new(PacketStatistics)
+	return &PacketStatistics{
+		IdCurrentSeqMap : make(map[string]uint32),
+		IdCurrentLostMap : make(map[string]uint32),
+	}
 }
 
 func (i *PacketStatistics) getLost(agentId string) uint32 {

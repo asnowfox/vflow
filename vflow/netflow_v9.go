@@ -94,7 +94,7 @@ func (i *NetflowV9) run() {
 		logger.Println("netflowv9 has been disabled")
 		return
 	}
-
+	i.pktStat = *NewPacketStatistics()
 	hostPort := net.JoinHostPort(i.addr, strconv.Itoa(i.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
 
