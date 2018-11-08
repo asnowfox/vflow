@@ -42,10 +42,7 @@ var (
 
 )
 
-type proto interface {
-	run()
-	shutdown()
-}
+
 
 func main() {
 	var (
@@ -82,28 +79,28 @@ func main() {
 	netflow9 := vflow.NewNetflowV9(flowMirror)
 
 
-	protos := []proto{sFlow, ipfix, netflow9}
+	protos := []vflow.Proto{sFlow, ipfix, netflow9}
 
 	for _, p := range protos {
 		wg.Add(1)
-		go func(p proto) {
+		go func(p vflow.Proto) {
 			defer wg.Done()
-			p.run()
+			p.Run()
 		}(p)
 	}
 
 	//go statsHTTPServer(ipfix, sFlow, netflow9, flowMirror)
 
-	beegoServer := restful.NewBeegoServer(logger,netflow9)
+	beegoServer := restful.NewBeegoServer()
 	beegoServer.Run()
 
 	<-signalCh
 
 	for _, p := range protos {
 		wg.Add(1)
-		go func(p proto) {
+		go func(p vflow.Proto) {
 			defer wg.Done()
-			p.shutdown()
+			p.Shutdown()
 		}(p)
 	}
 	wg.Wait()

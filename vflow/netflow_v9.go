@@ -89,7 +89,7 @@ func NewNetflowV9(exc *mirror.Netflowv9Mirror) *NetflowV9 {
 	}
 }
 
-func (i *NetflowV9) run() {
+func (i *NetflowV9) Run() {
 
 	// exit if the netflow v9 is disabled
 	if !opts.NetflowV9Enabled {
@@ -158,7 +158,7 @@ func (i *NetflowV9) run() {
 	}
 }
 
-func (i *NetflowV9) shutdown() {
+func (i *NetflowV9) Shutdown() {
 	// exit if the netflow v9 is disabled
 	if !opts.NetflowV9Enabled {
 		vlogger.Logger.Println("netflow v9 disabled")

@@ -92,7 +92,7 @@ func NewIPFIX(flowMirror *mirror.IPFixMirror) *IPFIX {
 	}
 }
 
-func (i *IPFIX) run() {
+func (i *IPFIX) Run() {
 	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
 		vlogger.Logger.Println("ipfix has been disabled")
@@ -165,7 +165,7 @@ func (i *IPFIX) run() {
 	}
 }
 
-func (i *IPFIX) shutdown() {
+func (i *IPFIX) Shutdown() {
 	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
 		vlogger.Logger.Println("ipfix disabled")

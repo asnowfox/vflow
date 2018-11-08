@@ -84,7 +84,7 @@ func NewSFlow() *SFlow {
 	}
 }
 
-func (s *SFlow) run() {
+func (s *SFlow) Run() {
 	// exit if the sflow is disabled
 	if !opts.SFlowEnabled {
 		vlogger.Logger.Println("sflow has been disabled")
@@ -149,7 +149,7 @@ func (s *SFlow) run() {
 
 }
 
-func (s *SFlow) shutdown() {
+func (s *SFlow) Shutdown() {
 	s.stop = true
 	vlogger.Logger.Println("stopping sflow service gracefully ...")
 	time.Sleep(1 * time.Second)

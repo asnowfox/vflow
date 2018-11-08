@@ -3,21 +3,19 @@ package restful
 import (
 	_ "./routers"
 	_ "./models"
-	"log"
 	"github.com/astaxie/beego"
 )
 
 type BegooServer struct {
-	logger *log.Logger
 
 }
 var(
 	BeegoInstance *BegooServer
 )
 
-func NewBeegoServer(logger *log.Logger) (*BegooServer){
+func NewBeegoServer() (*BegooServer){
 	BeegoInstance = &BegooServer{
-		logger:logger,
+
 	}
 	return BeegoInstance
 }
