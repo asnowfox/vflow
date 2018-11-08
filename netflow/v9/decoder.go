@@ -28,8 +28,8 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"../../../vflow/ipfix"
-	"../../../vflow/reader"
+	"../../ipfix"
+	"../../reader"
 )
 
 // Decoder represents Netflow payload and remote address
