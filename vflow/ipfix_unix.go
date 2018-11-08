@@ -23,9 +23,9 @@
 package vflow
 
 import (
-	"github.com/VerizonDigital/vflow/mirror"
-
+	"../mirror"
 	"net"
+	"../vlogger"
 )
 
 func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
@@ -50,7 +50,7 @@ func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 	}
 
 	ipfixMirrorEnabled = true
-	logger.Printf("ipfix mirror service is running (workers#: %d) ...", opts.IPFIXMirrorWorkers)
+	vlogger.Logger.Printf("ipfix mirror service is running (workers#: %d) ...", opts.IPFIXMirrorWorkers)
 
 	for {
 		msg = <-ch
