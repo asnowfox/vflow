@@ -3,7 +3,7 @@ package restful
 import (
 	"./routers"
 	"github.com/astaxie/beego"
-	"../vflow"
+	"../flows"
 )
 
 type BegooServer struct {

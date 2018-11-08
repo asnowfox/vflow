@@ -33,6 +33,7 @@ import (
 	"../restful"
 	"../mirror"
 	"../flows"
+	"../vlogger"
 )
 
 var (
@@ -52,10 +53,10 @@ func main() {
 
 	runtime.GOMAXPROCS(opts.GetCPU())
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
-	logger = opts.Logger
 
-	logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
-	mirror.Init(opts.ForwardFile,logger)
+
+	vlogger.Logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
+	mirror.Init(opts.ForwardFile)
 
 	flowMirror,err1 := mirror.NewNetFlowv9Mirror()
 	ipfixMirror,err2 := mirror.NewIPFixMirror()
