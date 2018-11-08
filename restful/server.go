@@ -5,11 +5,11 @@ import (
 	_ "./models"
 	"log"
 	"github.com/astaxie/beego"
-
 )
 
 type BegooServer struct {
 	logger *log.Logger
+
 }
 
 func NewBeegoServer(logger *log.Logger) (*BegooServer){

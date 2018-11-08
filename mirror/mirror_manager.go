@@ -79,13 +79,13 @@ func parsePort(value interface{}) uint32{
 func  buildMap() {
 	mirrorMaps = make(map[string][]Rule)
 	for _, policy := range policyConfigs {
-		fmt.Printf("Policy id %10s add config rules count is %d\n", policy.PolicyId, len(policy.Rules))
+		fmt.Printf("Policy %10s, rules count is %d\n", policy.PolicyId, len(policy.Rules))
 		for _,r := range policy.Rules {
 			if _, ok :=mirrorMaps[r.Source]; !ok {
 				mirrorMaps[r.Source] = make([]Rule,0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
-			fmt.Printf("   source:%15s, rule: inputPort %5d, outputPort %5d ->  %s \n",r.Source,r.InPort,r.OutPort,r.DistAddress)
+			fmt.Printf("   (source:%15s, inputPort %5d, outputPort %5d) ->  %s \n",r.Source,r.InPort,r.OutPort,r.DistAddress)
 			remoteAddr := strings.Split(r.DistAddress,":")[0]
 			if _, ok :=rawSockets[remoteAddr]; !ok {
 				connect,err := NewRawConn(net.ParseIP(remoteAddr))

@@ -42,6 +42,7 @@ type NetflowV9 struct {
 	workers       int
 	stop          bool
 	stats         NetflowV9Stats
+	pktStat       PacketStatistics
 	pool          chan chan struct{}
 	messageMirror *mirror.Netflowv9Mirror
 }
@@ -59,6 +60,8 @@ type NetflowV9Stats struct {
 	UDPCount     uint64
 	DecodedCount uint64
 	MQErrorCount uint64
+	LostCount 	 uint64
+	StartTime    int64
 	Workers      int32
 }
 
@@ -110,6 +113,7 @@ func (i *NetflowV9) run() {
 	}
 
 	logger.Printf("netflow v9 is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
+	i.stats.StartTime = time.Now().Unix()
 
 	mCacheNF9 = netflow9.GetCache(opts.NetflowV9TplCacheFile)
 	if mqEnabled {
@@ -130,8 +134,6 @@ func (i *NetflowV9) run() {
 
 		logger.Printf("disable netflow v9 json mq transfer")
 	}
-
-
 	go func() {
 		if !opts.DynWorkers {
 			logger.Println("netflow v9 dynamic worker disabled")
@@ -151,7 +153,6 @@ func (i *NetflowV9) run() {
 		atomic.AddUint64(&i.stats.UDPCount, 1)
 		netflowV9UDPCh <- NetflowV9UDPMsg{raddr, b[:n]}
 	}
-
 }
 
 func (i *NetflowV9) shutdown() {
@@ -210,9 +211,8 @@ LOOP:
 		if i.messageMirror != nil {
 			i.messageMirror.ReceiveMessage(decodedMsg)
 		}
-
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
-
+		i.pktStat.recordSeq(decodedMsg.AgentID,decodedMsg.Header.SrcID,decodedMsg.Header.SeqNum)
 		if decodedMsg.DataFlowSets != nil && mqEnabled {
 			for _, e := range decodedMsg.DataFlowSets {
 				b, err = decodedMsg.JSONMarshal(buf, e.DataSets)
@@ -220,7 +220,6 @@ LOOP:
 					logger.Println(err)
 					continue
 				}
-
 				select {
 				case netflowV9MQCh <- append([]byte{}, b...):
 				default:
@@ -228,7 +227,6 @@ LOOP:
 			}
 		}
 	}
-
 }
 
 func (i *NetflowV9) status() *NetflowV9Stats {
@@ -239,8 +237,9 @@ func (i *NetflowV9) status() *NetflowV9Stats {
 		DecodedCount: atomic.LoadUint64(&i.stats.DecodedCount),
 		MQErrorCount: atomic.LoadUint64(&i.stats.MQErrorCount),
 		Workers:      atomic.LoadInt32(&i.stats.Workers),
+		StartTime:    atomic.LoadInt64(&i.stats.StartTime),
+		LostCount:    atomic.LoadUint64(&i.stats.LostCount),
 	}
-
 }
 
 func (i *NetflowV9) dynWorkers() {
@@ -286,7 +285,6 @@ func (i *NetflowV9) dynWorkers() {
 			}
 
 		}
-
 		if load == 0 {
 			nSeq++
 		} else {
@@ -306,5 +304,4 @@ func (i *NetflowV9) dynWorkers() {
 			nSeq = 0
 		}
 	}
-
 }
