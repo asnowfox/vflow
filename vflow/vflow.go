@@ -21,7 +21,7 @@
 //: ----------------------------------------------------------------------------
 
 // Package main is the vflow binary
-package vflow
+package main
 
 import (
 	"log"
