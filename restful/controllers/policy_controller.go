@@ -20,16 +20,19 @@ type PolicyController struct {
 // @Failure 403 :objectId is empty
 // @router /:objectId [get]
 func (o *PolicyController) Get() {
-	policies := mirror.GetPolicies()
+
 	policyId := o.GetString("policyId")
 	fmt.Printf("call get method of policy policyId is %s\r\n", policyId)
 	if policyId != "" {
-		for _, e := range policies {
-			if e.PolicyId == policyId {
-				o.Data["json"] = e
-				o.ServeJSON()
-				return
-			}
+		policy := mirror.GetPolicyById(policyId)
+		if policy == nil{
+			o.Data["json"] = "{}"
+			o.ServeJSON()
+			return
+		}else{
+			o.Data["json"] = *policy
+			o.ServeJSON()
+			return
 		}
 	} else {
 		configs := mirror.GetPolicies()
