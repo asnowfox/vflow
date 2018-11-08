@@ -1,16 +1,15 @@
 package mirror
 
 import (
-	"log"
 	"sync/atomic"
 	"encoding/binary"
 	"strconv"
 	"strings"
 	"../ipfix"
+	"../vlogger"
 )
 
 type IPFixMirror struct {
-	Logger        *log.Logger
 	stats FlowMirrorStatus
 }
 
@@ -39,7 +38,7 @@ func (t *IPFixMirror) Run() {
 			//cfgMutex.Lock()
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
 			//	cfgMutex.Unlock()
-				t.Logger.Printf("Can not find agent cache, %s. ",sMsg.AgentID)
+				vlogger.Logger.Printf("Can not find agent cache, %s. ",sMsg.AgentID)
 				continue
 			}
 			ec := mirrorMaps[sMsg.AgentID]
@@ -79,7 +78,7 @@ func (t *IPFixMirror) Run() {
 				err := raw.Send(rBytes)
 				if err != nil {
 					atomic.AddUint64(&t.stats.RawErrorCount, 1)
-					t.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
+					vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
 				}else{
 					atomic.AddUint64(&t.stats.RawSentCount, 1)
 				}

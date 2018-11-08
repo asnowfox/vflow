@@ -120,14 +120,13 @@ func createRawPacket(srcAddress string, srcPort int,
 
 func NewNetFlowv9Mirror() (*Netflowv9Mirror, error) {
 	mirrorInstance := new(Netflowv9Mirror)
-	mirrorInstance.Logger = logger
+
 	Netflowv9MirrorInstance = mirrorInstance
 	return mirrorInstance, nil
 }
 
 func NewIPFixMirror() (*IPFixMirror, error) {
 	mirrorInstance := new(IPFixMirror)
-	mirrorInstance.Logger = logger
 	IPFixMirrorInstance = mirrorInstance
 	return mirrorInstance, nil
 }
