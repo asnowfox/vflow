@@ -11,7 +11,7 @@ import(
 	"github.com/astaxie/beego"
 	"../controllers"
 	"fmt"
-	"../../vflow"
+	"../../flows"
 )
 
 func Init(netflowv9 *flows.NetflowV9) {
