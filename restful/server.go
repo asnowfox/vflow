@@ -4,6 +4,7 @@ import (
 	_ "./routers"
 	_ "./models"
 	"github.com/astaxie/beego"
+	"../vflow"
 )
 
 type BegooServer struct {
@@ -11,9 +12,10 @@ type BegooServer struct {
 }
 var(
 	BeegoInstance *BegooServer
+	NetflowInstance *vflow.NetflowV9
 )
 
-func NewBeegoServer() (*BegooServer){
+func NewBeegoServer(netflowv9 vflow.NetflowV9) (*BegooServer){
 	BeegoInstance = &BegooServer{
 
 	}

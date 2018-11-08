@@ -70,7 +70,6 @@ var (
 	netflowV9UDPCh = make(chan NetflowV9UDPMsg, 1000)
 	netflowV9MQCh  = make(chan []byte, 1000)
 	mCacheNF9      netflow9.MemCache
-	NetflowInstance *NetflowV9
 	// ipfix udp payload pool
 	netflowV9Buffer = &sync.Pool{
 		New: func() interface{} {
@@ -309,6 +308,6 @@ func (i *NetflowV9) dynWorkers() {
 	}
 }
 
-func NetflowPacketLoss(agentId string) uint32{
-	return NetflowInstance.pktStat.getLost(agentId)
+func (i *NetflowV9) NetflowPacketLoss(agentId string) uint32{
+	return i.pktStat.getLost(agentId)
 }

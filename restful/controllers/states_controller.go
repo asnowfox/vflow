@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/astaxie/beego"
+	"../../restful"
 )
 
 
@@ -21,8 +22,13 @@ func (o *NetflowController) Get() {
 	agentId := o.GetString("agentId")
 	fmt.Printf("call get method of policy policyId is %s\r\n",agentId)
 	if agentId != "" {
-		//NetflowInstance
+		loss := restful.NetflowInstance.NetflowPacketLoss(agentId)
 
+		json := map[string]interface{}{}
+		json["loss"] = loss
+		json["message"] =  "packetloss"
+		o.Data["json"] = json
+		o.ServeJSON()
 	} else {
 
 	}

@@ -39,7 +39,6 @@ import (
 var (
 	opts   *vflow.Options
 	logger *log.Logger
-
 )
 
 
@@ -91,7 +90,7 @@ func main() {
 
 	//go statsHTTPServer(ipfix, sFlow, netflow9, flowMirror)
 
-	beegoServer := restful.NewBeegoServer()
+	beegoServer := restful.NewBeegoServer(netflow9)
 	beegoServer.Run()
 
 	<-signalCh

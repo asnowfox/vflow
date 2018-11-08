@@ -21,10 +21,15 @@ func NewPacketStatistics() (*PacketStatistics) {
 
 func (i *PacketStatistics) getLost(agentId string) uint32 {
 	var cnt uint32 = 0
+	found := false
 	for key,value := range i.IdCurrentLostMap {
 		if strings.HasPrefix(key,agentId+"_") {
 			cnt += value
+			found = true
 		}
+	}
+	if !found{
+		return -1
 	}
 	return cnt
 }
