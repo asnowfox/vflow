@@ -141,15 +141,18 @@ func GetPolicies() ([]Policy) {
 }
 
 func AddPolicy(policy Policy) (int,string) {
-	cfgMutex.Lock()
 	logger.Printf("add config sourceId %s, configs %d",policy.PolicyId, len(policy.Rules))
-
-	policyConfigs = append(policyConfigs, policy)
-	//mirrorConfigs = append(mirrorConfigs, mirrorConfig)
-	buildMap()
+	for _,config := range policyConfigs {
+		if config.PolicyId == policy.PolicyId {
+			return -1,"already have this policy "+policy.PolicyId
+		}
+	}
+	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
+	policyConfigs = append(policyConfigs, policy)
+	buildMap()
 	saveConfigsTofile()
-	return 0,"Add succeed!"
+	return len(policyConfigs),"add succeed."
 }
 
 func AddRule(policyId string, rule Rule) (int,string) {
@@ -189,7 +192,6 @@ func isSameRule(r1 Rule,r2 Rule) bool{
 }
 
 func DeleteRule(policyId string, rule Rule) (int,string) {
-
 	var pid = -1
 	for i, e := range policyConfigs {
 		if e.PolicyId == policyId {
