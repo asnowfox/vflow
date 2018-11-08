@@ -214,8 +214,6 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 	if index != -1 {
 		policyConfigs[pid].Rules = append(policyConfigs[pid].Rules[:index],
 			policyConfigs[pid].Rules[index+1:]...)
-		//copy(policyConfigs[pid].Rules, append(policyConfigs[pid].Rules[:index],
-		//	policyConfigs[pid].Rules[index+1:]...))
 		buildMap()
 		recycleClients()
 		saveConfigsTofile()
@@ -225,8 +223,7 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 	}
 }
 
-func DeletePolicy(policyId string) (int) {
-	cfgMutex.Lock()
+func DeletePolicy(policyId string) (int,string) {
 	var index = -1
 	for i, e := range policyConfigs {
 		if e.PolicyId == policyId {
@@ -235,15 +232,18 @@ func DeletePolicy(policyId string) (int) {
 		}
 	}
 	logger.Printf("delete %s find index %d ", policyId ,index)
+	cfgMutex.Lock()
+	defer cfgMutex.Unlock()
 	if index != -1 {
 		policyConfigs = append(policyConfigs[:index],
 			policyConfigs[index+1:]...)
 		buildMap()
+		recycleClients()
+		saveConfigsTofile()
+		return index,"delete success"
+	} else {
+		return index,"can not find policy"
 	}
-	recycleClients()
-	defer cfgMutex.Unlock()
-	saveConfigsTofile()
-	return index
 }
 func saveConfigsTofile() {
 	b, err := yaml.Marshal(policyConfigs)

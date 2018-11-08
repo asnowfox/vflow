@@ -65,23 +65,41 @@ func (o *PolicyController) Delete() {
 // @Failure 403 body is empty
 // @router / [post]
 func (o *PolicyController) Post() {
-	var ob mirror.Policy
 
-	fmt.Printf("add post message is %s, bytes length is %d.\n",
-		string(o.Ctx.Input.RequestBody), len(o.Ctx.Input.RequestBody))
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-	json := map[string]interface{}{}
-	if err != nil {
-		json["result"] = -1
-		json["message"] = "parse json error"
+	policyId := o.GetString("policyId")
+	method := o.GetString("method")
+	if method == "add"{
+		var ob mirror.Policy
+		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
+		json := map[string]interface{}{}
+		if err != nil {
+			json["result"] = -1
+			json["message"] = "parse json error"
+			o.Data["json"] = json
+			o.ServeJSON()
+			return
+		}
+		index,msg:=mirror.AddPolicy(ob)
+
+		json["result"] = index
+		json["message"] = msg
 		o.Data["json"] = json
 		o.ServeJSON()
 		return
+	}else if method == "delete" {
+		index,msg := mirror.DeletePolicy(policyId)
+		json := map[string]interface{}{}
+		json["result"] = index
+		json["message"] = msg
+		o.Data["json"] = json
+		o.ServeJSON()
+		return
+	}else{
+		json := map[string]interface{}{}
+		json["result"] = -1
+		o.Data["json"] = json
+		json["message"] = "can not handle method "+method
+		o.ServeJSON()
 	}
-	index,msg:=mirror.AddPolicy(ob)
 
-	json["result"] = index
-	json["message"] = msg
-	o.Data["json"] = json
-	o.ServeJSON()
 }
