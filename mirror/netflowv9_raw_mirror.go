@@ -70,7 +70,7 @@ func (t *Netflowv9Mirror) Run() {
 
 				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 
-				dstAddrs := strings.Split(mRule.distAddress, ":")
+				dstAddrs := strings.Split(mRule.DistAddress, ":")
 				dstAddr := dstAddrs[0]
 				dstPort, _ := strconv.Atoi(dstAddrs[1])
 
@@ -109,13 +109,13 @@ func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule,flowSet netflow9.DataFlow
 			if id == InputId {
 				inputFound = true
 				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.inPort) || mRule.inPort == -1 {
+				if port == uint32(mRule.InPort) || mRule.InPort == -1 {
 					inputMatch = true
 				}
 			} else if id == OutputId {
 				outputFound = true
 				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.outPort) ||  mRule.outPort == -1 {
+				if port == uint32(mRule.OutPort) ||  mRule.OutPort == -1 {
 					outputMatch = true
 				}
 			}

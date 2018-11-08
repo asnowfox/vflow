@@ -8,16 +8,15 @@ import (
 )
 
 type Policy struct {
-	policyId string `yaml:"policyId"`
-	rules  []Rule `yaml:"rules"`
+	PolicyId string `yaml:"policyId",json:"policyId"`
+	Rules  []Rule `yaml:"rules",json:"rules"`
 }
 
-
 type Rule struct {
-	source      string `yaml:"source""`
-	inPort      int32 `yaml:"inport"`
-	outPort     int32 `yaml:"outport"`
-	distAddress string `yaml:"distAddress"`
+	Source      string `yaml:"source",json:"source"`
+	InPort      int32 `yaml:"inport",json:"inport"`
+	OutPort     int32 `yaml:"outport",json:"outport"`
+	DistAddress string `yaml:"distAddress",json:"distAddress"`
 }
 
 func LoadPolicy(mirrorCfg string) error{

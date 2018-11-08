@@ -79,14 +79,14 @@ func parsePort(value interface{}) uint32{
 func  buildMap() {
 	mirrorMaps = make(map[string][]Rule)
 	for _, policy := range policyConfigs {
-		fmt.Printf("Policy id %10s add config rules count is %d\n", policy.policyId, len(policy.rules))
-		for _,r := range policy.rules {
-			if _, ok :=mirrorMaps[r.source]; !ok {
-				mirrorMaps[r.source] = make([]Rule,0)
+		fmt.Printf("Policy id %10s add config rules count is %d\n", policy.PolicyId, len(policy.Rules))
+		for _,r := range policy.Rules {
+			if _, ok :=mirrorMaps[r.Source]; !ok {
+				mirrorMaps[r.Source] = make([]Rule,0)
 			}
-			mirrorMaps[r.source] = append(mirrorMaps[r.source], r)
-			fmt.Printf("   rule: input port %6d, dst port %6d ->  %s \n",r.inPort,r.outPort,r.distAddress)
-			remoteAddr := strings.Split(r.distAddress,":")[0]
+			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
+			fmt.Printf("   rule: input port %6d, dst port %6d ->  %s \n",r.InPort,r.OutPort,r.DistAddress)
+			remoteAddr := strings.Split(r.DistAddress,":")[0]
 			if _, ok :=rawSockets[remoteAddr]; !ok {
 				connect,err := NewRawConn(net.ParseIP(remoteAddr))
 				if err != nil {
@@ -141,7 +141,7 @@ func GetPolicies() ([]Policy) {
 }
 func GetPolicyById(policyId string) (*Policy){
 	for _,policy := range policyConfigs {
-		if policy.policyId == policyId {
+		if policy.PolicyId == policyId {
 			return &policy
 		}
 	}
@@ -149,10 +149,10 @@ func GetPolicyById(policyId string) (*Policy){
 }
 
 func AddPolicy(policy Policy) (int,string) {
-	logger.Printf("add config sourceId %s, configs %d",policy.policyId, len(policy.rules))
+	logger.Printf("add config sourceId %s, configs %d",policy.PolicyId, len(policy.Rules))
 	for _,config := range policyConfigs {
-		if config.policyId == policy.policyId {
-			return -1,"already have this policy "+policy.policyId
+		if config.PolicyId == policy.PolicyId {
+			return -1,"already have this policy "+policy.PolicyId
 		}
 	}
 	cfgMutex.Lock()
@@ -166,18 +166,18 @@ func AddPolicy(policy Policy) (int,string) {
 func AddRule(policyId string, rule Rule) (int,string) {
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
-	logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.distAddress)
+	logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.DistAddress)
 	curLen := 0
 	for index,config := range policyConfigs {
-		if config.policyId == policyId {
-			for _,r := range config.rules {
+		if config.PolicyId == policyId {
+			for _,r := range config.Rules {
 				if isSameRule(rule,r){
 					return -1,"already has same rule."
 				}
 			}
-			policyConfigs[index].rules = append(config.rules, rule)
-			logger.Printf("current rule size is %d.\n", len(policyConfigs[index].rules))
-			curLen = len(policyConfigs[index].rules)
+			policyConfigs[index].Rules = append(config.Rules, rule)
+			logger.Printf("current rule size is %d.\n", len(policyConfigs[index].Rules))
+			curLen = len(policyConfigs[index].Rules)
 			break
 		}
 	}
@@ -190,10 +190,10 @@ func AddRule(policyId string, rule Rule) (int,string) {
 }
 
 func isSameRule(r1 Rule,r2 Rule) bool{
-	if r1.source == r2.source &&
-		r1.distAddress == r2.distAddress &&
-		r1.inPort == r2.inPort &&
-		r1.outPort == r2.outPort{
+	if r1.Source == r2.Source &&
+		r1.DistAddress == r2.DistAddress &&
+		r1.InPort == r2.InPort &&
+		r1.OutPort == r2.OutPort{
 			return true
 	}
 	return false
@@ -202,7 +202,7 @@ func isSameRule(r1 Rule,r2 Rule) bool{
 func DeleteRule(policyId string, rule Rule) (int,string) {
 	var pid = -1
 	for i, e := range policyConfigs {
-		if e.policyId == policyId {
+		if e.PolicyId == policyId {
 			pid = i
 			break
 		}
@@ -211,10 +211,10 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 		return -1,"no policy "+policyId
 	}
 	var index = -1
-	for i, r := range policyConfigs[pid].rules {
-		if r.outPort == rule.outPort &&
-			r.inPort == rule.inPort &&
-			r.distAddress == rule.distAddress {
+	for i, r := range policyConfigs[pid].Rules {
+		if r.OutPort == rule.OutPort &&
+			r.InPort == rule.InPort &&
+			r.DistAddress == rule.DistAddress {
 			index = i
 			break
 		}
@@ -222,8 +222,8 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	if index != -1 {
-		policyConfigs[pid].rules = append(policyConfigs[pid].rules[:index],
-			policyConfigs[pid].rules[index+1:]...)
+		policyConfigs[pid].Rules = append(policyConfigs[pid].Rules[:index],
+			policyConfigs[pid].Rules[index+1:]...)
 		buildMap()
 		recycleClients()
 		saveConfigsTofile()
@@ -236,7 +236,7 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 func DeletePolicy(policyId string) (int,string) {
 	var index = -1
 	for i, e := range policyConfigs {
-		if e.policyId == policyId {
+		if e.PolicyId == policyId {
 			index = i
 			break
 		}
@@ -265,20 +265,20 @@ func saveConfigsTofile() {
 func recycleClients() {
 	usedClient := make(map[string]string)
 	for _, policy := range policyConfigs {
-		for _, ecr := range policy.rules {
+		for _, ecr := range policy.Rules {
 			//找到在用的
-			dstAddresses := strings.Split(ecr.distAddress, ":")
+			dstAddresses := strings.Split(ecr.DistAddress, ":")
 			dstAddr := dstAddresses[0]
 			if _, ok := rawSockets[dstAddr]; ok {
-				usedClient[dstAddr] = ecr.distAddress
+				usedClient[dstAddr] = ecr.DistAddress
 			}
 		}
 	}
 
 	for _, mirrorConfig := range policyConfigs {
-		for _, ecr := range mirrorConfig.rules {
+		for _, ecr := range mirrorConfig.Rules {
 			//在用的不存在了
-			dstAddrs := strings.Split(ecr.distAddress, ":")
+			dstAddrs := strings.Split(ecr.DistAddress, ":")
 			dstAddr := dstAddrs[0]
 			if _, ok := usedClient[dstAddr]; !ok {
 				raw := rawSockets[dstAddr]
