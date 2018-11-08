@@ -65,8 +65,6 @@ func (o *PolicyController) Delete() {
 // @Failure 403 body is empty
 // @router / [post]
 func (o *PolicyController) Post() {
-
-	policyId := o.GetString("policyId")
 	method := o.GetString("method")
 	if method == "add"{
 		var ob mirror.Policy
@@ -87,6 +85,7 @@ func (o *PolicyController) Post() {
 		o.ServeJSON()
 		return
 	}else if method == "delete" {
+		policyId := o.GetString("policyId")
 		index,msg := mirror.DeletePolicy(policyId)
 		json := map[string]interface{}{}
 		json["result"] = index
