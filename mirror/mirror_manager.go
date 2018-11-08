@@ -11,7 +11,7 @@ import (
 	"../netflow/v9"
 	"../ipfix"
 	"encoding/binary"
-	"encoding/json"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -256,7 +256,7 @@ func DeletePolicy(policyId string) (int,string) {
 	}
 }
 func saveConfigsTofile() {
-	b, err := json.Marshal(policyConfigs)
+	b, err := yaml.Marshal(policyConfigs)
 	if err == nil {
 		ioutil.WriteFile(mirrorCfgFile, b, 0x777)
 	}
