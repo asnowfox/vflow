@@ -159,13 +159,11 @@ func AddRule(policyId string, rule Rule) (int,string) {
 	curLen := 0
 	for index,config := range policyConfigs {
 		if config.PolicyId == policyId {
-
 			for _,r := range config.Rules {
 				if isSameRule(rule,r){
 					return -1,"already has same rule."
 				}
 			}
-
 			policyConfigs[index].Rules = append(config.Rules, rule)
 			logger.Printf("current rule size is %d.\n", len(policyConfigs[index].Rules))
 			curLen = len(policyConfigs[index].Rules)
@@ -187,8 +185,6 @@ func isSameRule(r1 Rule,r2 Rule) bool{
 		r1.OutPort == r2.OutPort{
 			return true
 	}
-
-
 	return false
 }
 
@@ -210,6 +206,7 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 			r.InPort == rule.InPort &&
 			r.DistAddress == rule.DistAddress {
 			index = i
+			break
 		}
 	}
 	cfgMutex.Lock()
@@ -224,7 +221,6 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 	}else{
 		return -1,"can not find matched rule for policy "+policyId
 	}
-
 }
 
 func DeletePolicy(policyId string) (int) {
@@ -254,14 +250,14 @@ func saveConfigsTofile() {
 	}
 }
 
-func  recycleClients() {
+func recycleClients() {
 	usedClient := make(map[string]string)
 	for _, policy := range policyConfigs {
 		for _, ecr := range policy.Rules {
 			//找到在用的
-			if _, ok := rawSockets[ecr.DistAddress]; ok {
-				dstAddrs := strings.Split(ecr.DistAddress, ":")
-				dstAddr := dstAddrs[0]
+			dstAddresses := strings.Split(ecr.DistAddress, ":")
+			dstAddr := dstAddresses[0]
+			if _, ok := rawSockets[dstAddr]; ok {
 				usedClient[dstAddr] = ecr.DistAddress
 			}
 		}
