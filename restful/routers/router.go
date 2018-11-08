@@ -11,11 +11,16 @@ import(
 	"github.com/astaxie/beego"
 	"../controllers"
 	"fmt"
+	"../../vflow"
 )
 
-func init() {
+func Init(netflowv9 *vflow.NetflowV9) {
 	fmt.Printf("router ininted.\n")
 	beego.Router("/user", &controllers.UserController{})
 	beego.Router("/policy", &controllers.PolicyController{})
 	beego.Router("/rule", &controllers.RuleController{})
+
+	controller := &controllers.StatsController{}
+	controller.Init(*netflowv9)
+	beego.Router("/stats",controller)
 }

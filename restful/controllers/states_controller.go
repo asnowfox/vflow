@@ -3,14 +3,18 @@ package controllers
 import (
 	"fmt"
 	"github.com/astaxie/beego"
-	"../../restful"
+	"../../vflow"
 )
 
 
 // Operations about object
-type NetflowController struct {
+type StatsController struct {
 	beego.Controller
+	netflowv9 vflow.NetflowV9
+}
 
+func (o *StatsController) Init(netflowv9 vflow.NetflowV9){
+	o.netflowv9 = netflowv9
 }
 // @Title Get
 // @Description find object by objectid
@@ -18,11 +22,11 @@ type NetflowController struct {
 // @Success 200 {object} models.Object
 // @Failure 403 :objectId is empty
 // @router /:objectId [get]
-func (o *NetflowController) Get() {
+func (o *StatsController) Get() {
 	agentId := o.GetString("agentId")
 	fmt.Printf("call get method of policy policyId is %s\r\n",agentId)
 	if agentId != "" {
-		loss := restful.NetflowInstance.NetflowPacketLoss(agentId)
+		loss := o.netflowv9.NetflowPacketLoss(agentId)
 
 		json := map[string]interface{}{}
 		json["loss"] = loss

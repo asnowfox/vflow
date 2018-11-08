@@ -1,8 +1,7 @@
 package restful
 
 import (
-	_ "./routers"
-	_ "./models"
+	"./routers"
 	"github.com/astaxie/beego"
 	"../vflow"
 )
@@ -12,14 +11,13 @@ type BegooServer struct {
 }
 var(
 	BeegoInstance *BegooServer
-	NetflowInstance *vflow.NetflowV9
 )
 
 func NewBeegoServer(netflowv9 *vflow.NetflowV9) (*BegooServer){
 	BeegoInstance = &BegooServer{
 
 	}
-	NetflowInstance = netflowv9
+	routers.Init(netflowv9)
 	return BeegoInstance
 }
 
