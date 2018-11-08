@@ -177,8 +177,8 @@ func AddRule(policyId string, rule Rule) (int,string) {
 	return curLen,"add rule succeed."
 }
 
-func DeleteRule(policyId string, rule Rule) (int) {
-	cfgMutex.Lock()
+func DeleteRule(policyId string, rule Rule) (int,string) {
+
 	var pid = -1
 	for i, e := range policyConfigs {
 		if e.PolicyId == policyId {
@@ -187,7 +187,7 @@ func DeleteRule(policyId string, rule Rule) (int) {
 		}
 	}
 	if pid == -1 {
-		return -1
+		return -1,"no policy "+policyId
 	}
 	var index = -1
 	for i, r := range policyConfigs[pid].Rules {
@@ -197,16 +197,19 @@ func DeleteRule(policyId string, rule Rule) (int) {
 			index = i
 		}
 	}
+	cfgMutex.Lock()
+	defer cfgMutex.Unlock()
 	if index != -1 {
 		copy(policyConfigs[pid].Rules, append(policyConfigs[pid].Rules[:index],
 			policyConfigs[pid].Rules[index+1:]...))
 		buildMap()
+		recycleClients()
+		saveConfigsTofile()
+		return index,"rule is deleted"
+	}else{
+		return -1,"can not find matched rule for policy "+policyId
 	}
-	recycleClients()
-	defer cfgMutex.Unlock()
 
-	saveConfigsTofile()
-	return index
 }
 
 func DeletePolicy(policyId string) (int) {
