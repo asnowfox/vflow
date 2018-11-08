@@ -25,16 +25,14 @@ package main
 import (
 	"bytes"
 	"net"
-	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
-
 	"../netflow/v9"
-	"github.com/VerizonDigital/vflow/producer"
-
 	"../mirror"
+	"github.com/VerizonDigital/vflow/producer"
+	"path"
 )
 
 // NetflowV9 represents netflow v9 collector
@@ -67,6 +65,7 @@ type NetflowV9Stats struct {
 var (
 	netflowV9UDPCh = make(chan NetflowV9UDPMsg, 1000)
 	netflowV9MQCh  = make(chan []byte, 1000)
+	mqEnabled = false
 	mCacheNF9      netflow9.MemCache
 	// ipfix udp payload pool
 	netflowV9Buffer = &sync.Pool{
@@ -114,20 +113,26 @@ func (i *NetflowV9) run() {
 	logger.Printf("netflow v9 is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 
 	mCacheNF9 = netflow9.GetCache(opts.NetflowV9TplCacheFile)
+	if opts.MQConfigFile != "none" {
+		mqEnabled = true
+		go func() {
+			p := producer.NewProducer(opts.MQName)
 
-	go func() {
-		p := producer.NewProducer(opts.MQName)
+			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
+			p.MQErrorCount = &i.stats.MQErrorCount
+			p.Logger = logger
+			p.Chan = netflowV9MQCh
+			p.Topic = opts.NetflowV9Topic
 
-		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
-		p.MQErrorCount = &i.stats.MQErrorCount
-		p.Logger = logger
-		p.Chan = netflowV9MQCh
-		p.Topic = opts.NetflowV9Topic
+			if err := p.Run(); err != nil {
+				logger.Fatal(err)
+			}
+		}()
+	}else{
+		mqEnabled = false
+		logger.Printf("disable json mq transfer")
+	}
 
-		if err := p.Run(); err != nil {
-			logger.Fatal(err)
-		}
-	}()
 
 	go func() {
 		if !opts.DynWorkers {
@@ -210,7 +215,7 @@ LOOP:
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
-		if decodedMsg.DataFlowSets != nil {
+		if decodedMsg.DataFlowSets != nil && mqEnabled {
 			for _, e := range decodedMsg.DataFlowSets {
 				b, err = decodedMsg.JSONMarshal(buf, e.DataSets)
 				if err != nil {
@@ -223,7 +228,6 @@ LOOP:
 				default:
 				}
 			}
-
 		}
 	}
 

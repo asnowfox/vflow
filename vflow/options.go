@@ -160,7 +160,7 @@ func NewOptions() *Options {
 		NetflowV9Topic:        "vflow.netflow9",
 		NetflowV9TplCacheFile: "/tmp/netflowv9.templates",
 
-		MQName:       "kafka",
+		MQName:       "none",
 		MQConfigFile: "mq.conf",
 
 		VFlowConfigPath: "/etc/vflow",
