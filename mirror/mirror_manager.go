@@ -3,7 +3,6 @@ package mirror
 import (
 	"log"
 	"io/ioutil"
-	"gopkg.in/yaml.v2"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"../netflow/v9"
 	"../ipfix"
 	"encoding/binary"
+	"encoding/json"
 )
 
 var (
@@ -256,7 +256,7 @@ func DeletePolicy(policyId string) (int,string) {
 	}
 }
 func saveConfigsTofile() {
-	b, err := yaml.Marshal(policyConfigs)
+	b, err := json.Marshal(policyConfigs)
 	if err == nil {
 		ioutil.WriteFile(mirrorCfgFile, b, 0x777)
 	}

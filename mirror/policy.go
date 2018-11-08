@@ -3,20 +3,20 @@ package mirror
 import (
 	"io/ioutil"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"os"
+	"encoding/json"
 )
 
 type Policy struct {
-	PolicyId string `yaml:"policyId",json:"policyId"`
-	Rules  []Rule `yaml:"rules",json:"rules"`
+	PolicyId string `json:"policyId"`
+	Rules  []Rule `json:"rules"`
 }
 
 type Rule struct {
-	Source      string `yaml:"source",json:"source"`
-	InPort      int32 `yaml:"inport",json:"inport"`
-	OutPort     int32 `yaml:"outport",json:"outport"`
-	DistAddress string `yaml:"distAddress",json:"distAddress"`
+	Source      string `json:"source"`
+	InPort      int32 `json:"inport"`
+	OutPort     int32 `json:"outport"`
+	DistAddress string `json:"distAddress"`
 }
 
 func LoadPolicy(mirrorCfg string) error{
@@ -26,7 +26,7 @@ func LoadPolicy(mirrorCfg string) error{
 		fmt.Printf("No Mirror config file is defined. \n")
 		return  err
 	}
-	err = yaml.Unmarshal(b, &policyConfigs)
+	err = json.Unmarshal(b, &policyConfigs)
 	if err != nil {
 		//log.Printf("Mirror config file is worong, exit! \n")
 		fmt.Printf("Mirror config file is worong,exit! \n")
