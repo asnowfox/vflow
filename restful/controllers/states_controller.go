@@ -26,11 +26,11 @@ func (o *StatsController) Get() {
 	agentId := o.GetString("agentId")
 	fmt.Printf("call get packet loss. agentId is %s\r\n",agentId)
 	if agentId != "" {
-		loss := o.netflowv9.NetflowPacketLoss(agentId)
+		loss,err := o.netflowv9.NetflowPacketLoss(agentId)
 
 		json := map[string]interface{}{}
 		json["loss"] = loss
-		json["message"] =  "packetloss"
+		json["message"] = err
 		o.Data["json"] = json
 		o.ServeJSON()
 	} else {
