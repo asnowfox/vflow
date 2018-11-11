@@ -186,14 +186,15 @@ func AddRule(policyId string, rule Rule) (int,string) {
 	defer cfgMutex.Unlock()
 	vlogger.Logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.DistAddress)
 	curLen := 0
-	for index,config := range policyConfigs {
-		if config.PolicyId == policyId {
-			for _,r := range config.Rules {
+	for index,policy := range policyConfigs {
+		if policy.PolicyId == policyId {
+			for _,r := range policy.Rules {
 				if isSameRule(rule,r){
 					return -1,"already has same rule."
 				}
 			}
-			policyConfigs[index].Rules = append(config.Rules, rule)
+			rule.DistAddress = policy.TargetAddress
+			policyConfigs[index].Rules = append(policy.Rules, rule)
 			vlogger.Logger.Printf("current rule size is %d.\n", len(policyConfigs[index].Rules))
 			curLen = len(policyConfigs[index].Rules)
 			break
@@ -209,7 +210,6 @@ func AddRule(policyId string, rule Rule) (int,string) {
 
 func isSameRule(r1 Rule,r2 Rule) bool{
 	if r1.Source == r2.Source &&
-		r1.DistAddress == r2.DistAddress &&
 		r1.InPort == r2.InPort &&
 		r1.OutPort == r2.OutPort{
 			return true
@@ -231,8 +231,7 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 	var index = -1
 	for i, r := range policyConfigs[pid].Rules {
 		if r.OutPort == rule.OutPort &&
-			r.InPort == rule.InPort &&
-			r.DistAddress == rule.DistAddress {
+			r.InPort == rule.InPort {
 			index = i
 			break
 		}
@@ -274,7 +273,8 @@ func DeletePolicy(policyId string) (int,string) {
 	}
 }
 func saveConfigsTofile() {
-	b, err := json.Marshal(policyConfigs)
+	b, err := json.MarshalIndent(policyConfigs,"","    ")
+
 	if err == nil {
 		ioutil.WriteFile(mirrorCfgFile, b, 0x777)
 	}
