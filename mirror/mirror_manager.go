@@ -16,16 +16,16 @@ import (
 
 var (
 	Netflowv9MirrorInstance *Netflowv9Mirror
-	IPFixMirrorInstance *IPFixMirror
-	mirrorMaps map[string][]Rule
-	rawSockets map[string]Conn
-	policyConfigs []Policy
-	mirrorCfgFile string
-	seqMutex       sync.Mutex
-	cfgMutex       sync.RWMutex
-	seqMap          = make(map[string]uint32)
-	ipfixChannel  = make(chan ipfix.Message, 1000)
-	netflowChannel  = make(chan netflow9.Message, 1000)
+	IPFixMirrorInstance     *IPFixMirror
+	mirrorMaps              map[string][]Rule
+	rawSockets              map[string]Conn
+	policyConfigs           []Policy
+	mirrorCfgFile           string
+	seqMutex                sync.Mutex
+	cfgMutex                sync.RWMutex
+	seqMap                  = make(map[string]uint32)
+	ipfixChannel            = make(chan ipfix.Message, 1000)
+	netflowChannel          = make(chan netflow9.Message, 1000)
 )
 
 const InputId = 10
@@ -38,14 +38,14 @@ type FlowMirrorStatus struct {
 	RawErrorCount        uint64
 }
 
-func Init(mirrorCfg string) error{
+func Init(mirrorCfg string) error {
 
 	err := LoadPolicy(mirrorCfg)
 	if err != nil {
 		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
 		fmt.Printf("Mirror config file is worong,exit! \n")
 		os.Exit(-1)
-		return  err
+		return err
 	}
 	mirrorCfgFile = mirrorCfg
 	mirrorMaps = make(map[string][]Rule)
@@ -54,55 +54,54 @@ func Init(mirrorCfg string) error{
 	return nil
 }
 
-func parsePort(value interface{}) uint32{
-	switch value.(type){
-		case []byte:
-			bytes := value.([]byte)
-			if len(bytes) == 2 {
-				return uint32(binary.BigEndian.Uint16(value.([]byte)))
-			}else if len(bytes) == 4 {
-				return uint32(binary.BigEndian.Uint32(value.([]byte)))
-			}
-		case uint32:
-			return value.(uint32)
-		case uint16:
-			return uint32(value.(uint16))
-		default:
-			return 0
+func parsePort(value interface{}) uint32 {
+	switch value.(type) {
+	case []byte:
+		bytes := value.([]byte)
+		if len(bytes) == 2 {
+			return uint32(binary.BigEndian.Uint16(value.([]byte)))
+		} else if len(bytes) == 4 {
+			return uint32(binary.BigEndian.Uint32(value.([]byte)))
+		}
+	case uint32:
+		return value.(uint32)
+	case uint16:
+		return uint32(value.(uint16))
+	default:
+		return 0
 	}
 	return 0
 }
 
-
-func  buildMap() {
+func buildMap() {
 	mirrorMaps = make(map[string][]Rule)
-	for _,policy := range policyConfigs {
+	for _, policy := range policyConfigs {
 		targetAddress := policy.TargetAddress
-		for i:=0;i< len(policy.Rules);i++ {
+		for i := 0; i < len(policy.Rules); i++ {
 			policy.Rules[i].DistAddress = targetAddress
 		}
 	}
-	for _,policy := range policyConfigs {
-		for _,rule := range policy.Rules {
+	for _, policy := range policyConfigs {
+		for _, rule := range policy.Rules {
 
 			fmt.Printf("target is %10s\n", rule.DistAddress)
 		}
 	}
 	for _, policy := range policyConfigs {
-		fmt.Printf("Policy %10s, target is %10s,rules count is %d\n", policy.PolicyId,policy.TargetAddress,len(policy.Rules))
-		for _,r := range policy.Rules {
-			if _, ok :=mirrorMaps[r.Source]; !ok {
-				mirrorMaps[r.Source] = make([]Rule,0)
+		fmt.Printf("Policy %10s, target is %10s,rules count is %d\n", policy.PolicyId, policy.TargetAddress, len(policy.Rules))
+		for _, r := range policy.Rules {
+			if _, ok := mirrorMaps[r.Source]; !ok {
+				mirrorMaps[r.Source] = make([]Rule, 0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
-			fmt.Printf("   (source:%15s, inputPort %5d, outputPort %5d) ->  %s \n",r.Source,r.InPort,r.OutPort,r.DistAddress)
-			remoteAddr := strings.Split(r.DistAddress,":")[0]
-			if _, ok :=rawSockets[remoteAddr]; !ok {
-				connect,err := NewRawConn(net.ParseIP(remoteAddr))
+			fmt.Printf("   (source:%15s, inputPort %5d, outputPort %5d) ->  %s \n", r.Source, r.InPort, r.OutPort, r.DistAddress)
+			remoteAddr := strings.Split(r.DistAddress, ":")[0]
+			if _, ok := rawSockets[remoteAddr]; !ok {
+				connect, err := NewRawConn(net.ParseIP(remoteAddr))
 				if err != nil {
-					vlogger.Logger.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
-					fmt.Printf("Mirror interface ip %s is wrong\n",remoteAddr)
-				}else{
+					vlogger.Logger.Printf("Mirror interface ip %s is wrong\n", remoteAddr)
+					fmt.Printf("Mirror interface ip %s is wrong\n", remoteAddr)
+				} else {
 					rawSockets[remoteAddr] = connect
 				}
 			}
@@ -111,7 +110,7 @@ func  buildMap() {
 }
 
 func createRawPacket(srcAddress string, srcPort int,
-	dstAddress string, dstPort int, data []byte) []byte{
+	dstAddress string, dstPort int, data []byte) []byte {
 	ipHLen := IPv4HLen
 	udp := UDP{srcPort, dstPort, 0, 0}
 	udpHdr := udp.Marshal()
@@ -129,7 +128,6 @@ func createRawPacket(srcAddress string, srcPort int,
 	return payload
 }
 
-
 func NewNetFlowv9Mirror() (*Netflowv9Mirror, error) {
 	mirrorInstance := new(Netflowv9Mirror)
 
@@ -143,13 +141,11 @@ func NewIPFixMirror() (*IPFixMirror, error) {
 	return mirrorInstance, nil
 }
 
-
-
 func GetPolicies() ([]Policy) {
 	return policyConfigs
 }
-func GetPolicyById(policyId string) (*Policy){
-	for _,policy := range policyConfigs {
+func GetPolicyById(policyId string) (*Policy) {
+	for _, policy := range policyConfigs {
 		if policy.PolicyId == policyId {
 			return &policy
 		}
@@ -157,40 +153,69 @@ func GetPolicyById(policyId string) (*Policy){
 	return nil
 }
 
-func AddPolicy(policy Policy) (int,string) {
+func UpdatePolicy(policyId string, nPolicy Policy) (int, string) {
+	index := 0
+	found := false
+	for _, config := range policyConfigs {
+		if config.PolicyId == policyId {
+			found = true
+			break
+		}
+		index++
+	}
+	if found {
+		policyConfigs[index].PolicyId = nPolicy.PolicyId
+		policyConfigs[index].TargetAddress = nPolicy.TargetAddress
+		buildMap()
+		saveConfigsTofile()
+		recycleClients()
+		return 0, "update success"
+	} else {
+		return -1, "can not find policy " + policyId
+	}
+}
+
+func AddPolicy(policy Policy) (int, string) {
 	vlogger.Logger.Printf("add config sourceId %s, target is %s, configs %d",
 		policy.PolicyId, policy.TargetAddress, len(policy.Rules))
-	for _,config := range policyConfigs {
+	result, e := HostAddrCheck(policy.TargetAddress)
+	if policy.PolicyId == "" {
+		return -1, "Policy id is blank"
+	}
+	if policy.Rules == nil {
+		policy.Rules = make([]Rule, 0)
+	}
+	for _, config := range policyConfigs {
 		if config.PolicyId == policy.PolicyId {
-			return -1,"already have this policy "+policy.PolicyId
+			return -1, "already have this policy " + policy.PolicyId
 		}
 	}
-	result,e := HostAddrCheck(policy.TargetAddress)
+
 	if !result {
-		return -1,e.Error()
+		return -1, e.Error()
 	}
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	policyConfigs = append(policyConfigs, policy)
 	buildMap()
 	saveConfigsTofile()
-	return len(policyConfigs),"add succeed."
+	return len(policyConfigs), "add succeed."
 }
 
-func AddRule(policyId string, rule Rule) (int,string) {
-	result,e := RuleCheck(rule)
-	if  !result {
-		return -1,e.Error()
+func AddRule(policyId string, rule Rule) (int, string) {
+	result, e := RuleCheck(rule)
+	if !result {
+		return -1, e.Error()
 	}
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
-	vlogger.Logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.DistAddress)
+	vlogger.Logger.Printf("add rule policyId %s, rule dist %s.", policyId, rule.DistAddress)
 	curLen := 0
-	for index,policy := range policyConfigs {
+	for index, policy := range policyConfigs {
 		if policy.PolicyId == policyId {
-			for _,r := range policy.Rules {
-				if isSameRule(rule,r){
-					return -1,"already has same rule."
+			for _, r := range policy.Rules {
+				if isSameRule(rule, r) {
+					return -1, "already has same rule."
 				}
 			}
 			rule.DistAddress = policy.TargetAddress
@@ -200,24 +225,24 @@ func AddRule(policyId string, rule Rule) (int,string) {
 			break
 		}
 	}
-	if curLen == 0{
-		return -1,"no policy id "+policyId
+	if curLen == 0 {
+		return -1, "no policy id " + policyId
 	}
 	buildMap()
 	saveConfigsTofile()
-	return curLen,"add rule succeed."
+	return curLen, "add rule succeed."
 }
 
-func isSameRule(r1 Rule,r2 Rule) bool{
+func isSameRule(r1 Rule, r2 Rule) bool {
 	if r1.Source == r2.Source &&
 		r1.InPort == r2.InPort &&
-		r1.OutPort == r2.OutPort{
-			return true
+		r1.OutPort == r2.OutPort {
+		return true
 	}
 	return false
 }
 
-func DeleteRule(policyId string, rule Rule) (int,string) {
+func DeleteRule(policyId string, rule Rule) (int, string) {
 	var pid = -1
 	for i, e := range policyConfigs {
 		if e.PolicyId == policyId {
@@ -226,7 +251,7 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 		}
 	}
 	if pid == -1 {
-		return -1,"no policy "+policyId
+		return -1, "no policy " + policyId
 	}
 	var index = -1
 	for i, r := range policyConfigs[pid].Rules {
@@ -244,13 +269,13 @@ func DeleteRule(policyId string, rule Rule) (int,string) {
 		buildMap()
 		recycleClients()
 		saveConfigsTofile()
-		return index,"rule is deleted"
-	}else{
-		return -1,"can not find matched rule for policy "+policyId
+		return index, "rule is deleted"
+	} else {
+		return -1, "can not find matched rule for policy " + policyId
 	}
 }
 
-func DeletePolicy(policyId string) (int,string) {
+func DeletePolicy(policyId string) (int, string) {
 	var index = -1
 	for i, e := range policyConfigs {
 		if e.PolicyId == policyId {
@@ -258,7 +283,7 @@ func DeletePolicy(policyId string) (int,string) {
 			break
 		}
 	}
-	vlogger.Logger.Printf("delete %s find index %d ", policyId ,index)
+	vlogger.Logger.Printf("delete %s find index %d ", policyId, index)
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	if index != -1 {
@@ -267,13 +292,13 @@ func DeletePolicy(policyId string) (int,string) {
 		buildMap()
 		recycleClients()
 		saveConfigsTofile()
-		return index,"delete success"
+		return index, "delete success"
 	} else {
-		return index,"can not find policy"
+		return index, "can not find policy"
 	}
 }
 func saveConfigsTofile() {
-	b, err := json.MarshalIndent(policyConfigs,"","    ")
+	b, err := json.MarshalIndent(policyConfigs, "", "    ")
 
 	if err == nil {
 		ioutil.WriteFile(mirrorCfgFile, b, 0x777)

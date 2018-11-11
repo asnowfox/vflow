@@ -102,6 +102,25 @@ func (o *PolicyController) Post() {
 		o.Data["json"] = json
 		o.ServeJSON()
 		return
+	}else if method == "update" {
+		policyId := o.GetString("policyId")
+		var ob mirror.Policy
+		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
+		json := map[string]interface{}{}
+		if err != nil {
+			json["result"] = -1
+			json["message"] = "parse json error"
+			o.Data["json"] = json
+			o.ServeJSON()
+			return
+		}
+		index,msg:=mirror.UpdatePolicy(policyId,ob)
+
+		json["result"] = index
+		json["message"] = msg
+		o.Data["json"] = json
+		o.ServeJSON()
+		return
 	}else{
 		json := map[string]interface{}{}
 		json["result"] = -1
