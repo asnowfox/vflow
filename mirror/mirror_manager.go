@@ -12,7 +12,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"../vlogger"
-	"./utils"
 )
 
 var (
@@ -160,7 +159,7 @@ func AddPolicy(policy Policy) (int,string) {
 			return -1,"already have this policy "+policy.PolicyId
 		}
 	}
-	result,e := utils.HostAddrCheck(policy.TargetAddress)
+	result,e := HostAddrCheck(policy.TargetAddress)
 	if !result {
 		return -1,e.Error()
 	}
@@ -173,7 +172,7 @@ func AddPolicy(policy Policy) (int,string) {
 }
 
 func AddRule(policyId string, rule Rule) (int,string) {
-	result,e := utils.RuleCheck(rule)
+	result,e := RuleCheck(rule)
 	if  !result {
 		return -1,e.Error()
 	}

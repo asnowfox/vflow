@@ -1,4 +1,4 @@
-package utils
+package mirror
 
 import (
 	"strings"
@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strconv"
 	"errors"
-	"../../mirror"
 )
 
 func HostAddrCheck(addr string) (bool,error) {
