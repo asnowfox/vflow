@@ -12,6 +12,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"../vlogger"
+	"./utils"
 )
 
 var (
@@ -76,6 +77,12 @@ func parsePort(value interface{}) uint32{
 
 func  buildMap() {
 	mirrorMaps = make(map[string][]Rule)
+	for _,policy := range policyConfigs {
+		targetAddress := policy.TargetAddress
+		for _,rule := range policy.Rules {
+			rule.DistAddress = targetAddress
+		}
+	}
 	for _, policy := range policyConfigs {
 		fmt.Printf("Policy %10s, rules count is %d\n", policy.PolicyId, len(policy.Rules))
 		for _,r := range policy.Rules {
@@ -146,11 +153,16 @@ func GetPolicyById(policyId string) (*Policy){
 }
 
 func AddPolicy(policy Policy) (int,string) {
-	vlogger.Logger.Printf("add config sourceId %s, configs %d",policy.PolicyId, len(policy.Rules))
+	vlogger.Logger.Printf("add config sourceId %s, target is %s, configs %d",
+		policy.PolicyId, policy.TargetAddress, len(policy.Rules))
 	for _,config := range policyConfigs {
 		if config.PolicyId == policy.PolicyId {
 			return -1,"already have this policy "+policy.PolicyId
 		}
+	}
+	result,e := utils.HostAddrCheck(policy.TargetAddress)
+	if !result {
+		return -1,e.Error()
 	}
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
@@ -161,6 +173,10 @@ func AddPolicy(policy Policy) (int,string) {
 }
 
 func AddRule(policyId string, rule Rule) (int,string) {
+	result,e := utils.RuleCheck(rule)
+	if  !result {
+		return -1,e.Error()
+	}
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	vlogger.Logger.Printf("add rule policyId %s, rule dist %s.",policyId, rule.DistAddress)

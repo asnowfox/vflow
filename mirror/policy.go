@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"encoding/json"
+	"../vlogger"
 )
 
 type Policy struct {
 	PolicyId string `json:"policyId"`
+	TargetAddress string `json:"targetAddress"`
 	Rules  []Rule `json:"rules"`
 }
 
@@ -22,13 +24,13 @@ type Rule struct {
 func LoadPolicy(mirrorCfg string) error{
 	b, err := ioutil.ReadFile(mirrorCfg)
 	if err != nil {
-		//log.Printf("No Mirror config file is defined. \n")
+		vlogger.Logger.Printf("No Mirror config file is defined. \n")
 		fmt.Printf("No Mirror config file is defined. \n")
 		return  err
 	}
 	err = json.Unmarshal(b, &policyConfigs)
 	if err != nil {
-		//log.Printf("Mirror config file is worong, exit! \n")
+		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
 		fmt.Printf("Mirror config file is worong,exit! \n")
 		os.Exit(-1)
 		return  err
