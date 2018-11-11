@@ -78,14 +78,13 @@ func  buildMap() {
 	mirrorMaps = make(map[string][]Rule)
 	for _,policy := range policyConfigs {
 		targetAddress := policy.TargetAddress
-		for _,rule := range policy.Rules {
-			rule.DistAddress = targetAddress
-			fmt.Printf("target is %10s\n", rule.DistAddress)
+		for i:=0;i< len(policy.Rules);i++ {
+			policy.Rules[i].DistAddress = targetAddress
 		}
 	}
 	for _,policy := range policyConfigs {
 		for _,rule := range policy.Rules {
-			
+
 			fmt.Printf("target is %10s\n", rule.DistAddress)
 		}
 	}
