@@ -39,7 +39,7 @@ func HostAddrCheck(addr string) (bool,error) {
 	return true,nil
 }
 
-func RuleCheck(rule mirror.Rule) (bool,error) {
+func RuleCheck(rule Rule) (bool,error) {
 	a := net.ParseIP(rule.Source)
 	if a == nil {
 		return false,errors.New("can not parse ip "+rule.Source)
