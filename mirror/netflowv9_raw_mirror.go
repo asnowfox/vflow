@@ -3,14 +3,13 @@ package mirror
 import (
 	"../netflow/v9"
 	"encoding/binary"
-	"log"
 	"sync/atomic"
 	"strconv"
 	"strings"
+	"../vlogger"
 )
 
 type Netflowv9Mirror struct {
-	Logger *log.Logger
 	stats  FlowMirrorStatus
 }
 
@@ -46,10 +45,17 @@ func (t *Netflowv9Mirror) Run() {
 			for _, mRule := range ec {
 				var msgFlowSets []netflow9.DataFlowSet
 				for _,flowSet := range sMsg.DataFlowSets {
-					flowDataSet := t.filterFlowDataSet(mRule,flowSet)
-					//该flowSet中有存在的记录
-					if len(flowDataSet.DataSets) > 0  {
-						msgFlowSets = append(msgFlowSets, flowDataSet)
+					//TODO 这里可以缓存区查找该flowSet对应的Rule
+					// agentId_inport_outport -> distAddress:port
+					if ok,_ := CatchMatch(sMsg.AgentID);ok {
+
+					}else{
+						flowDataSet := t.filterFlowDataSet(mRule,flowSet)
+						//该flowSet中有存在的记录
+						if len(flowDataSet.DataSets) > 0  {
+							msgFlowSets = append(msgFlowSets, flowDataSet)
+							//TODO 将该条记录添加到缓存中
+						}
 					}
 				}
 				//no data and no template records continue
@@ -79,12 +85,12 @@ func (t *Netflowv9Mirror) Run() {
 					err := raw.Send(rBytes)
 					if err != nil {
 						atomic.AddUint64(&t.stats.RawErrorCount, 1)
-						t.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
+						vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
 					}else{
 						atomic.AddUint64(&t.stats.RawSentCount, 1)
 					}
 				}else{
-					t.Logger.Printf("can not find raw socket for dist %s",dstAddr)
+					vlogger.Logger.Printf("can not find raw socket for dist %s",dstAddr)
 				}
 
 
