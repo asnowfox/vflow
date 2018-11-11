@@ -83,6 +83,12 @@ func  buildMap() {
 			fmt.Printf("target is %10s\n", rule.DistAddress)
 		}
 	}
+	for _,policy := range policyConfigs {
+		for _,rule := range policy.Rules {
+			
+			fmt.Printf("target is %10s\n", rule.DistAddress)
+		}
+	}
 	for _, policy := range policyConfigs {
 		fmt.Printf("Policy %10s, target is %10s,rules count is %d\n", policy.PolicyId,policy.TargetAddress,len(policy.Rules))
 		for _,r := range policy.Rules {
