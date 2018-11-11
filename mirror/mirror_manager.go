@@ -83,7 +83,7 @@ func  buildMap() {
 		}
 	}
 	for _, policy := range policyConfigs {
-		fmt.Printf("Policy %10s, rules count is %d\n", policy.PolicyId, len(policy.Rules))
+		fmt.Printf("Policy %10s, target is %10s,rules count is %d\n", policy.PolicyId,policy.TargetAddress,len(policy.Rules))
 		for _,r := range policy.Rules {
 			if _, ok :=mirrorMaps[r.Source]; !ok {
 				mirrorMaps[r.Source] = make([]Rule,0)
