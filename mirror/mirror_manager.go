@@ -80,6 +80,7 @@ func  buildMap() {
 		targetAddress := policy.TargetAddress
 		for _,rule := range policy.Rules {
 			rule.DistAddress = targetAddress
+			fmt.Printf("target is %10s\n", rule.DistAddress)
 		}
 	}
 	for _, policy := range policyConfigs {
