@@ -39,6 +39,7 @@ func Init(cfgFile string) (*WalkTask,error) {
 		return nil,err
 	}
 	var cfg DeviceSnmpConfig
+	fmt.Printf("file is %s",string(b))
 	err = json.Unmarshal(b, &cfg)
 	if err != nil {
 		vlogger.Logger.Printf("SNMP config file is worong, exit! \n")
@@ -46,7 +47,7 @@ func Init(cfgFile string) (*WalkTask,error) {
 		os.Exit(-1)
 		return  nil,err
 	}
-	fmt.Printf("delay is %d",cfg.delay)
+	fmt.Printf("delay is %d.\n",cfg.delay)
 	snmpTaskInstance.snmpConfigs = cfg
 	return snmpTaskInstance,nil
 }
