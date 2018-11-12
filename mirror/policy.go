@@ -9,32 +9,32 @@ import (
 )
 
 type Policy struct {
-	PolicyId string `json:"policyId"`
+	PolicyId      string `json:"policyId"`
 	TargetAddress string `json:"targetAddress"`
-	Enable int `json:"enable"`
-	Rules  []Rule `json:"rules"`
+	Enable        int    `json:"enable"`
+	Rules         []Rule `json:"rules"`
 }
 
 type Rule struct {
 	Source      string `json:"source"`
-	InPort      int32 `json:"inport"`
-	OutPort     int32 `json:"outport"`
+	InPort      int32  `json:"inport"`
+	OutPort     int32  `json:"outport"`
 	DistAddress string `json:"distAddress"`
 }
 
-func LoadPolicy(mirrorCfg string) error{
+func LoadPolicy(mirrorCfg string) error {
 	b, err := ioutil.ReadFile(mirrorCfg)
 	if err != nil {
 		vlogger.Logger.Printf("No Mirror config file is defined. \n")
 		fmt.Printf("No Mirror config file is defined. \n")
-		return  err
+		return err
 	}
 	err = json.Unmarshal(b, &policyConfigs)
 	if err != nil {
 		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
 		fmt.Printf("Mirror config file is worong,exit! \n")
 		os.Exit(-1)
-		return  err
+		return err
 	}
 	return nil
 }

@@ -18,6 +18,35 @@ var ifDesOid = ".1.3.6.1.2.1.31.1.1.1.18"
 type WalkTask struct {
 	snmpConfigs DeviceSnmpConfig
 }
+/***
+
+{
+    "interval":30,
+    "devices":[
+
+        {
+            "deviceAddress": "159.226.8.131",
+            "community":"cst*net"
+        },
+        {
+            "deviceAddress": "10.0.0.2",
+            "community":"public"
+        },
+        {
+            "deviceAddress": "10.0.0.3",
+            "community":"public"
+        }
+    ]
+}
+
+
+
+ */
+
+type DeviceSnmpConfig struct {
+	delay     int32             `json:"interval"`
+	deviceCfg []CommunityConfig `json:"devices"`
+}
 
 type CommunityConfig struct {
 	deviceAddress string `json:"deviceAddress"`
@@ -26,7 +55,7 @@ type CommunityConfig struct {
 
 var snmpTaskInstance *WalkTask
 var snmpCfgFile string
-
+var cfg DeviceSnmpConfig
 
 func Init(cfgFile string) (*WalkTask,error) {
 	snmpCfgFile = cfgFile
@@ -38,7 +67,7 @@ func Init(cfgFile string) (*WalkTask,error) {
 		fmt.Printf("No SNMP config file is defined. \n")
 		return nil,err
 	}
-	var cfg DeviceSnmpConfig
+
 	fmt.Printf("file is %s",string(b))
 	err = json.Unmarshal(b, &cfg)
 	if err != nil {
@@ -50,11 +79,6 @@ func Init(cfgFile string) (*WalkTask,error) {
 	fmt.Printf("delay is %d.\n",cfg.delay)
 	snmpTaskInstance.snmpConfigs = cfg
 	return snmpTaskInstance,nil
-}
-
-type DeviceSnmpConfig struct {
-	delay     int32             `json:"interval"`
-	deviceCfg []CommunityConfig `json:"devices"`
 }
 
 func (task *WalkTask) Run() {
