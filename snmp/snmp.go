@@ -32,13 +32,15 @@ func Init(cfgFile string) (*WalkTask,error) {
 		fmt.Printf("No Mirror config file is defined. \n")
 		return nil,err
 	}
-	err = json.Unmarshal(b, &snmpTaskInstance.snmpConfigs)
+	cfg := new (DeviceSnmpConfig)
+	err = json.Unmarshal(b, cfg)
 	if err != nil {
 		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
 		fmt.Printf("Mirror config file is worong,exit! \n")
 		os.Exit(-1)
 		return  nil,err
 	}
+	snmpTaskInstance.snmpConfigs = *cfg
 	return snmpTaskInstance,nil
 }
 
