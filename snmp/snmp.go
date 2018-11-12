@@ -40,7 +40,7 @@ func Init(cfgFile string) (*WalkTask,error) {
 		os.Exit(-1)
 		return  nil,err
 	}
-	fmt.Printf("delay is %d",cfg.deviceCfg)
+	fmt.Printf("delay is %d",cfg.delay)
 	snmpTaskInstance.snmpConfigs = *cfg
 	return snmpTaskInstance,nil
 }
