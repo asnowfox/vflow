@@ -22,7 +22,7 @@ type WalkTask struct {
 var snmpTaskInstance *WalkTask
 var snmpCfgFile string
 
-func Init(cfgFile string) error {
+func Init(cfgFile string) (*WalkTask,error) {
 	snmpCfgFile = cfgFile
 	snmpTaskInstance = new(WalkTask)
 
@@ -30,16 +30,16 @@ func Init(cfgFile string) error {
 	if err != nil {
 		vlogger.Logger.Printf("No Mirror config file is defined. \n")
 		fmt.Printf("No Mirror config file is defined. \n")
-		return err
+		return nil,err
 	}
 	err = json.Unmarshal(b, &snmpTaskInstance.snmpConfigs)
 	if err != nil {
 		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
 		fmt.Printf("Mirror config file is worong,exit! \n")
 		os.Exit(-1)
-		return err
+		return  nil,err
 	}
-	return nil
+	return snmpTaskInstance,nil
 }
 
 type DeviceSnmpConfig struct {
