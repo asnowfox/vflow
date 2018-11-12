@@ -19,8 +19,14 @@ type WalkTask struct {
 	snmpConfigs DeviceSnmpConfig
 }
 
+type CommunityConfig struct {
+	deviceAddress string `json:"deviceAddress"`
+	community     string `json:"community"`
+}
+
 var snmpTaskInstance *WalkTask
 var snmpCfgFile string
+
 
 func Init(cfgFile string) (*WalkTask,error) {
 	snmpCfgFile = cfgFile
@@ -28,20 +34,20 @@ func Init(cfgFile string) (*WalkTask,error) {
 
 	b, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
-		vlogger.Logger.Printf("No Mirror config file is defined. \n")
-		fmt.Printf("No Mirror config file is defined. \n")
+		vlogger.Logger.Printf("No SNMP config file is defined. \n")
+		fmt.Printf("No SNMP config file is defined. \n")
 		return nil,err
 	}
-	cfg := new (DeviceSnmpConfig)
-	err = json.Unmarshal(b, cfg)
+	var cfg DeviceSnmpConfig
+	err = json.Unmarshal(b, &cfg)
 	if err != nil {
-		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
-		fmt.Printf("Mirror config file is worong,exit! \n")
+		vlogger.Logger.Printf("SNMP config file is worong, exit! \n")
+		fmt.Printf("SNMP config file is worong,exit! \n")
 		os.Exit(-1)
 		return  nil,err
 	}
 	fmt.Printf("delay is %d",cfg.delay)
-	snmpTaskInstance.snmpConfigs = *cfg
+	snmpTaskInstance.snmpConfigs = cfg
 	return snmpTaskInstance,nil
 }
 
@@ -49,12 +55,6 @@ type DeviceSnmpConfig struct {
 	delay     int32             `json:"interval"`
 	deviceCfg []CommunityConfig `json:"devices"`
 }
-
-type CommunityConfig struct {
-	deviceAddress string `json:"deviceAddress"`
-	community     string `json:"community"`
-}
-
 
 func (task *WalkTask) Run() {
 	go func() {
@@ -85,7 +85,6 @@ func (task *WalkTask) walkIndex(deviceAddress string, community string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	indexResp, err := s.Walk(ifIndexOid)
 
 	if err == nil {
