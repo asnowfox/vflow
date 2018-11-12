@@ -84,7 +84,7 @@ func buildMap() {
 		}
 	}
 	for _, policy := range policyConfigs {
-		fmt.Printf("Policy %10s, enable %10t, target is %10s,rules count is %d\n",
+		fmt.Printf("Policy %10s, enable %10d, target is %10s,rules count is %d\n",
 			policy.PolicyId, policy.Enable, policy.TargetAddress, len(policy.Rules))
 		if policy.Enable == 0 {
 			continue
