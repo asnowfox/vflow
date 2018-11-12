@@ -34,6 +34,7 @@ import (
 	"../mirror"
 	"../flows"
 	"../vlogger"
+	"../snmp"
 )
 
 var (
@@ -56,6 +57,17 @@ func main() {
 
 
 	vlogger.Logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
+	snmp.Init(opts.CommunityFile)
+
+	//devices := make([]snmp.DeviceSnmpConfig,0)
+	//snmpTask,err := snmp.NewSnmpTask(30,devices)
+	//
+	//if err == nil {
+	//	snmpTask.Run()
+	//}else{
+	//	vlogger.Logger.Printf("unable to start snmp task, exit!")
+	//}
+
 	mirror.Init(opts.ForwardFile)
 
 	flowMirror,err1 := mirror.NewNetFlowv9Mirror()
@@ -73,9 +85,11 @@ func main() {
 	}
 
 	sFlow := flows.NewSFlow()
-
 	ipfix := flows.NewIPFIX(ipfixMirror)
 	netflow9 := flows.NewNetflowV9(flowMirror)
+	//delay int32,dstAddress[] DeviceSnmpConfig
+
+
 
 
 	protos := []flows.Proto{sFlow, ipfix, netflow9}

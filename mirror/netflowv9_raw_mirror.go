@@ -62,6 +62,8 @@ func (t *Netflowv9Mirror) Run() {
 				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0{
 					continue
 				}
+				//这个是针对这个rule进行发送的过程
+
 				var seq uint32 = 0
 				key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
 				// add a lock support
@@ -92,7 +94,6 @@ func (t *Netflowv9Mirror) Run() {
 				}else{
 					vlogger.Logger.Printf("can not find raw socket for dist %s",dstAddr)
 				}
-
 
 			}//end rule for
 			cfgMutex.RUnlock()

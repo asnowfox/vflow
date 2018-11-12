@@ -43,22 +43,23 @@ var (
 )
 
 type arrUInt32Flags []uint32
+
 var opts *Options
 
 var mqEnabled = false
 
-
 // Options represents options
 type Options struct {
 	// global options
-	Verbose     bool   `yaml:"verbose"`
-	LogFile     string `yaml:"log-file"`
-	ForwardFile string `yaml:"mirror-config-file"`
-	PIDFile     string `yaml:"pid-file"`
-	CPUCap      string `yaml:"cpu-cap"`
-	DynWorkers  bool   `yaml:"dynamic-workers"`
+	Verbose       bool   `yaml:"verbose"`
+	LogFile       string `yaml:"log-file"`
+	ForwardFile   string `yaml:"mirror-config-file"`
+	CommunityFile string `yaml:"community-config-file"`
+	PIDFile       string `yaml:"pid-file"`
+	CPUCap        string `yaml:"cpu-cap"`
+	DynWorkers    bool   `yaml:"dynamic-workers"`
 	//Logger      *log.Logger
-	version     bool
+	version bool
 
 	// stats options
 	StatsEnabled  bool   `yaml:"stats-enabled"`
@@ -127,12 +128,13 @@ func (a *arrUInt32Flags) Set(value string) error {
 // NewOptions constructs new options
 func NewOptions() *Options {
 	return &Options{
-		Verbose:    false,
-		version:    false,
-		DynWorkers: true,
-		PIDFile:    "/var/run/vflow.pid",
-		ForwardFile: "/etc/vflow/forward.conf",
-		CPUCap:     "100%",
+		Verbose:       false,
+		version:       false,
+		DynWorkers:    true,
+		PIDFile:       "/var/run/vflow.pid",
+		ForwardFile:   "/etc/vflow/forward.conf",
+		CommunityFile: "/etc/vflow/snmp.conf",
+		CPUCap:        "100%",
 
 		StatsEnabled:  true,
 		StatsHTTPPort: "8081",

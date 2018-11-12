@@ -39,7 +39,6 @@ type FlowMirrorStatus struct {
 }
 
 func Init(mirrorCfg string) error {
-
 	err := LoadPolicy(mirrorCfg)
 	if err != nil {
 		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
@@ -76,19 +75,20 @@ func parsePort(value interface{}) uint32 {
 func buildMap() {
 	mirrorMaps = make(map[string][]Rule)
 	for _, policy := range policyConfigs {
+		if policy.Enable == 0{
+			continue
+		}
 		targetAddress := policy.TargetAddress
 		for i := 0; i < len(policy.Rules); i++ {
 			policy.Rules[i].DistAddress = targetAddress
 		}
 	}
 	for _, policy := range policyConfigs {
-		for _, rule := range policy.Rules {
-
-			fmt.Printf("target is %10s\n", rule.DistAddress)
+		fmt.Printf("Policy %10s, enable %10t, target is %10s,rules count is %d\n",
+			policy.PolicyId, policy.Enable, policy.TargetAddress, len(policy.Rules))
+		if policy.Enable == 0 {
+			continue
 		}
-	}
-	for _, policy := range policyConfigs {
-		fmt.Printf("Policy %10s, target is %10s,rules count is %d\n", policy.PolicyId, policy.TargetAddress, len(policy.Rules))
 		for _, r := range policy.Rules {
 			if _, ok := mirrorMaps[r.Source]; !ok {
 				mirrorMaps[r.Source] = make([]Rule, 0)
@@ -166,6 +166,7 @@ func UpdatePolicy(policyId string, nPolicy Policy) (int, string) {
 	if found {
 		policyConfigs[index].PolicyId = nPolicy.PolicyId
 		policyConfigs[index].TargetAddress = nPolicy.TargetAddress
+		policyConfigs[index].Enable = nPolicy.Enable
 		buildMap()
 		saveConfigsTofile()
 		recycleClients()

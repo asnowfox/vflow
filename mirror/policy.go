@@ -11,6 +11,7 @@ import (
 type Policy struct {
 	PolicyId string `json:"policyId"`
 	TargetAddress string `json:"targetAddress"`
+	Enable int `json:"enable"`
 	Rules  []Rule `json:"rules"`
 }
 
