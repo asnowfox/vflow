@@ -25,16 +25,16 @@ type WalkTask struct {
     "devices":[
 
         {
-            "deviceAddress": "159.226.8.131",
-            "community":"cst*net"
+            "DeviceAddress": "159.226.8.131",
+            "Community":"cst*net"
         },
         {
-            "deviceAddress": "10.0.0.2",
-            "community":"public"
+            "DeviceAddress": "10.0.0.2",
+            "Community":"public"
         },
         {
-            "deviceAddress": "10.0.0.3",
-            "community":"public"
+            "DeviceAddress": "10.0.0.3",
+            "Community":"public"
         }
     ]
 }
@@ -44,13 +44,13 @@ type WalkTask struct {
  */
 
 type DeviceSnmpConfig struct {
-	delay     int32             `json:"interval"`
-	deviceCfg []CommunityConfig `json:"devices"`
+	Interval     int32             `json:"interval"`
+	DeviceCfg []CommunityConfig `json:"devices"`
 }
 
 type CommunityConfig struct {
-	deviceAddress string `json:"deviceAddress"`
-	community     string `json:"community"`
+	DeviceAddress string `json:"DeviceAddress"`
+	Community     string `json:"Community"`
 }
 
 var snmpTaskInstance *WalkTask
@@ -68,7 +68,7 @@ func Init(cfgFile string) (*WalkTask,error) {
 		return nil,err
 	}
 
-	fmt.Printf("file is %s",string(b))
+	fmt.Printf("config is %s",string(b))
 	err = json.Unmarshal(b, &cfg)
 	if err != nil {
 		vlogger.Logger.Printf("SNMP config file is worong, exit! \n")
@@ -76,14 +76,14 @@ func Init(cfgFile string) (*WalkTask,error) {
 		os.Exit(-1)
 		return  nil,err
 	}
-	fmt.Printf("delay is %d. device length is %d\n",cfg.delay, len(cfg.deviceCfg))
+	fmt.Printf("delay is %d. device length is %d\n",cfg.Interval, len(cfg.DeviceCfg))
 	snmpTaskInstance.snmpConfigs = cfg
 	return snmpTaskInstance,nil
 }
 
 func (task *WalkTask) Run() {
 	go func() {
-		duration := time.Duration(time.Duration(task.snmpConfigs.delay) * time.Second)
+		duration := time.Duration(time.Duration(task.snmpConfigs.Interval) * time.Second)
 		timer1 := time.NewTicker(duration)
 		for {
 			select {
@@ -95,8 +95,8 @@ func (task *WalkTask) Run() {
 }
 
 func (task *WalkTask) task() {
-	for _, dev := range task.snmpConfigs.deviceCfg {
-		task.walkIndex(dev.deviceAddress, dev.community)
+	for _, dev := range task.snmpConfigs.DeviceCfg {
+		task.walkIndex(dev.DeviceAddress, dev.Community)
 	}
 }
 
@@ -105,8 +105,8 @@ type NameIndex struct {
 	IfIndex string
 }
 
-func (task *WalkTask) walkIndex(deviceAddress string, community string) {
-	s, err := gosnmp.NewGoSNMP(deviceAddress, community, gosnmp.Version2c, 5)
+func (task *WalkTask) walkIndex(DeviceAddress string, Community string) {
+	s, err := gosnmp.NewGoSNMP(DeviceAddress, Community, gosnmp.Version2c, 5)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -149,20 +149,20 @@ func (task *WalkTask) walkIndex(deviceAddress string, community string) {
 }
 
 
-func (task *WalkTask) AddConfig(deviceCfg CommunityConfig) (int, string) {
-	for _, addr := range task.snmpConfigs.deviceCfg {
-		if addr.deviceAddress == deviceCfg.deviceAddress {
+func (task *WalkTask) AddConfig(DeviceCfg CommunityConfig) (int, string) {
+	for _, addr := range task.snmpConfigs.DeviceCfg {
+		if addr.DeviceAddress == DeviceCfg.DeviceAddress {
 			return -1, "config exist!"
 		}
 	}
-	task.snmpConfigs.deviceCfg = append(task.snmpConfigs.deviceCfg, deviceCfg)
-	return len(task.snmpConfigs.deviceCfg), "add success!"
+	task.snmpConfigs.DeviceCfg = append(task.snmpConfigs.DeviceCfg, DeviceCfg)
+	return len(task.snmpConfigs.DeviceCfg), "add success!"
 }
 
 func (task *WalkTask) DeleteConfig(deviceAddr string) (int, string) {
 	index := -1
-	for i, addr := range task.snmpConfigs.deviceCfg {
-		if addr.deviceAddress == deviceAddr {
+	for i, addr := range task.snmpConfigs.DeviceCfg {
+		if addr.DeviceAddress == deviceAddr {
 			index = i
 			break
 		}
@@ -170,13 +170,13 @@ func (task *WalkTask) DeleteConfig(deviceAddr string) (int, string) {
 	if index == -1 {
 		return -1, "can not find address " + deviceAddr
 	}
-	task.snmpConfigs.deviceCfg = append(task.snmpConfigs.deviceCfg[:index],
-		task.snmpConfigs.deviceCfg[index+1:]...)
+	task.snmpConfigs.DeviceCfg = append(task.snmpConfigs.DeviceCfg[:index],
+		task.snmpConfigs.DeviceCfg[index+1:]...)
 	err := saveConfigToFile()
 	if err != nil {
 		return -1, "save config to file error"
 	}
-	return len(task.snmpConfigs.deviceCfg), "delete success!"
+	return len(task.snmpConfigs.DeviceCfg), "delete success!"
 }
 
 func saveConfigToFile() error {
