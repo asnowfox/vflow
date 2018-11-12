@@ -115,8 +115,8 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) {
 	if err == nil {
 		for _, v := range indexResp {
 
-			log.Printf("Response: %s : %s : %s \n",
-				v.Name, v.Value.(string), v.Type.String())
+			log.Printf("Response: %s : %d : %s \n",
+				v.Name, v.Value, v.Type.String())
 
 		}
 	} else {
@@ -127,17 +127,17 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) {
 	if err == nil {
 		for _, v := range nameResp {
 			log.Printf("Response: %s : %s : %s \n",
-				v.Name, v.Value.(string), v.Type.String())
+				v.Name, v.Value, v.Type.String())
 		}
 	} else {
 		log.Printf("snmp walk err %e", err)
 	}
 
-	desResp, err := s.Walk(ifNameOid)
+	desResp, err := s.Walk(ifDesOid)
 	if err == nil {
 		for _, v := range desResp {
 			log.Printf("Response: %s : %s : %s \n",
-				v.Name, v.Value.(string), v.Type.String())
+				v.Name, v.Value, v.Type.String())
 		}
 	} else {
 		log.Printf("snmp walk err %e", err)
