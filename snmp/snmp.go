@@ -114,10 +114,10 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) {
 
 	if err == nil {
 		for _, v := range indexResp {
-			switch v.Type {
-			case gosnmp.OctetString:
-				log.Printf("Response: %s : %s : %s \n", v.Name, v.Value.(string), v.Type.String())
-			}
+
+			log.Printf("Response: %s : %s : %s \n",
+				v.Name, v.Value.(string), v.Type.String())
+
 		}
 	} else {
 		log.Printf("snmp walk err %e", err)
@@ -126,10 +126,8 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) {
 	nameResp, err := s.Walk(ifNameOid)
 	if err == nil {
 		for _, v := range nameResp {
-			switch v.Type {
-			case gosnmp.OctetString:
-				log.Printf("Response: %s : %s : %s \n", v.Name, v.Value.(string), v.Type.String())
-			}
+			log.Printf("Response: %s : %s : %s \n",
+				v.Name, v.Value.(string), v.Type.String())
 		}
 	} else {
 		log.Printf("snmp walk err %e", err)
@@ -138,10 +136,8 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) {
 	desResp, err := s.Walk(ifNameOid)
 	if err == nil {
 		for _, v := range desResp {
-			switch v.Type {
-			case gosnmp.OctetString:
-				log.Printf("Response: %s : %s : %s \n", v.Name, v.Value.(string), v.Type.String())
-			}
+			log.Printf("Response: %s : %s : %s \n",
+				v.Name, v.Value.(string), v.Type.String())
 		}
 	} else {
 		log.Printf("snmp walk err %e", err)
