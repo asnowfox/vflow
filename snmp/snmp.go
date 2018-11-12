@@ -40,6 +40,7 @@ func Init(cfgFile string) (*WalkTask,error) {
 		os.Exit(-1)
 		return  nil,err
 	}
+	fmt.Printf("delay is %d",cfg.deviceCfg)
 	snmpTaskInstance.snmpConfigs = *cfg
 	return snmpTaskInstance,nil
 }
@@ -54,44 +55,6 @@ type CommunityConfig struct {
 	community     string `json:"community"`
 }
 
-func (task *WalkTask) AddConfig(deviceCfg CommunityConfig) (int, string) {
-	for _, addr := range task.snmpConfigs.deviceCfg {
-		if addr.deviceAddress == deviceCfg.deviceAddress {
-			return -1, "config exist!"
-		}
-	}
-	task.snmpConfigs.deviceCfg = append(task.snmpConfigs.deviceCfg, deviceCfg)
-	return len(task.snmpConfigs.deviceCfg), "add success!"
-}
-
-func (task *WalkTask) DeleteConfig(deviceAddr string) (int, string) {
-	index := -1
-	for i, addr := range task.snmpConfigs.deviceCfg {
-		if addr.deviceAddress == deviceAddr {
-			index = i
-			break
-		}
-	}
-	if index == -1 {
-		return -1, "can not find address " + deviceAddr
-	}
-	task.snmpConfigs.deviceCfg = append(task.snmpConfigs.deviceCfg[:index],
-		task.snmpConfigs.deviceCfg[index+1:]...)
-	err := saveConfigToFile()
-	if err != nil {
-		return -1, "save config to file error"
-	}
-	return len(task.snmpConfigs.deviceCfg), "delete success!"
-}
-
-func saveConfigToFile() error {
-	b, err := json.MarshalIndent(snmpTaskInstance.snmpConfigs, "", "    ")
-	if err == nil {
-		return ioutil.WriteFile(snmpCfgFile, b, 0x777)
-	} else {
-		return err
-	}
-}
 
 func (task *WalkTask) Run() {
 	go func() {
@@ -158,5 +121,45 @@ func (task *WalkTask) walkIndex(deviceAddress string, community string) {
 		}
 	} else {
 		log.Printf("snmp walk err %e", err)
+	}
+}
+
+
+func (task *WalkTask) AddConfig(deviceCfg CommunityConfig) (int, string) {
+	for _, addr := range task.snmpConfigs.deviceCfg {
+		if addr.deviceAddress == deviceCfg.deviceAddress {
+			return -1, "config exist!"
+		}
+	}
+	task.snmpConfigs.deviceCfg = append(task.snmpConfigs.deviceCfg, deviceCfg)
+	return len(task.snmpConfigs.deviceCfg), "add success!"
+}
+
+func (task *WalkTask) DeleteConfig(deviceAddr string) (int, string) {
+	index := -1
+	for i, addr := range task.snmpConfigs.deviceCfg {
+		if addr.deviceAddress == deviceAddr {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return -1, "can not find address " + deviceAddr
+	}
+	task.snmpConfigs.deviceCfg = append(task.snmpConfigs.deviceCfg[:index],
+		task.snmpConfigs.deviceCfg[index+1:]...)
+	err := saveConfigToFile()
+	if err != nil {
+		return -1, "save config to file error"
+	}
+	return len(task.snmpConfigs.deviceCfg), "delete success!"
+}
+
+func saveConfigToFile() error {
+	b, err := json.MarshalIndent(snmpTaskInstance.snmpConfigs, "", "    ")
+	if err == nil {
+		return ioutil.WriteFile(snmpCfgFile, b, 0x777)
+	} else {
+		return err
 	}
 }
