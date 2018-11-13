@@ -28,15 +28,13 @@ type WalkTask struct {
 }
 
 type PortInfo struct {
-	ifIndex int
-	ifName string
-	ifDes string
+	IfIndex int    `json:"ifIndex"`
+	IfName  string `json:"ifName"`
+	IfDes   string `json:"ifDes"`
 }
 
-
-
 type DeviceSnmpConfig struct {
-	Interval     int32             `json:"interval"`
+	Interval  int32             `json:"interval"`
 	DeviceCfg []CommunityConfig `json:"devices"`
 }
 
@@ -45,9 +43,7 @@ type CommunityConfig struct {
 	Community     string `json:"Community"`
 }
 
-
-
-func Init(cfgFile string) (*WalkTask,error) {
+func Init(cfgFile string) (*WalkTask, error) {
 	snmpCfgFile = cfgFile
 	SnmpTaskInstance = new(WalkTask)
 
@@ -55,24 +51,24 @@ func Init(cfgFile string) (*WalkTask,error) {
 	if err != nil {
 		vlogger.Logger.Printf("No SNMP config file is defined. \n")
 		fmt.Printf("No SNMP config file is defined. \n")
-		return nil,err
+		return nil, err
 	}
 
-	fmt.Printf("config is %s",string(b))
+	fmt.Printf("config is %s", string(b))
 	err = json.Unmarshal(b, &cfg)
 	if err != nil {
 		vlogger.Logger.Printf("SNMP config file is worong, exit! \n")
 		fmt.Printf("SNMP config file is worong,exit! \n")
 		os.Exit(-1)
-		return  nil,err
+		return nil, err
 	}
-	fmt.Printf("delay is %d. device length is %d\n",cfg.Interval, len(cfg.DeviceCfg))
+	fmt.Printf("delay is %d. device length is %d\n", cfg.Interval, len(cfg.DeviceCfg))
 	SnmpTaskInstance.snmpConfigs = cfg
-	return SnmpTaskInstance,nil
+	return SnmpTaskInstance, nil
 }
 
 func (task *WalkTask) Run() {
-	go func(){
+	go func() {
 		task.task()
 	}()
 
@@ -106,9 +102,9 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) error {
 	}
 	indexResp, err := s.Walk(ifIndexOid)
 
-	indexList := make([]int,0)
-	nameList := make([]string,0)
-	desList := make([]string,0)
+	indexList := make([]int, 0)
+	nameList := make([]string, 0)
+	desList := make([]string, 0)
 
 	if err == nil {
 		for _, v := range indexResp {
@@ -146,41 +142,41 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) error {
 	}
 
 	rwLock.RLock()
-	defer  rwLock.RUnlock()
+	defer rwLock.RUnlock()
 
-	if(len(indexList) == len(nameList)) && (len(indexList) == len(desList)){
-		devicePortMap[DeviceAddress] = make([]PortInfo,0)
+	if (len(indexList) == len(nameList)) && (len(indexList) == len(desList)) {
+		devicePortMap[DeviceAddress] = make([]PortInfo, 0)
 		for i, index := range indexList {
-			info := PortInfo{index,nameList[i],desList[i]}
+			info := PortInfo{index, nameList[i], desList[i]}
 			devicePortMap[DeviceAddress] = append(devicePortMap[DeviceAddress], info)
 		}
-	}else{
+	} else {
 		return errors.New("snmp walk err response is not equal")
 		log.Printf("snmp walk err response is not equal")
 	}
 	return nil
 }
 
-func (task *WalkTask) RefreshConfig(deviceIp string) ([]PortInfo,error) {
+func (task *WalkTask) RefreshConfig(deviceIp string) ([]PortInfo, error) {
 	community := ""
 	found := false
-	for _,devCfg := range task.snmpConfigs.DeviceCfg {
+	for _, devCfg := range task.snmpConfigs.DeviceCfg {
 		if devCfg.DeviceAddress == deviceIp {
 			found = true
 			community = devCfg.Community
 			break
 		}
 	}
-	if found{
+	if found {
 		err := task.walkIndex(deviceIp, community)
-		if err == nil{
-			return devicePortMap[deviceIp],nil
-		}else{
-			return make([]PortInfo,0),err
+		if err == nil {
+			return devicePortMap[deviceIp], nil
+		} else {
+			return make([]PortInfo, 0), err
 		}
 
-	}else{
-		return make([]PortInfo,0),errors.New("no device "+deviceIp)
+	} else {
+		return make([]PortInfo, 0), errors.New("no device " + deviceIp)
 	}
 }
 
@@ -217,7 +213,6 @@ func (task *WalkTask) DeleteConfig(deviceAddr string) (int, string) {
 func (task *WalkTask) ListConfig() ([]CommunityConfig) {
 	return task.snmpConfigs.DeviceCfg
 }
-
 
 func (task *WalkTask) ListPortInfo(devAddress string) ([]PortInfo) {
 	rwLock.RLock()
