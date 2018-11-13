@@ -41,8 +41,8 @@ func TransRule(deviceIp string,r mirror.Rule)RRule{
 	}
 	oPortInfo,err := snmp.SnmpTaskInstance.PortInfo(deviceIp,int(r.OutPort))
 	if err== nil {
-		rule.InportName = oPortInfo.IfName
-		rule.InportDes = oPortInfo.IfDes
+		rule.OutportName = oPortInfo.IfName
+		rule.OutportDes = oPortInfo.IfDes
 	}
 	return *rule
 }
