@@ -32,6 +32,8 @@ func (o *DeviceController) Post() {
 		msg := "parse json error."
 		if err != nil {
 			cnt, msg = snmp.SnmpTaskInstance.AddConfig(ob)
+		}else{
+			vlogger.Logger.Printf("parse json error %s",err.Error())
 		}
 
 		json := map[string]interface{}{}
