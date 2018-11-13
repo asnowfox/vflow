@@ -17,6 +17,7 @@ var ifNameOid = ".1.3.6.1.2.1.31.1.1.1.1"
 var ifIndexOid = ".1.3.6.1.2.1.2.2.1.1"
 var ifDesOid = ".1.3.6.1.2.1.31.1.1.1.18"
 var devicePortMap = make(map[string][]PortInfo)
+var devicePortIndexMap = make(map[string]map[int]PortInfo)
 var rwLock = new(sync.RWMutex)
 
 var SnmpTaskInstance *WalkTask
@@ -146,9 +147,11 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) error {
 
 	if (len(indexList) == len(nameList)) && (len(indexList) == len(desList)) {
 		devicePortMap[DeviceAddress] = make([]PortInfo, 0)
+		devicePortIndexMap[DeviceAddress] = make(map[int]PortInfo) //清空
 		for i, index := range indexList {
 			info := PortInfo{index, nameList[i], desList[i]}
 			devicePortMap[DeviceAddress] = append(devicePortMap[DeviceAddress], info)
+			devicePortIndexMap[DeviceAddress][index] = info
 		}
 	} else {
 		return errors.New("snmp walk err response is not equal")
@@ -219,6 +222,18 @@ func (task *WalkTask) ListPortInfo(devAddress string) ([]PortInfo) {
 	rwLock.RLock()
 	defer rwLock.RLock()
 	return devicePortMap[devAddress]
+}
+
+func (task *WalkTask) PortInfo(devAddress string,index int) (PortInfo,error) {
+	rwLock.RLock()
+	defer rwLock.RLock()
+	if _,ok := devicePortMap[devAddress];!ok{
+		return *new(PortInfo),errors.New("Can not find device")
+	}
+	if _,ok := devicePortIndexMap[devAddress][index];!ok{
+		return *new(PortInfo),errors.New("Can not find index")
+	}
+	return devicePortIndexMap[devAddress][index],nil
 }
 
 func saveConfigToFile() error {

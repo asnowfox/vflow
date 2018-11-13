@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/astaxie/beego"
 	"../../mirror"
+	"../models"
 	"fmt"
 	"encoding/json"
 )
@@ -24,19 +25,23 @@ func (o *PolicyController) Get() {
 	fmt.Printf("call get method of policy policyId is %s\r\n", policyId)
 	if policyId != "" {
 		policy := mirror.GetPolicyById(policyId)
-		if policy == nil{
+		if policy == nil {
 			o.Data["json"] = "{}"
 			o.ServeJSON()
 			return
-		}else{
-			o.Data["json"] = *policy
+		} else {
+			o.Data["json"] = models.TransPolicy(*policy)
 			o.ServeJSON()
 			return
 		}
 	} else {
+		data := make([]models.RPolicy,0)
 		configs := mirror.GetPolicies()
+		for _,p := range configs {
+			data = append(data, models.TransPolicy(p))
+		}
 		fmt.Printf("serve all configs\r\n")
-		o.Data["json"] = configs
+		o.Data["json"] = data
 		o.ServeJSON()
 		return
 	}
@@ -44,7 +49,6 @@ func (o *PolicyController) Get() {
 	o.ServeJSON()
 	return
 }
-
 
 // @Title Create
 // @Description create object
@@ -54,7 +58,7 @@ func (o *PolicyController) Get() {
 // @router / [post]
 func (o *PolicyController) Post() {
 	method := o.GetString("method")
-	if method == "add"{
+	if method == "add" {
 		var ob mirror.Policy
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 		json := map[string]interface{}{}
@@ -65,23 +69,23 @@ func (o *PolicyController) Post() {
 			o.ServeJSON()
 			return
 		}
-		index,msg:=mirror.AddPolicy(ob)
+		index, msg := mirror.AddPolicy(ob)
 
 		json["result"] = index
 		json["message"] = msg
 		o.Data["json"] = json
 		o.ServeJSON()
 		return
-	}else if method == "delete" {
+	} else if method == "delete" {
 		policyId := o.GetString("policyId")
-		index,msg := mirror.DeletePolicy(policyId)
+		index, msg := mirror.DeletePolicy(policyId)
 		json := map[string]interface{}{}
 		json["result"] = index
 		json["message"] = msg
 		o.Data["json"] = json
 		o.ServeJSON()
 		return
-	}else if method == "update" {
+	} else if method == "update" {
 		policyId := o.GetString("policyId")
 		var ob mirror.Policy
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
@@ -93,17 +97,17 @@ func (o *PolicyController) Post() {
 			o.ServeJSON()
 			return
 		}
-		index,msg:=mirror.UpdatePolicy(policyId,ob)
+		index, msg := mirror.UpdatePolicy(policyId, ob)
 		json["result"] = index
 		json["message"] = msg
 		o.Data["json"] = json
 		o.ServeJSON()
 		return
-	}else{
+	} else {
 		json := map[string]interface{}{}
 		json["result"] = -1
 		o.Data["json"] = json
-		json["message"] = "can not handle method "+method
+		json["message"] = "can not handle method " + method
 		o.ServeJSON()
 	}
 }
