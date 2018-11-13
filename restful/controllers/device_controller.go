@@ -30,7 +30,7 @@ func (o *DeviceController) Post() {
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 
 		msg := "parse json error."
-		if err != nil {
+		if err == nil {
 			cnt, msg = snmp.SnmpTaskInstance.AddConfig(ob)
 		}
 
