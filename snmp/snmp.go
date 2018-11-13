@@ -103,7 +103,7 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) error {
 	}
 	indexResp, err := s.Walk(ifIndexOid)
 
-	indexList := make([]int32,0)
+	indexList := make([]int,0)
 	nameList := make([]string,0)
 	desList := make([]string,0)
 
@@ -111,7 +111,7 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) error {
 		for _, v := range indexResp {
 			log.Printf("Response: %s : %d : %s \n",
 				v.Name, v.Value, v.Type.String())
-			indexList = append(indexList, v.Value.(int32))
+			indexList = append(indexList, v.Value.(int))
 		}
 	} else {
 		log.Printf("snmp walk err %e", err)
