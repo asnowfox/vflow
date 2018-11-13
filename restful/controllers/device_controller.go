@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"../../snmp"
+	"../../vlogger"
 	"encoding/json"
 )
 
@@ -24,7 +25,7 @@ func (o *DeviceController) Post() {
 	method := o.GetString("method")
 	cnt := -1
 	if method == "add" {
-		fmt.Printf("add a config to device controller")
+		vlogger.Logger.Printf("call add method of device controller")
 		var ob snmp.CommunityConfig
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 
@@ -41,7 +42,7 @@ func (o *DeviceController) Post() {
 		return
 	} else if method == "delete" {
 		deviceIp := o.GetString("deviceIp")
-		fmt.Printf("call delete method of device controller, deviceIP is %s\r\n", deviceIp)
+		vlogger.Logger.Printf("call delete method of device controller, deviceIP is %s\r\n", deviceIp)
 		cnt, msg := snmp.SnmpTaskInstance.DeleteConfig(deviceIp)
 		json := map[string]interface{}{}
 		json["result"] = cnt
@@ -51,7 +52,7 @@ func (o *DeviceController) Post() {
 		return
 	} else if method == "refresh" {
 		deviceIp := o.GetString("deviceIp")
-		fmt.Printf("call delete method of device controller, deviceIP is %s\r\n", deviceIp)
+		vlogger.Logger.Printf("call refresh method of device controller, deviceIP is %s\r\n", deviceIp)
 		ports, err := snmp.SnmpTaskInstance.RefreshConfig(deviceIp)
 		if err != nil {
 			json := map[string]interface{}{}
