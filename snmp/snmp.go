@@ -143,7 +143,7 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) error {
 	}
 
 	rwLock.RLock()
-	defer  rwLock.Unlock()
+	defer  rwLock.RUnlock()
 
 	if(len(indexList) == len(nameList)) && (len(indexList) == len(desList)){
 		devicePortMap[DeviceAddress] = make([]PortInfo,0)
@@ -218,7 +218,7 @@ func (task *WalkTask) ListConfig() ([]CommunityConfig) {
 
 func (task *WalkTask) ListPortInfo(devAddress string) ([]PortInfo) {
 	rwLock.RLock()
-	defer rwLock.Unlock()
+	defer rwLock.RLock()
 	return devicePortMap[devAddress]
 }
 
