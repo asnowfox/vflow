@@ -28,7 +28,7 @@ type WalkTask struct {
 }
 
 type PortInfo struct {
-	ifIndex int32
+	ifIndex int
 	ifName string
 	ifDes string
 }
