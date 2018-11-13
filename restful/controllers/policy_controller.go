@@ -94,7 +94,6 @@ func (o *PolicyController) Post() {
 			return
 		}
 		index,msg:=mirror.UpdatePolicy(policyId,ob)
-
 		json["result"] = index
 		json["message"] = msg
 		o.Data["json"] = json
@@ -107,5 +106,4 @@ func (o *PolicyController) Post() {
 		json["message"] = "can not handle method "+method
 		o.ServeJSON()
 	}
-
 }
