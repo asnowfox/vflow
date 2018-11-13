@@ -72,7 +72,10 @@ func Init(cfgFile string) (*WalkTask,error) {
 }
 
 func (task *WalkTask) Run() {
-	task.task()
+	go func(){
+		task.task()
+	}()
+
 	go func() {
 		duration := time.Duration(time.Duration(task.snmpConfigs.Interval) * time.Second)
 		timer1 := time.NewTicker(duration)
