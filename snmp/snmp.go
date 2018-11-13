@@ -227,6 +227,12 @@ func (task *WalkTask) ListPortInfo(devAddress string) ([]PortInfo) {
 func (task *WalkTask) PortInfo(devAddress string,index int) (PortInfo,error) {
 	rwLock.RLock()
 	defer rwLock.RLock()
+	if index == -1{
+		info := PortInfo{
+			-1 ,"all port","match all port",
+		}
+		return info,nil
+	}
 	if _,ok := devicePortMap[devAddress];!ok{
 		return *new(PortInfo),errors.New("Can not find device")
 	}
