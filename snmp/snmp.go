@@ -187,6 +187,7 @@ func (task *WalkTask) AddConfig(DeviceCfg CommunityConfig) (int, string) {
 		}
 	}
 	task.snmpConfigs.DeviceCfg = append(task.snmpConfigs.DeviceCfg, DeviceCfg)
+	saveConfigToFile()
 	return len(task.snmpConfigs.DeviceCfg), "add success!"
 }
 
