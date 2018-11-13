@@ -39,8 +39,8 @@ type DeviceSnmpConfig struct {
 }
 
 type CommunityConfig struct {
-	DeviceAddress string `json:"DeviceAddress"`
-	Community     string `json:"Community"`
+	DeviceAddress string `json:"deviceIp"`
+	Community     string `json:"community"`
 }
 
 func Init(cfgFile string) (*WalkTask, error) {
