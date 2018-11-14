@@ -57,7 +57,7 @@ func main() {
 
 
 	vlogger.Logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
-	task,_:=snmp.Init(opts.CommunityFile)
+	task,_:=snmp.NewDevicePortManager(opts.CommunityFile)
 	task.Run()
 
 	//devices := make([]snmp.DeviceSnmpConfig,0)

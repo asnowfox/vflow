@@ -33,7 +33,7 @@ import (
 var errUknownMarshalDataType = errors.New("unknown data type to marshal")
 
 // JSONMarshal encodes netflow v9 message
-func (m *Message) JSONMarshal(b *bytes.Buffer, datas [][]DecodedField) ([]byte, error) {
+func (m *Message) JSONMarshal(b *bytes.Buffer, datas []DataFlowRecord) ([]byte, error) {
 
 	b.WriteString("{")
 
@@ -53,7 +53,7 @@ func (m *Message) JSONMarshal(b *bytes.Buffer, datas [][]DecodedField) ([]byte, 
 	return b.Bytes(), nil
 }
 
-func (m *Message) encodeDataSet(b *bytes.Buffer,datas [][]DecodedField) error {
+func (m *Message) encodeDataSet(b *bytes.Buffer,datas []DataFlowRecord) error {
 	var (
 		length   int
 		dsLength int
@@ -65,15 +65,15 @@ func (m *Message) encodeDataSet(b *bytes.Buffer,datas [][]DecodedField) error {
 
 	b.WriteByte('[')
 
-	for i := range datas {
-		length = len(datas[i])
+	for i,data := range datas {
+		length = len(data.DataSets)
 
 		b.WriteByte('[')
-		for j := range datas[i] {
+		for j := range data.DataSets {
 			b.WriteString("{\"I\":")
-			b.WriteString(strconv.FormatInt(int64(datas[i][j].ID), 10))
+			b.WriteString(strconv.FormatInt(int64(data.DataSets[j].ID), 10))
 			b.WriteString(",\"V\":")
-			err = m.writeValue(b, i, j,datas)
+			err = m.writeValue(b, j,data.DataSets)
 
 			if j < length-1 {
 				b.WriteString("},")
@@ -94,44 +94,7 @@ func (m *Message) encodeDataSet(b *bytes.Buffer,datas [][]DecodedField) error {
 	return err
 }
 
-//func (m *Message) encodeDataSetFlat(b *bytes.Buffer) error {
-//	var (
-//		length   int
-//		dsLength int
-//		err      error
-//	)
-//
-//	b.WriteString("\"DataSets\":")
-//	dsLength = len(m.DataSets)
-//
-//	b.WriteByte('[')
-//
-//	for i := range m.DataSets {
-//		length = len(m.DataSets[i])
-//
-//		b.WriteByte('{')
-//		for j := range m.DataSets[i] {
-//			b.WriteByte('"')
-//			b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].ID), 10))
-//			b.WriteString("\":")
-//			err = m.writeValue(b, i, j)
-//
-//			if j < length-1 {
-//				b.WriteByte(',')
-//			} else {
-//				b.WriteByte('}')
-//			}
-//		}
-//
-//		if i < dsLength-1 {
-//			b.WriteString(",")
-//		}
-//	}
-//
-//	b.WriteByte(']')
-//
-//	return err
-//}
+
 
 func (m *Message) encodeHeader(b *bytes.Buffer) {
 	b.WriteString("\"Header\":{\"Version\":")
@@ -155,47 +118,47 @@ func (m *Message) encodeAgent(b *bytes.Buffer) {
 	b.WriteString("\",")
 }
 
-func (m *Message) writeValue(b *bytes.Buffer, i, j int,datas [][]DecodedField) error {
-	switch datas[i][j].Value.(type) {
+func (m *Message) writeValue(b *bytes.Buffer, i int, datas []DecodedField) error {
+	switch datas[i].Value.(type) {
 	case uint:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(uint)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(uint)), 10))
 	case uint8:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(uint8)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(uint8)), 10))
 	case uint16:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(uint16)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(uint16)), 10))
 	case uint32:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(uint32)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(uint32)), 10))
 	case uint64:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(uint64)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(uint64)), 10))
 	case int:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(int)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(int)), 10))
 	case int8:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(int8)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(int8)), 10))
 	case int16:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(int16)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(int16)), 10))
 	case int32:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(int32)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(int32)), 10))
 	case int64:
-		b.WriteString(strconv.FormatInt(int64(datas[i][j].Value.(int64)), 10))
+		b.WriteString(strconv.FormatInt(int64(datas[i].Value.(int64)), 10))
 	case float32:
-		b.WriteString(strconv.FormatFloat(float64(datas[i][j].Value.(float32)), 'E', -1, 32))
+		b.WriteString(strconv.FormatFloat(float64(datas[i].Value.(float32)), 'E', -1, 32))
 	case float64:
-		b.WriteString(strconv.FormatFloat(datas[i][j].Value.(float64), 'E', -1, 64))
+		b.WriteString(strconv.FormatFloat(datas[i].Value.(float64), 'E', -1, 64))
 	case string:
 		b.WriteByte('"')
-		b.WriteString(datas[i][j].Value.(string))
+		b.WriteString(datas[i].Value.(string))
 		b.WriteByte('"')
 	case net.IP:
 		b.WriteByte('"')
-		b.WriteString(datas[i][j].Value.(net.IP).String())
+		b.WriteString(datas[i].Value.(net.IP).String())
 		b.WriteByte('"')
 	case net.HardwareAddr:
 		b.WriteByte('"')
-		b.WriteString(datas[i][j].Value.(net.HardwareAddr).String())
+		b.WriteString(datas[i].Value.(net.HardwareAddr).String())
 		b.WriteByte('"')
 	case []uint8:
 		b.WriteByte('"')
-		b.WriteString("0x" + hex.EncodeToString(datas[i][j].Value.([]uint8)))
+		b.WriteString("0x" + hex.EncodeToString(datas[i].Value.([]uint8)))
 		b.WriteByte('"')
 	default:
 		return errUknownMarshalDataType

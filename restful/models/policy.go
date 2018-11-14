@@ -34,12 +34,12 @@ func TransPolicy(p mirror.Policy) RPolicy  {
 func TransRule(deviceIp string,r mirror.Rule)RRule{
 	rule := new(RRule)
 	rule.Rule = r
-	iPortInfo,err := snmp.SnmpTaskInstance.PortInfo(deviceIp,int(r.InPort))
+	iPortInfo,err := snmp.ManageInstance.PortInfo(deviceIp,int(r.InPort))
 	if err== nil {
 		rule.InportName = iPortInfo.IfName
 		rule.InportDes = iPortInfo.IfDes
 	}
-	oPortInfo,err := snmp.SnmpTaskInstance.PortInfo(deviceIp,int(r.OutPort))
+	oPortInfo,err := snmp.ManageInstance.PortInfo(deviceIp,int(r.OutPort))
 	if err== nil {
 		rule.OutportName = oPortInfo.IfName
 		rule.OutportDes = oPortInfo.IfDes

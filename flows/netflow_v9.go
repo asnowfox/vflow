@@ -217,7 +217,7 @@ LOOP:
 		i.pktStat.recordSeq(decodedMsg.AgentID,decodedMsg.Header.SrcID,decodedMsg.Header.SeqNum)
 		if decodedMsg.DataFlowSets != nil && mqEnabled {
 			for _, e := range decodedMsg.DataFlowSets {
-				b, err = decodedMsg.JSONMarshal(buf, e.DataSets)
+				b, err = decodedMsg.JSONMarshal(buf, e.DataFlowRecords)
 				if err != nil {
 					vlogger.Logger.Println(err)
 					continue

@@ -15,7 +15,7 @@ type DeviceController struct {
 
 func (o *DeviceController) Get() {
 	fmt.Printf("call get method of device controller")
-	devConfigs := snmp.SnmpTaskInstance.ListConfig()
+	devConfigs := snmp.ManageInstance.ListConfig()
 	o.Data["json"] = devConfigs
 	o.ServeJSON()
 	return
@@ -31,7 +31,7 @@ func (o *DeviceController) Post() {
 
 		msg := "parse json error."
 		if err == nil {
-			cnt, msg = snmp.SnmpTaskInstance.AddConfig(ob)
+			cnt, msg = snmp.ManageInstance.AddConfig(ob)
 		}
 
 		json := map[string]interface{}{}
@@ -43,7 +43,7 @@ func (o *DeviceController) Post() {
 	} else if method == "delete" {
 		deviceIp := o.GetString("deviceIp")
 		vlogger.Logger.Printf("call delete method of device controller, deviceIP is %s\r\n", deviceIp)
-		cnt, msg := snmp.SnmpTaskInstance.DeleteConfig(deviceIp)
+		cnt, msg := snmp.ManageInstance.DeleteConfig(deviceIp)
 		json := map[string]interface{}{}
 		json["result"] = cnt
 		json["message"] = msg
@@ -53,7 +53,7 @@ func (o *DeviceController) Post() {
 	} else if method == "refresh" {
 		deviceIp := o.GetString("deviceIp")
 		vlogger.Logger.Printf("call refresh method of device controller, deviceIP is %s\r\n", deviceIp)
-		ports, err := snmp.SnmpTaskInstance.RefreshConfig(deviceIp)
+		ports, err := snmp.ManageInstance.RefreshConfig(deviceIp)
 		if err != nil {
 			json := map[string]interface{}{}
 			json["ports"] = ports

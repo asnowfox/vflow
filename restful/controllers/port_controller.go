@@ -16,7 +16,7 @@ type PortController struct {
 func (o *PortController) Get() {
 	deviceIp := o.GetString("deviceIp")
 	fmt.Printf("Call get method of device controller")
-	devConfigs := snmp.SnmpTaskInstance.ListPortInfo(deviceIp)
+	devConfigs := snmp.ManageInstance.ListPortInfo(deviceIp)
 	o.Data["json"] = devConfigs
 	o.ServeJSON()
 	return

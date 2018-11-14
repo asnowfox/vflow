@@ -2,7 +2,6 @@ package mirror
 
 import (
 	"../netflow/v9"
-	"encoding/binary"
 	"sync/atomic"
 	"strconv"
 	"strings"
@@ -52,7 +51,7 @@ func (t *Netflowv9Mirror) Run() {
 					}else{
 						flowDataSet := t.filterFlowDataSet(mRule,flowSet)
 						//该flowSet中有存在的记录
-						if len(flowDataSet.DataSets) > 0  {
+						if len(flowDataSet.DataFlowRecords) > 0  {
 							msgFlowSets = append(msgFlowSets, flowDataSet)
 							//TODO 将该条记录添加到缓存中
 						}
@@ -104,39 +103,26 @@ func (t *Netflowv9Mirror) Run() {
 func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule,flowSet netflow9.DataFlowSet)netflow9.DataFlowSet{
 	rtnFlowSet := new(netflow9.DataFlowSet)
 	rtnFlowSet.SetHeader.FlowSetID = flowSet.SetHeader.FlowSetID
-	var datas [][]netflow9.DecodedField
+	var datas []netflow9.DataFlowRecord
 	// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
-	for _, nfData := range flowSet.DataSets { //[]DecodedField
+	for _, nfData := range flowSet.DataFlowRecords { //[]DecodedField
 		inputMatch, outputMatch := false, false
-		inputFound, outputFound := false, false
+		//inputFound, outputFound := false, false
 		var dataLen uint16 = 0
-		for _, decodedData := range nfData {
-			id := decodedData.ID
-			dataLen = dataLen + uint16(binary.Size(decodedData.Value))
-			if id == InputId {
-				inputFound = true
-				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.InPort) || mRule.InPort == -1 {
-					inputMatch = true
-				}
-			} else if id == OutputId {
-				outputFound = true
-				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.OutPort) ||  mRule.OutPort == -1 {
-					outputMatch = true
-				}
-			}
+		if nfData.InPort == -1 || nfData.OutPort == -1 {
+			inputMatch, outputMatch = true, true
 		}
-		if !outputFound {
-			outputMatch = true
-		}
-		if !inputFound {
+		if nfData.InPort == int(mRule.InPort) || mRule.InPort == -1 {
 			inputMatch = true
 		}
+		if nfData.OutPort == int(mRule.OutPort) || mRule.OutPort == -1 {
+			outputMatch = true
+		}
+
 		if inputMatch && outputMatch { // input and output matched
 			datas = append(datas, nfData)
 			rtnFlowSet.SetHeader.Length+= dataLen
-			rtnFlowSet.DataSets = datas;
+			rtnFlowSet.DataFlowRecords = datas
 		}
 	}
 	if rtnFlowSet.SetHeader.Length > 0 {

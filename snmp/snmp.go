@@ -11,6 +11,7 @@ import (
 	"../vlogger"
 	"sync"
 	"errors"
+	"net"
 )
 
 var ifNameOid = ".1.3.6.1.2.1.31.1.1.1.1"
@@ -20,11 +21,11 @@ var devicePortMap = make(map[string][]PortInfo)
 var devicePortIndexMap = make(map[string]map[int]PortInfo)
 var rwLock = new(sync.RWMutex)
 
-var SnmpTaskInstance *WalkTask
+var ManageInstance *DevicePortManager
 var snmpCfgFile string
 var cfg DeviceSnmpConfig
 
-type WalkTask struct {
+type DevicePortManager struct {
 	snmpConfigs DeviceSnmpConfig
 }
 
@@ -44,9 +45,9 @@ type CommunityConfig struct {
 	Community     string `json:"community"`
 }
 
-func Init(cfgFile string) (*WalkTask, error) {
+func NewDevicePortManager(cfgFile string) (*DevicePortManager, error) {
 	snmpCfgFile = cfgFile
-	SnmpTaskInstance = new(WalkTask)
+	ManageInstance = new(DevicePortManager)
 
 	b, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
@@ -64,13 +65,13 @@ func Init(cfgFile string) (*WalkTask, error) {
 		return nil, err
 	}
 	fmt.Printf("delay is %d. device length is %d\n", cfg.Interval, len(cfg.DeviceCfg))
-	SnmpTaskInstance.snmpConfigs = cfg
-	return SnmpTaskInstance, nil
+	ManageInstance.snmpConfigs = cfg
+	return ManageInstance, nil
 }
 
-func (task *WalkTask) Run() {
+func (task *DevicePortManager) Run() {
 	go func() {
-		task.task()
+		task.taskOnce()
 	}()
 
 	go func() {
@@ -79,13 +80,13 @@ func (task *WalkTask) Run() {
 		for {
 			select {
 			case <-timer1.C:
-				task.task()
+				task.taskOnce()
 			}
 		}
 	}()
 }
 
-func (task *WalkTask) task() {
+func (task *DevicePortManager) taskOnce() {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
 		task.walkIndex(dev.DeviceAddress, dev.Community)
 	}
@@ -96,7 +97,7 @@ type NameIndex struct {
 	IfIndex string
 }
 
-func (task *WalkTask) walkIndex(DeviceAddress string, Community string) error {
+func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string) error {
 	s, err := gosnmp.NewGoSNMP(DeviceAddress, Community, gosnmp.Version2c, 5)
 	if err != nil {
 		log.Fatal(err)
@@ -160,7 +161,7 @@ func (task *WalkTask) walkIndex(DeviceAddress string, Community string) error {
 	return nil
 }
 
-func (task *WalkTask) RefreshConfig(deviceIp string) ([]PortInfo, error) {
+func (task *DevicePortManager) RefreshConfig(deviceIp string) ([]PortInfo, error) {
 	community := ""
 	found := false
 	for _, devCfg := range task.snmpConfigs.DeviceCfg {
@@ -183,18 +184,25 @@ func (task *WalkTask) RefreshConfig(deviceIp string) ([]PortInfo, error) {
 	}
 }
 
-func (task *WalkTask) AddConfig(DeviceCfg CommunityConfig) (int, string) {
+func (task *DevicePortManager) AddConfig(DeviceCfg CommunityConfig) (int, string) {
 	for _, addr := range task.snmpConfigs.DeviceCfg {
 		if addr.DeviceAddress == DeviceCfg.DeviceAddress {
 			return -1, "config exist!"
 		}
 	}
+	a := net.ParseIP(DeviceCfg.DeviceAddress)
+	if a == nil {
+		return -1, "invalid ip address"
+	}
 	task.snmpConfigs.DeviceCfg = append(task.snmpConfigs.DeviceCfg, DeviceCfg)
-	saveConfigToFile()
+	err := saveConfigToFile()
+	if err != nil {
+		return -1, "save config to file error"
+	}
 	return len(task.snmpConfigs.DeviceCfg), "add success!"
 }
 
-func (task *WalkTask) DeleteConfig(deviceAddr string) (int, string) {
+func (task *DevicePortManager) DeleteConfig(deviceAddr string) (int, string) {
 	index := -1
 	for i, addr := range task.snmpConfigs.DeviceCfg {
 		if addr.DeviceAddress == deviceAddr {
@@ -214,17 +222,17 @@ func (task *WalkTask) DeleteConfig(deviceAddr string) (int, string) {
 	return len(task.snmpConfigs.DeviceCfg), "delete success!"
 }
 
-func (task *WalkTask) ListConfig() ([]CommunityConfig) {
+func (task *DevicePortManager) ListConfig() ([]CommunityConfig) {
 	return task.snmpConfigs.DeviceCfg
 }
 
-func (task *WalkTask) ListPortInfo(devAddress string) ([]PortInfo) {
+func (task *DevicePortManager) ListPortInfo(devAddress string) ([]PortInfo) {
 	rwLock.RLock()
 	defer rwLock.RLock()
 	return devicePortMap[devAddress]
 }
 
-func (task *WalkTask) PortInfo(devAddress string,index int) (PortInfo,error) {
+func (task *DevicePortManager) PortInfo(devAddress string,index int) (PortInfo,error) {
 	rwLock.RLock()
 	defer rwLock.RLock()
 	if index == -1{
@@ -243,7 +251,7 @@ func (task *WalkTask) PortInfo(devAddress string,index int) (PortInfo,error) {
 }
 
 func saveConfigToFile() error {
-	b, err := json.MarshalIndent(SnmpTaskInstance.snmpConfigs, "", "    ")
+	b, err := json.MarshalIndent(ManageInstance.snmpConfigs, "", "    ")
 	if err == nil {
 		return ioutil.WriteFile(snmpCfgFile, b, 0x777)
 	} else {

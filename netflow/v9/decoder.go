@@ -30,6 +30,7 @@ import (
 	"net"
 	"../../ipfix"
 	"../../reader"
+	"encoding/binary"
 )
 
 // Decoder represents Netflow payload and remote address
@@ -38,6 +39,9 @@ type Decoder struct {
 	reader *reader.Reader
 }
 type nonfatalError error
+const InputId = 10
+const OutputId = 14
+
 
 // PacketHeader represents Netflow v9  packet header
 type PacketHeader struct {
@@ -71,22 +75,14 @@ type TemplateFieldSpecifier struct {
 
 // TemplateRecord represents template fields
 type TemplateRecord struct {
-	Header 				 TemplateHeader
-	SetId                uint16
+	Header TemplateHeader
+	SetId  uint16
 	//TemplateID           uint16
 	//FieldCount           uint16
 	FieldSpecifiers      []TemplateFieldSpecifier
 	ScopeFieldCount      uint16
 	ScopeFieldSpecifiers []TemplateFieldSpecifier
 }
-
-// DecodedField represents a decoded field
-type DecodedField struct {
-	ID    uint16
-	Value interface{}
-}
-
-
 
 // Message represents Netflow decoded data
 type Message struct {
@@ -97,10 +93,21 @@ type Message struct {
 }
 
 type DataFlowSet struct {
-	SetHeader    SetHeader
-	DataSets     [][]DecodedField
+	SetHeader       SetHeader
+	DataFlowRecords []DataFlowRecord
 }
 
+type DataFlowRecord struct {
+	DataSets []DecodedField
+	InPort   int
+	OutPort  int
+}
+
+// DecodedField represents a decoded field
+type DecodedField struct {
+	ID    uint16
+	Value interface{}
+}
 
 //   The Packet Header format is specified as:
 //
@@ -150,7 +157,7 @@ func (h *PacketHeader) unmarshal(r *reader.Reader) error {
 
 func (h *PacketHeader) validate(agentId string) error {
 	if h.Version != 9 {
-		return fmt.Errorf("invalid netflow version (%d),%s", h.Version,agentId)
+		return fmt.Errorf("invalid netflow version (%d),%s", h.Version, agentId)
 	}
 	// TODO: needs more validation
 	return nil
@@ -325,18 +332,19 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 	return nil
 }
 
-func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
+func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) {
 	var (
 		fields []DecodedField
 		err    error
 		b      []byte
 	)
 	r := d.reader
-
+	inputId := -1
+	outputId := -1
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
 		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
 		if err != nil {
-			return nil, err
+			return nil,-1,-1, err
 		}
 
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
@@ -345,10 +353,16 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
+			return nil, -1,-1,nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
 				tr.FieldSpecifiers[i].ElementID))
 		}
 
+		if m.FieldID == InputId {
+			inputId = int(parsePort(ipfix.Interpret(&b, m.Type)))
+		}
+		if m.FieldID == OutputId {
+			inputId = int(parsePort(ipfix.Interpret(&b, m.Type)))
+		}
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
 			Value: ipfix.Interpret(&b, m.Type),
@@ -358,7 +372,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
 		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
 		if err != nil {
-			return nil, err
+			return nil,-1,-1, err
 		}
 
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
@@ -367,7 +381,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
+			return nil, -1,-1,nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
 				tr.ScopeFieldSpecifiers[i].ElementID))
 		}
 
@@ -377,7 +391,27 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		})
 	}
 
-	return fields, nil
+	return fields, inputId,outputId,nil
+}
+
+
+func parsePort(value interface{}) uint32 {
+	switch value.(type) {
+	case []byte:
+		bytes := value.([]byte)
+		if len(bytes) == 2 {
+			return uint32(binary.BigEndian.Uint16(value.([]byte)))
+		} else if len(bytes) == 4 {
+			return uint32(binary.BigEndian.Uint32(value.([]byte)))
+		}
+	case uint32:
+		return value.(uint32)
+	case uint16:
+		return uint32(value.(uint16))
+	default:
+		return 0
+	}
+	return 0
 }
 
 // NewDecoder constructs a decoder
@@ -391,12 +425,12 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 
 	// IPFIX Message Header decoding
 	if err := msg.Header.unmarshal(d.reader); err != nil {
-		fmt.Printf("%s decode header error.",d.raddr)
+		fmt.Printf("%s decode header error.", d.raddr)
 		return nil, err
 	}
 	// IPFIX Message Header validation
 	if err := msg.Header.validate(d.raddr.String()); err != nil {
-		fmt.Printf("%s validate error.",d.raddr)
+		fmt.Printf("%s validate error.", d.raddr)
 		return nil, err
 	}
 
@@ -411,7 +445,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		if err := d.decodeSet(mem, msg); err != nil {
 			switch err.(type) {
 			case nonfatalError:
-				fmt.Printf("%s decodeSet error.",d.raddr)
+				fmt.Printf("%s decodeSet error.", d.raddr)
 				decodeErrors = append(decodeErrors, err)
 			default:
 				return nil, err
@@ -464,10 +498,10 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			if err == nil {
 				mem.insert(tr.Header.TemplateID, d.raddr, tr)
 				msg.TemplateRecords = append(msg.TemplateRecords, tr)
-				fmt.Printf("after set %s, setId is %d, msg's templatRecord size is %d\n",msg.AgentID,
-					setId,len(msg.TemplateRecords))
-			}else{
-				fmt.Printf("unable unmarshal %s's template record.\n",msg.AgentID)
+				fmt.Printf("after set %s, setId is %d, msg's templatRecord size is %d\n", msg.AgentID,
+					setId, len(msg.TemplateRecords))
+			} else {
+				fmt.Printf("unable unmarshal %s's template record.\n", msg.AgentID)
 			}
 
 		} else if setId >= 4 && setId <= 255 {
@@ -475,11 +509,17 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			break
 		} else {
 			// Data set
-			var data []DecodedField
-			data, err = d.decodeData(tr)
+			//var data []DecodedField
+			data,i,o, err := d.decodeData(tr)
 			if err == nil {
 				decodedFlowSet.SetHeader = *setHeader
-				decodedFlowSet.DataSets = append(decodedFlowSet.DataSets, data)
+				record := DataFlowRecord{
+					data,
+					i,
+					o,
+				}
+				decodedFlowSet.DataFlowRecords = append(decodedFlowSet.DataFlowRecords, record)
+
 			}
 		}
 	}
