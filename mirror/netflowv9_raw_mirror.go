@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"strings"
 	"../vlogger"
+	"encoding/binary"
 )
 
 type Netflowv9Mirror struct {
-	stats  FlowMirrorStatus
+	stats FlowMirrorStatus
 }
 
 func (t *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
@@ -18,7 +19,7 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
 
 func (t *Netflowv9Mirror) Status() *FlowMirrorStatus {
 	return &FlowMirrorStatus{
-		QueueSize:            len(netflowChannel),
+		QueueSize: len(netflowChannel),
 		//MessageErrorCount:    atomic.LoadUint64(&t.stats.MessageErrorCount),
 		MessageReceivedCount: atomic.LoadUint64(&t.stats.MessageReceivedCount),
 		RawSentCount:         atomic.LoadUint64(&t.stats.RawSentCount),
@@ -43,33 +44,33 @@ func (t *Netflowv9Mirror) Run() {
 			ec := mirrorMaps[sMsg.AgentID]
 			for _, mRule := range ec {
 				var msgFlowSets []netflow9.DataFlowSet
-				for _,flowSet := range sMsg.DataFlowSets {
+				for _, flowSet := range sMsg.DataFlowSets {
 					//TODO 这里可以缓存区查找该flowSet对应的Rule
 					// agentId_inport_outport -> distAddress:port
-					if ok,_ := CatchMatch(sMsg.AgentID);ok {
+					if ok, _ := CatchMatch(sMsg.AgentID); ok {
 
-					}else{
-						flowDataSet := t.filterFlowDataSet(mRule,flowSet)
+					} else {
+						flowDataSet := t.filterFlowDataSet(mRule, flowSet)
 						//该flowSet中有存在的记录
-						if len(flowDataSet.DataFlowRecords) > 0  {
+						if len(flowDataSet.DataFlowRecords) > 0 {
 							msgFlowSets = append(msgFlowSets, flowDataSet)
 							//TODO 将该条记录添加到缓存中
 						}
 					}
 				}
 				//no data and no template records continue
-				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0{
+				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
 					continue
 				}
 				//这个是针对这个rule进行发送的过程
 
 				var seq uint32 = 0
-				key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.SrcID),10)
+				key := sMsg.AgentID + "_" + strconv.FormatUint(uint64(sMsg.Header.SrcID), 10)
 				// add a lock support
 				seqMutex.Lock()
 				if a, ok := seqMap[key]; ok {
 					seq = a
-				}else{
+				} else {
 					seqMap[key] = 0
 				}
 				seqMap[key] = seqMap[key] + 1
@@ -86,21 +87,21 @@ func (t *Netflowv9Mirror) Run() {
 					err := raw.Send(rBytes)
 					if err != nil {
 						atomic.AddUint64(&t.stats.RawErrorCount, 1)
-						vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
-					}else{
+						vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes), err)
+					} else {
 						atomic.AddUint64(&t.stats.RawSentCount, 1)
 					}
-				}else{
-					vlogger.Logger.Printf("can not find raw socket for dist %s",dstAddr)
+				} else {
+					vlogger.Logger.Printf("can not find raw socket for dist %s", dstAddr)
 				}
 
-			}//end rule for
+			} //end rule for
 			cfgMutex.RUnlock()
-		}// end loop
+		} // end loop
 	}()
 }
 
-func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule,flowSet netflow9.DataFlowSet)netflow9.DataFlowSet{
+func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule, flowSet netflow9.DataFlowSet) netflow9.DataFlowSet {
 	rtnFlowSet := new(netflow9.DataFlowSet)
 	rtnFlowSet.SetHeader.FlowSetID = flowSet.SetHeader.FlowSetID
 	var datas []netflow9.DataFlowRecord
@@ -108,7 +109,7 @@ func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule,flowSet netflow9.DataFlow
 	for _, nfData := range flowSet.DataFlowRecords { //[]DecodedField
 		inputMatch, outputMatch := false, false
 		//inputFound, outputFound := false, false
-		var dataLen uint16 = 0
+		//var dataLen uint16 = 0
 		if nfData.InPort == -1 || nfData.OutPort == -1 {
 			inputMatch, outputMatch = true, true
 		}
@@ -121,12 +122,15 @@ func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule,flowSet netflow9.DataFlow
 
 		if inputMatch && outputMatch { // input and output matched
 			datas = append(datas, nfData)
-			rtnFlowSet.SetHeader.Length+= dataLen
+			for _, data := range nfData.DataSets {
+				rtnFlowSet.SetHeader.Length += uint16(binary.Size(data.Value))
+			}
+			//rtnFlowSet.SetHeader.Length += dataLen
 			rtnFlowSet.DataFlowRecords = datas
 		}
 	}
 	if rtnFlowSet.SetHeader.Length > 0 {
-		rtnFlowSet.SetHeader.Length+=4
+		rtnFlowSet.SetHeader.Length += 4
 	}
 	return *rtnFlowSet
 }
