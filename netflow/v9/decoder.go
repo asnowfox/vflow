@@ -346,7 +346,6 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) 
 		if err != nil {
 			return nil,-1,-1, err
 		}
-
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
 			0,
 			tr.FieldSpecifiers[i].ElementID,
@@ -357,16 +356,18 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) 
 				tr.FieldSpecifiers[i].ElementID))
 		}
 
+		id :=  m.FieldID
+		value := ipfix.Interpret(&b, m.Type)
+		fields = append(fields, DecodedField{
+			ID:    id,
+			Value: value,
+		})
 		if m.FieldID == InputId {
-			inputId = int(parsePort(ipfix.Interpret(&b, m.Type)))
+			inputId = int(parsePort(value))
 		}
 		if m.FieldID == OutputId {
-			inputId = int(parsePort(ipfix.Interpret(&b, m.Type)))
+			outputId = int(parsePort(value))
 		}
-		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: ipfix.Interpret(&b, m.Type),
-		})
 	}
 
 	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
@@ -384,11 +385,18 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) 
 			return nil, -1,-1,nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
 				tr.ScopeFieldSpecifiers[i].ElementID))
 		}
-
+		id :=  m.FieldID
+		value := ipfix.Interpret(&b, m.Type)
 		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: ipfix.Interpret(&b, m.Type),
+			ID:   id,
+			Value: value,
 		})
+		if m.FieldID == InputId {
+			inputId = int(parsePort(value))
+		}
+		if m.FieldID == OutputId {
+			outputId = int(parsePort(value))
+		}
 	}
 
 	return fields, inputId,outputId,nil
@@ -511,6 +519,9 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			// Data set
 			//var data []DecodedField
 			data,i,o, err := d.decodeData(tr)
+			if i!=-1 && o!=-1{
+				fmt.Printf("inpupt %d,output %d",i,o)
+			}
 			if err == nil {
 				decodedFlowSet.SetHeader = *setHeader
 				record := DataFlowRecord{

@@ -108,8 +108,6 @@ func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule, flowSet netflow9.DataFlo
 	// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
 	for _, nfData := range flowSet.DataFlowRecords { //[]DecodedField
 		inputMatch, outputMatch := false, false
-		//inputFound, outputFound := false, false
-		//var dataLen uint16 = 0
 		if nfData.InPort == -1 || nfData.OutPort == -1 {
 			inputMatch, outputMatch = true, true
 		}
