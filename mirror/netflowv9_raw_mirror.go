@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"../vlogger"
-	"encoding/binary"
 )
 
 type Netflowv9Mirror struct {
@@ -47,15 +46,10 @@ func (t *Netflowv9Mirror) Run() {
 				for _, flowSet := range sMsg.DataFlowSets {
 					//TODO 这里可以缓存区查找该flowSet对应的Rule
 					// agentId_inport_outport -> distAddress:port
-					if ok, _ := CatchMatch(sMsg.AgentID); ok {
-
-					} else {
-						flowDataSet := t.filterFlowDataSet(mRule, flowSet)
-						//该flowSet中有存在的记录
-						if len(flowDataSet.DataFlowRecords) > 0 {
-							msgFlowSets = append(msgFlowSets, flowDataSet)
-							//TODO 将该条记录添加到缓存中
-						}
+					flowDataSet := t.filterFlowDataSet(mRule, flowSet)
+					//该flowSet中有存在的记录
+					if len(flowDataSet.DataFlowRecords) > 0 {
+						msgFlowSets = append(msgFlowSets, flowDataSet)
 					}
 				}
 				//no data and no template records continue
@@ -94,7 +88,6 @@ func (t *Netflowv9Mirror) Run() {
 				} else {
 					vlogger.Logger.Printf("can not find raw socket for dist %s", dstAddr)
 				}
-
 			} //end rule for
 			cfgMutex.RUnlock()
 		} // end loop
@@ -120,9 +113,9 @@ func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule, flowSet netflow9.DataFlo
 
 		if inputMatch && outputMatch { // input and output matched
 			datas = append(datas, nfData)
-			for _, data := range nfData.DataSets {
-				rtnFlowSet.SetHeader.Length += uint16(binary.Size(data.Value))
-			}
+			//for _, data := range nfData.DataSets {
+			rtnFlowSet.SetHeader.Length += nfData.Length
+			//}
 			//rtnFlowSet.SetHeader.Length += dataLen
 			rtnFlowSet.DataFlowRecords = datas
 		}

@@ -39,9 +39,9 @@ type Decoder struct {
 	reader *reader.Reader
 }
 type nonfatalError error
+
 const InputId = 10
 const OutputId = 14
-
 
 // PacketHeader represents Netflow v9  packet header
 type PacketHeader struct {
@@ -101,6 +101,7 @@ type DataFlowRecord struct {
 	DataSets []DecodedField
 	InPort   int
 	OutPort  int
+	Length   uint16
 }
 
 // DecodedField represents a decoded field
@@ -332,7 +333,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 	return nil
 }
 
-func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) {
+func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,uint16, error) {
 	var (
 		fields []DecodedField
 		err    error
@@ -341,10 +342,12 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) 
 	r := d.reader
 	inputId := -1
 	outputId := -1
+	var length uint16 = 0
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
 		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
+		length+= uint16(len(b))
 		if err != nil {
-			return nil,-1,-1, err
+			return nil, -1, -1,0, err
 		}
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
 			0,
@@ -352,11 +355,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) 
 		}]
 
 		if !ok {
-			return nil, -1,-1,nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
+			return nil, -1, -1, 0,nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
 				tr.FieldSpecifiers[i].ElementID))
 		}
 
-		id :=  m.FieldID
+		id := m.FieldID
 		value := ipfix.Interpret(&b, m.Type)
 		fields = append(fields, DecodedField{
 			ID:    id,
@@ -372,8 +375,9 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) 
 
 	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
 		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
+		length+= uint16(len(b))
 		if err != nil {
-			return nil,-1,-1, err
+			return nil, -1, -1,0, err
 		}
 
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
@@ -382,13 +386,13 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) 
 		}]
 
 		if !ok {
-			return nil, -1,-1,nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
+			return nil, -1, -1,0, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
 				tr.ScopeFieldSpecifiers[i].ElementID))
 		}
-		id :=  m.FieldID
+		id := m.FieldID
 		value := ipfix.Interpret(&b, m.Type)
 		fields = append(fields, DecodedField{
-			ID:   id,
+			ID:    id,
 			Value: value,
 		})
 		if m.FieldID == InputId {
@@ -399,9 +403,8 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int,int,error) 
 		}
 	}
 
-	return fields, inputId,outputId,nil
+	return fields, inputId, outputId,length, nil
 }
-
 
 func parsePort(value interface{}) uint32 {
 	switch value.(type) {
@@ -518,14 +521,15 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		} else {
 			// Data set
 			//var data []DecodedField
-			data,i,o, err := d.decodeData(tr)
-			
+			data, i, o, length, err := d.decodeData(tr)
+
 			if err == nil {
 				decodedFlowSet.SetHeader = *setHeader
 				record := DataFlowRecord{
 					data,
 					i,
 					o,
+					 length,
 				}
 				decodedFlowSet.DataFlowRecords = append(decodedFlowSet.DataFlowRecords, record)
 

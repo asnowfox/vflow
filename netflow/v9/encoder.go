@@ -60,9 +60,7 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 	for _, e := range DataFlowSets {
 		count += uint16(len(e.DataFlowRecords))
 	}
-
 	count = count + uint16(len(originalMsg.TemplateRecords))
-
 	//orginal flow header
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.Version)
 	binary.Write(buf, binary.BigEndian, uint16(count))
@@ -113,7 +111,6 @@ func writeTemplate(buf *bytes.Buffer, TemplaRecord TemplateRecord) {
 			binary.Write(buf, binary.BigEndian, spec.ElementID)
 			binary.Write(buf, binary.BigEndian, spec.Length)
 		}
-
 	} else {
 		fmt.Printf("template record's Field count is 0\n")
 	}

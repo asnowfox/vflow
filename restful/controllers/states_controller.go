@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"../../flows"
+	"../../mirror"
 )
 
 
@@ -24,6 +25,7 @@ func (o *StatsController) InitService(netflowv9 flows.NetflowV9){
 // @router /:objectId [get]
 func (o *StatsController) Get() {
 	agentId := o.GetString("agentId")
+
 	fmt.Printf("call get packet loss. agentId is %s\r\n",agentId)
 	if agentId != "" {
 		loss,err := o.netflowv9.NetflowPacketLoss(agentId)
@@ -34,7 +36,9 @@ func (o *StatsController) Get() {
 		o.Data["json"] = json
 		o.ServeJSON()
 	} else {
-
+		status := mirror.Netflowv9MirrorInstance.Status()
+		o.Data["json"] = *status
+		o.ServeJSON()
 	}
 	o.Data["json"] = map[string]interface{}{}
 	o.ServeJSON()
