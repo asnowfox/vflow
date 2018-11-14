@@ -202,6 +202,7 @@ LOOP:
 				break LOOP
 			}
 		}
+
 		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {
 			vlogger.Logger.Println("decode data error",msg.raddr.IP.String(),err.Error())
@@ -225,6 +226,9 @@ LOOP:
 				select {
 				case netflowV9MQCh <- append([]byte{}, b...):
 				default:
+				}
+				if opts.Verbose {
+					vlogger.Logger.Println(string(b))
 				}
 			}
 		}

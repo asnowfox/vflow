@@ -60,14 +60,6 @@ func main() {
 	task,_:=snmp.NewDevicePortManager(opts.CommunityFile)
 	task.Run()
 
-	//devices := make([]snmp.DeviceSnmpConfig,0)
-	//snmpTask,err := snmp.NewSnmpTask(30,devices)
-	//
-	//if err == nil {
-	//	snmpTask.Run()
-	//}else{
-	//	vlogger.Logger.Printf("unable to start snmp task, exit!")
-	//}
 
 	mirror.Init(opts.ForwardFile)
 

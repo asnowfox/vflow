@@ -140,27 +140,12 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 			break
 		}
 
-		//k.producer.Input() <- &sarama.ProducerMessage{
-		//	Topic: topic,
-		//	Value: sarama.ByteEncoder(msg),
-		//}
-		//err := <-k.producer.Errors()
-		//if err != nil {
-		//	k.logger.Println(err)
-		//	str := string(msg[:])
-		//	k.logger.Println(str)
-		//	*ec++
-		//}
-		//time.Sleep(1*time.Nanosecond)
 		kMsg := &sarama.ProducerMessage{
 			Topic: topic,
 			Value: sarama.ByteEncoder(msg),
 		}
 		select {
-		case k.producer.Input() <- kMsg:
-
-		//default:
-		//	time.Sleep(1*time.Nanosecond)
+			case k.producer.Input() <- kMsg:
 		}
 
 	}
