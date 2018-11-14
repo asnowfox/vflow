@@ -519,9 +519,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			// Data set
 			//var data []DecodedField
 			data,i,o, err := d.decodeData(tr)
-			if i!=-1 && o!=-1{
-				fmt.Printf("inpupt %d,output %d",i,o)
-			}
+			
 			if err == nil {
 				decodedFlowSet.SetHeader = *setHeader
 				record := DataFlowRecord{
