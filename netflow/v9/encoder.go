@@ -58,7 +58,7 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 	buf := new(bytes.Buffer)
 	count := uint16(0)
 	for _, e := range DataFlowSets {
-		count += uint16(len(e.DataSets))
+		count += uint16(len(e.DataFlowRecords))
 	}
 
 	count = count + uint16(len(originalMsg.TemplateRecords))
@@ -79,8 +79,8 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 	for _, flowSet := range DataFlowSets {
 		binary.Write(buf, binary.BigEndian, flowSet.SetHeader.FlowSetID)
 		binary.Write(buf, binary.BigEndian, flowSet.SetHeader.Length)
-		for _, field := range flowSet.DataSets {
-			for _, item := range field {
+		for _, field := range flowSet.DataFlowRecords {
+			for _, item := range field.DataSets {
 				binary.Write(buf, binary.BigEndian, item.Value)
 			}
 		}
