@@ -3,7 +3,6 @@ package snmp
 import (
 	"time"
 	"github.com/alouca/gosnmp"
-	"log"
 	"fmt"
 	"os"
 	"io/ioutil"
@@ -100,7 +99,7 @@ type NameIndex struct {
 func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string) error {
 	s, err := gosnmp.NewGoSNMP(DeviceAddress, Community, gosnmp.Version2c, 5)
 	if err != nil {
-		log.Fatal(err)
+		vlogger.Logger.Fatal(err)
 	}
 	indexResp, err := s.Walk(ifIndexOid)
 
@@ -110,36 +109,30 @@ func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string)
 
 	if err == nil {
 		for _, v := range indexResp {
-			log.Printf("Response: %s : %d : %s \n",
-				v.Name, v.Value, v.Type.String())
 			indexList = append(indexList, v.Value.(int))
 		}
 	} else {
-		log.Printf("snmp walk err %e", err)
+		vlogger.Logger.Printf("snmp walk err %e", err)
 		return err
 	}
 
 	nameResp, err := s.Walk(ifNameOid)
 	if err == nil {
 		for _, v := range nameResp {
-			log.Printf("Response: %s : %s : %s \n",
-				v.Name, v.Value, v.Type.String())
 			nameList = append(nameList, v.Value.(string))
 		}
 	} else {
-		log.Printf("snmp walk err %e", err)
+		vlogger.Logger.Printf("snmp walk err %e", err)
 		return err
 	}
 
 	desResp, err := s.Walk(ifDesOid)
 	if err == nil {
 		for _, v := range desResp {
-			log.Printf("Response: %s : %s : %s \n",
-				v.Name, v.Value, v.Type.String())
 			desList = append(desList, v.Value.(string))
 		}
 	} else {
-		log.Printf("snmp walk err %e", err)
+		vlogger.Logger.Printf("snmp walk err %e", err)
 		return err
 	}
 
@@ -156,7 +149,7 @@ func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string)
 		}
 	} else {
 		return errors.New("snmp walk err response is not equal")
-		log.Printf("snmp walk err response is not equal")
+		vlogger.Logger.Printf("snmp walk err response is not equal")
 	}
 	return nil
 }

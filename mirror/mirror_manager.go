@@ -90,21 +90,26 @@ func buildMap() {
 			continue
 		}
 		for _, r := range policy.Rules {
+
 			if _, ok := mirrorMaps[r.Source]; !ok {
 				mirrorMaps[r.Source] = make([]Rule, 0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
 			fmt.Printf("   (source:%15s, inputPort %5d, outputPort %5d) ->  %s \n", r.Source, r.InPort, r.OutPort, r.DistAddress)
-			remoteAddr := strings.Split(r.DistAddress, ":")[0]
-			if _, ok := rawSockets[remoteAddr]; !ok {
-				connect, err := NewRawConn(net.ParseIP(remoteAddr))
-				if err != nil {
-					vlogger.Logger.Printf("Mirror interface ip %s is wrong\n", remoteAddr)
-					fmt.Printf("Mirror interface ip %s is wrong\n", remoteAddr)
-				} else {
-					rawSockets[remoteAddr] = connect
+
+			for  _,rule:= range r.DistAddress {
+				remoteAddr := strings.Split(rule, ":")[0]
+				if _, ok := rawSockets[remoteAddr]; !ok {
+					connect, err := NewRawConn(net.ParseIP(remoteAddr))
+					if err != nil {
+						vlogger.Logger.Printf("Mirror interface ip %s is wrong\n", remoteAddr)
+						fmt.Printf("Mirror interface ip %s is wrong\n", remoteAddr)
+					} else {
+						rawSockets[remoteAddr] = connect
+					}
 				}
 			}
+
 		}
 	}
 }
@@ -179,7 +184,13 @@ func UpdatePolicy(policyId string, nPolicy Policy) (int, string) {
 func AddPolicy(policy Policy) (int, string) {
 	vlogger.Logger.Printf("add config sourceId %s, target is %s, configs %d",
 		policy.PolicyId, policy.TargetAddress, len(policy.Rules))
-	result, e := HostAddrCheck(policy.TargetAddress)
+	for _,target := range policy.TargetAddress {
+		result, e := HostAddrCheck(target)
+		if !result {
+			return -1, e.Error()
+		}
+	}
+
 	if policy.PolicyId == "" {
 		return -1, "Policy id is blank"
 	}
@@ -192,9 +203,7 @@ func AddPolicy(policy Policy) (int, string) {
 		}
 	}
 
-	if !result {
-		return -1, e.Error()
-	}
+
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	policyConfigs = append(policyConfigs, policy)
@@ -311,10 +320,12 @@ func recycleClients() {
 	for _, policy := range policyConfigs {
 		for _, ecr := range policy.Rules {
 			//找到在用的
-			dstAddresses := strings.Split(ecr.DistAddress, ":")
-			dstAddr := dstAddresses[0]
-			if _, ok := rawSockets[dstAddr]; ok {
-				usedClient[dstAddr] = ecr.DistAddress
+			for _,dist := range ecr.DistAddress {
+				dstAddresses := strings.Split(dist, ":")
+				dstAddr := dstAddresses[0]
+				if _, ok := rawSockets[dstAddr]; ok {
+					usedClient[dstAddr] = dist
+				}
 			}
 		}
 	}
@@ -322,12 +333,14 @@ func recycleClients() {
 	for _, mirrorConfig := range policyConfigs {
 		for _, ecr := range mirrorConfig.Rules {
 			//在用的不存在了
-			dstAddrs := strings.Split(ecr.DistAddress, ":")
-			dstAddr := dstAddrs[0]
-			if _, ok := usedClient[dstAddr]; !ok {
-				raw := rawSockets[dstAddr]
-				raw.Close()
-				delete(rawSockets, dstAddr)
+			for _,dist := range ecr.DistAddress {
+				dstAddrs := strings.Split(dist, ":")
+				dstAddr := dstAddrs[0]
+				if _, ok := usedClient[dstAddr]; !ok {
+					raw := rawSockets[dstAddr]
+					raw.Close()
+					delete(rawSockets, dstAddr)
+				}
 			}
 		}
 	}

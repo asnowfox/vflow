@@ -10,7 +10,7 @@ import (
 
 type Policy struct {
 	PolicyId      string `json:"policyId"`
-	TargetAddress string `json:"targetAddress"`
+	TargetAddress []string `json:"targetAddress"`
 	Enable        int    `json:"enable"`
 	Rules         []Rule `json:"rules"`
 }
@@ -19,7 +19,7 @@ type Rule struct {
 	Source      string `json:"source"`
 	InPort      int32  `json:"inport"`
 	OutPort     int32  `json:"outport"`
-	DistAddress string `json:"distAddress"`
+	DistAddress []string `json:"distAddress"`
 }
 
 func LoadPolicy(mirrorCfg string) error {
