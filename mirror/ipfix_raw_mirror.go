@@ -69,18 +69,22 @@ func (t *IPFixMirror) Run() {
 
 				rBytes := ipfix.Encode(sMsg, seq, msgFlowSets)
 
-				dstAddrs := strings.Split(mRule.DistAddress, ":")
-				dstAddr := dstAddrs[0]
-				dstPort, _ := strconv.Atoi(dstAddrs[1])
-
-				rBytes = createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
-				raw := rawSockets[dstAddr]
-				err := raw.Send(rBytes)
-				if err != nil {
-					atomic.AddUint64(&t.stats.RawErrorCount, 1)
-					vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes),err)
-				}else{
-					atomic.AddUint64(&t.stats.RawSentCount, 1)
+				for _,r := range mRule.DistAddress {
+					dstAddrs := strings.Split(r, ":")
+					dstAddr := dstAddrs[0]
+					dstPort, _ := strconv.Atoi(dstAddrs[1])
+					rBytes = createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
+					if raw, ok := rawSockets[dstAddr]; ok {
+						err := raw.Send(rBytes)
+						if err != nil {
+							atomic.AddUint64(&t.stats.RawErrorCount, 1)
+							vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes), err)
+						} else {
+							atomic.AddUint64(&t.stats.RawSentCount, 1)
+						}
+					} else {
+						vlogger.Logger.Printf("can not find raw socket for dist %s", dstAddr)
+					}
 				}
 			}//end rule for
 			//cfgMutex.Unlock()
