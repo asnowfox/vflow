@@ -24,7 +24,13 @@ func TransPolicy(p mirror.Policy) RPolicy  {
 	policy := new(RPolicy)
 	policy.Enable = p.Enable
 	policy.PolicyId = p.PolicyId
-	policy.TargetAddress = p.TargetAddress
+	for _,target := range p.TargetAddress {
+		policy.TargetAddress += target+","
+	}
+	a := len(policy.TargetAddress)
+	if a>0{
+		policy.TargetAddress = policy.TargetAddress[0:a-1]
+	}
 	for _,r := range p.Rules {
 		policy.Rules = append(policy.Rules, TransRule(r.Source,r))
 	}
