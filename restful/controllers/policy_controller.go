@@ -64,14 +64,15 @@ func (o *PolicyController) Post() {
 		json := map[string]interface{}{}
 		if err != nil {
 			json["result"] = -1
+			json["id"] = ""
 			json["message"] = "parse json error"
 			o.Data["json"] = json
 			o.ServeJSON()
 			return
 		}
 		index, msg := mirror.AddPolicy(ob)
-
 		json["result"] = index
+		json["id"] = ob.PolicyId
 		json["message"] = msg
 		o.Data["json"] = json
 		o.ServeJSON()
@@ -92,6 +93,7 @@ func (o *PolicyController) Post() {
 		json := map[string]interface{}{}
 		if err != nil {
 			json["result"] = -1
+			json["id"] = ob.PolicyId
 			json["message"] = "parse json error"
 			o.Data["json"] = json
 			o.ServeJSON()
@@ -100,6 +102,7 @@ func (o *PolicyController) Post() {
 		index, msg := mirror.UpdatePolicy(policyId, ob)
 		json["result"] = index
 		json["message"] = msg
+		json["id"] = ob.PolicyId
 		o.Data["json"] = json
 		o.ServeJSON()
 		return
@@ -107,6 +110,7 @@ func (o *PolicyController) Post() {
 		json := map[string]interface{}{}
 		json["result"] = -1
 		o.Data["json"] = json
+		json["id"] = ""
 		json["message"] = "can not handle method " + method
 		o.ServeJSON()
 	}

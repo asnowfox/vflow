@@ -4,6 +4,8 @@ import (
 	"github.com/astaxie/beego"
 	"../../mirror"
 	"encoding/json"
+	"strings"
+	"strconv"
 )
 
 // Operations about object
@@ -21,27 +23,61 @@ type RuleController struct {
 func (o *RuleController) Post() {
 	var ob mirror.Rule
 	policyId := o.GetString("policyId")
+	ruleId := o.GetString("ruleId")
 	method := o.GetString("method")
-	err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-	json := map[string]interface{}{}
-	if err != nil{
-		json["result"] = -1
-		json["message"] = "parse json error"
-		o.Data["json"] = json
-		o.ServeJSON()
-		return
-	}
+	jsonRtn := map[string]interface{}{}
 	if method == "add"{
+		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
+		if err != nil{
+			jsonRtn["result"] = -1
+			jsonRtn["id"] = ""
+			jsonRtn["message"] = "parse json error"
+			o.Data["json"] = jsonRtn
+			o.ServeJSON()
+			return
+		}
 		index,msg := mirror.AddRule(policyId,ob)
-		json["result"] = index
-		json["message"] = msg
-		o.Data["json"] = json
+		id := string(ob.InPort)+"_"+string(ob.OutPort)+"_"+ob.Source
+		if index < 0{
+			id = ""
+		}
+		jsonRtn["result"] = index
+		jsonRtn["id"] = id
+		jsonRtn["message"] = msg
+		o.Data["json"] = jsonRtn
 		o.ServeJSON()
 	}else if method == "delete"{
-		index,msg := mirror.DeleteRule(policyId,ob)
-		json["result"] = index
-		json["message"] = msg
-		o.Data["json"] = json
+		strs := strings.Split(ruleId,"_")
+		if len(strs) != 3{
+			jsonRtn["result"] = -1
+			jsonRtn["id"] = ruleId
+			jsonRtn["message"] = "unknow id"
+			o.Data["json"] = jsonRtn
+			o.ServeJSON()
+			return
+		}
+		inport,e1 := strconv.Atoi(strs[0])
+		outport,e2 := strconv.Atoi(strs[0])
+		if e1 != nil && e2 != nil{
+			jsonRtn["result"] = -1
+			jsonRtn["id"] = ruleId
+			jsonRtn["message"] = "Unknow rule id"
+			o.Data["json"] = jsonRtn
+			o.ServeJSON()
+			return
+		}
+		rule := mirror.Rule{
+			strs[2],
+			int32(inport),
+			int32(outport),
+			make([]string,0),
+		}
+		index,msg := mirror.DeleteRule(policyId,rule)
+		id := string(ob.InPort)+"_"+string(ob.OutPort)+"_"+ob.Source
+		jsonRtn["id"] = id
+		jsonRtn["result"] = index
+		jsonRtn["message"] = msg
+		o.Data["json"] = jsonRtn
 		o.ServeJSON()
 	}
 }

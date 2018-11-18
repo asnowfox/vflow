@@ -175,7 +175,7 @@ func UpdatePolicy(policyId string, nPolicy Policy) (int, string) {
 		buildMap()
 		saveConfigsTofile()
 		recycleClients()
-		return 0, "update success"
+		return 1, "update success"
 	} else {
 		return -1, "can not find policy " + policyId
 	}
@@ -187,6 +187,9 @@ func AddPolicy(policy Policy) (int, string) {
 	for _,target := range policy.TargetAddress {
 		result, e := HostAddrCheck(target)
 		if !result {
+			return -1, e.Error()
+		}
+		if e != nil{
 			return -1, e.Error()
 		}
 	}

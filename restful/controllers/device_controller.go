@@ -28,14 +28,13 @@ func (o *DeviceController) Post() {
 		vlogger.Logger.Printf("call add method of device controller")
 		var ob snmp.CommunityConfig
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-
 		msg := "parse json error."
 		if err == nil {
 			cnt, msg = snmp.ManageInstance.AddConfig(ob)
 		}
-
 		json := map[string]interface{}{}
 		json["result"] = cnt
+		json["id"] = ob.DeviceAddress
 		json["message"] = msg
 		o.Data["json"] = json
 		o.ServeJSON()
@@ -57,6 +56,8 @@ func (o *DeviceController) Post() {
 		if err != nil {
 			json := map[string]interface{}{}
 			json["ports"] = ports
+			json["result"] = -1
+			json["id"] = deviceIp
 			json["message"] = err.Error()
 			o.Data["json"] = json
 			o.ServeJSON()
@@ -64,6 +65,8 @@ func (o *DeviceController) Post() {
 			json := map[string]interface{}{}
 			json["ports"] = ports
 			json["message"] = "updated"
+			json["id"] = deviceIp
+			json["result"] = 1
 			o.Data["json"] = json
 			o.ServeJSON()
 		}
