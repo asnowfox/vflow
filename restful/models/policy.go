@@ -14,7 +14,7 @@ type RPolicy struct {
 
 type RRule struct {
 	mirror.Rule
-	ruleId string `json:ruleId`
+	RuleId string `json:ruleId`
 	InportName string `json:"inportName"`
 	InportDes string `json:"inportDes"`
 	OutportName string `json:"outportName"`
@@ -41,7 +41,7 @@ func TransPolicy(p mirror.Policy) RPolicy  {
 func TransRule(deviceIp string,r mirror.Rule)RRule{
 	rule := new(RRule)
 	rule.Rule = r
-	rule.ruleId = string(r.InPort)+"_"+string(r.OutPort)+"_"+r.Source
+	rule.RuleId = string(r.InPort)+"_"+string(r.OutPort)+"_"+r.Source
 	iPortInfo,err := snmp.ManageInstance.PortInfo(deviceIp,int(r.InPort))
 	if err== nil {
 		rule.InportName = iPortInfo.IfName
