@@ -282,7 +282,7 @@ func DeleteRule(policyId string, rule Rule) (int, string) {
 		buildMap()
 		recycleClients()
 		saveConfigsTofile()
-		return index, "rule is deleted"
+		return len(policyConfigs[pid].Rules), "rule is deleted"
 	} else {
 		return -1, "can not find matched rule for policy " + policyId
 	}
