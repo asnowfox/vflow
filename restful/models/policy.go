@@ -15,7 +15,7 @@ type RPolicy struct {
 
 type RRule struct {
 	mirror.Rule
-	RuleId string `json:ruleId`
+	RuleId string `json:"ruleId"`
 	InportName string `json:"inportName"`
 	InportDes string `json:"inportDes"`
 	OutportName string `json:"outportName"`
