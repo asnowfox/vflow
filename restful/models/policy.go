@@ -3,6 +3,7 @@ package models
 import (
 	"../../mirror"
 	"../../snmp"
+	"strconv"
 )
 
 type RPolicy struct {
@@ -41,7 +42,7 @@ func TransPolicy(p mirror.Policy) RPolicy  {
 func TransRule(deviceIp string,r mirror.Rule)RRule{
 	rule := new(RRule)
 	rule.Rule = r
-	rule.RuleId = string(r.InPort)+"_"+string(r.OutPort)+"_"+r.Source
+	rule.RuleId = strconv.Itoa(int(r.InPort))+"_"+strconv.Itoa(int(r.OutPort))+"_"+r.Source
 	iPortInfo,err := snmp.ManageInstance.PortInfo(deviceIp,int(r.InPort))
 	if err== nil {
 		rule.InportName = iPortInfo.IfName

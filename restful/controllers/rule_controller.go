@@ -37,7 +37,7 @@ func (o *RuleController) Post() {
 			return
 		}
 		index,msg := mirror.AddRule(policyId,ob)
-		id := string(ob.InPort)+"_"+string(ob.OutPort)+"_"+ob.Source
+		id :=  strconv.Itoa(int(ob.InPort))+"_"+strconv.Itoa(int(ob.OutPort))+"_"+ob.Source
 		if index < 0{
 			id = ""
 		}
@@ -73,7 +73,7 @@ func (o *RuleController) Post() {
 			make([]string,0),
 		}
 		index,msg := mirror.DeleteRule(policyId,rule)
-		id := string(ob.InPort)+"_"+string(ob.OutPort)+"_"+ob.Source
+		id :=  strconv.Itoa(int(ob.InPort))+"_"+strconv.Itoa(int(ob.OutPort))+"_"+ob.Source
 		jsonRtn["id"] = id
 		jsonRtn["result"] = index
 		jsonRtn["message"] = msg
