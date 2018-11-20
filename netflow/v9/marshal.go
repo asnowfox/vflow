@@ -60,7 +60,7 @@ func (m *Message) encodeDataSet(b *bytes.Buffer,datas []DataFlowRecord) error {
 		err      error
 	)
 
-	b.WriteString("\"DataSets\":")
+	b.WriteString("\"dataSets\":")
 	dsLength = len(datas)
 
 	b.WriteByte('[')
@@ -70,9 +70,9 @@ func (m *Message) encodeDataSet(b *bytes.Buffer,datas []DataFlowRecord) error {
 
 		b.WriteByte('[')
 		for j := range data.DataSets {
-			b.WriteString("{\"I\":")
+			b.WriteString("{\"i\":")
 			b.WriteString(strconv.FormatInt(int64(data.DataSets[j].ID), 10))
-			b.WriteString(",\"V\":")
+			b.WriteString(",\"v\":")
 			err = m.writeValue(b, j,data.DataSets)
 
 			if j < length-1 {
@@ -97,23 +97,23 @@ func (m *Message) encodeDataSet(b *bytes.Buffer,datas []DataFlowRecord) error {
 
 
 func (m *Message) encodeHeader(b *bytes.Buffer) {
-	b.WriteString("\"Header\":{\"Version\":")
+	b.WriteString("\"header\":{\"version\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.Version), 10))
-	b.WriteString(",\"Count\":")
+	b.WriteString(",\"count\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.Count), 10))
-	b.WriteString(",\"SysUpTime\":")
+	b.WriteString(",\"sysUpTime\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.SysUpTime), 10))
-	b.WriteString(",\"UNIXSecs\":")
+	b.WriteString(",\"unixSecs\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.UNIXSecs), 10))
-	b.WriteString(",\"SeqNum\":")
+	b.WriteString(",\"seqNum\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.SeqNum), 10))
-	b.WriteString(",\"SrcID\":")
+	b.WriteString(",\"srcID\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.SrcID), 10))
 	b.WriteString("},")
 }
 
 func (m *Message) encodeAgent(b *bytes.Buffer) {
-	b.WriteString("\"AgentID\":\"")
+	b.WriteString("\"agentID\":\"")
 	b.WriteString(m.AgentID)
 	b.WriteString("\",")
 }
