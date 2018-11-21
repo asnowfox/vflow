@@ -28,7 +28,6 @@ import (
 	"errors"
 	"net"
 	"strconv"
-	"time"
 )
 
 var errUknownMarshalDataType = errors.New("unknown data type to marshal")
@@ -111,11 +110,6 @@ func (m *Message) encodeHeader(b *bytes.Buffer) {
 	b.WriteString(",\"srcID\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.SrcID), 10))
 	b.WriteString("},")
-}
-func (m *Message) encodeTime(b *bytes.Buffer) {
-	b.WriteString("\"timeStamp\":\"")
-	b.WriteString(strconv.FormatInt(time.Now().Unix(),10));
-	b.WriteString("\",")
 }
 
 func (m *Message) encodeAgent(b *bytes.Buffer) {
