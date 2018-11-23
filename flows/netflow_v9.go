@@ -133,7 +133,6 @@ func (i *NetflowV9) Run() {
 			}
 		}()
 	}else{
-
 		vlogger.Logger.Printf("disable netflow v9 json mq transfer")
 	}
 	go func() {

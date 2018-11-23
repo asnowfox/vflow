@@ -31,6 +31,7 @@ import (
 	"../../ipfix"
 	"../../reader"
 	"encoding/binary"
+	"time"
 )
 
 // Decoder represents Netflow payload and remote address
@@ -45,12 +46,13 @@ const OutputId = 14
 
 // PacketHeader represents Netflow v9  packet header
 type PacketHeader struct {
-	Version   uint16 // Version of Flow Record format exported in this packet
-	Count     uint16 // The total number of records in the Export Packet
-	SysUpTime uint32 // Time in milliseconds since this device was first booted
-	UNIXSecs  uint32 // Time in seconds since 0000 UTC 197
-	SeqNum    uint32 // Incremental sequence counter of all Export Packets
-	SrcID     uint32 // A 32-bit value that identifies the Exporter
+	Version        uint16 // Version of Flow Record format exported in this packet
+	Count          uint16 // The total number of records in the Export Packet
+	SysUpTime      uint32 // Time in milliseconds since this device was first booted
+	UNIXSecs       uint32 // Time in seconds since 0000 UTC 197
+	SeqNum         uint32 // Incremental sequence counter of all Export Packets
+	SrcID          uint32 // A 32-bit value that identifies the Exporter
+	CaptureTimeSec int64
 }
 
 // SetHeader represents netflow v9 data flowset id and length
@@ -77,8 +79,6 @@ type TemplateFieldSpecifier struct {
 type TemplateRecord struct {
 	Header TemplateHeader
 	SetId  uint16
-	//TemplateID           uint16
-	//FieldCount           uint16
 	FieldSpecifiers      []TemplateFieldSpecifier
 	ScopeFieldCount      uint16
 	ScopeFieldSpecifiers []TemplateFieldSpecifier
@@ -333,7 +333,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 	return nil
 }
 
-func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,uint16, error) {
+func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int, uint16, error) {
 	var (
 		fields []DecodedField
 		err    error
@@ -345,9 +345,9 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,uint16
 	var length uint16 = 0
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
 		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
-		length+= uint16(len(b))
+		length += uint16(len(b))
 		if err != nil {
-			return nil, -1, -1,0, err
+			return nil, -1, -1, 0, err
 		}
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
 			0,
@@ -355,7 +355,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,uint16
 		}]
 
 		if !ok {
-			return nil, -1, -1, 0,nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
+			return nil, -1, -1, 0, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
 				tr.FieldSpecifiers[i].ElementID))
 		}
 
@@ -375,9 +375,9 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,uint16
 
 	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
 		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
-		length+= uint16(len(b))
+		length += uint16(len(b))
 		if err != nil {
-			return nil, -1, -1,0, err
+			return nil, -1, -1, 0, err
 		}
 
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
@@ -386,7 +386,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,uint16
 		}]
 
 		if !ok {
-			return nil, -1, -1,0, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
+			return nil, -1, -1, 0, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
 				tr.ScopeFieldSpecifiers[i].ElementID))
 		}
 		id := m.FieldID
@@ -403,7 +403,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,uint16
 		}
 	}
 
-	return fields, inputId, outputId,length, nil
+	return fields, inputId, outputId, length, nil
 }
 
 func parsePort(value interface{}) uint32 {
@@ -447,7 +447,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 
 	// Add source IP address as Agent ID
 	msg.AgentID = d.raddr.String()
-
+	msg.Header.CaptureTimeSec = time.Now().Unix()
 	// In case there are multiple non-fatal errors, collect them and report all of them.
 	// The rest of the received sets will still be interpreted, until a fatal error is encountered.
 	// A non-fatal error is for example an illegal data record or unknown template id.
@@ -529,7 +529,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 					data,
 					i,
 					o,
-					 length,
+					length,
 				}
 				decodedFlowSet.DataFlowRecords = append(decodedFlowSet.DataFlowRecords, record)
 

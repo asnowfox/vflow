@@ -103,6 +103,8 @@ func (m *Message) encodeHeader(b *bytes.Buffer) {
 	b.WriteString(strconv.FormatInt(int64(m.Header.Count), 10))
 	b.WriteString(",\"sysUpTime\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.SysUpTime), 10))
+	b.WriteString(",\"captureTimeSec\":")
+	b.WriteString(strconv.FormatInt(int64(m.Header.CaptureTimeSec), 10))
 	b.WriteString(",\"unixSecs\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.UNIXSecs), 10))
 	b.WriteString(",\"seqNum\":")
