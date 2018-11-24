@@ -82,7 +82,6 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	config.ClientID = "vFlow.Kafka"
 	config.Producer.Retry.Max = k.config.RetryMax
 	config.Producer.Retry.Backoff = time.Duration(k.config.RetryBackoff) * time.Millisecond
-
 	sarama.MaxRequestSize = k.config.RequestSizeMax
 
 	switch k.config.Compression {
@@ -144,9 +143,7 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 			Topic: topic,
 			Value: sarama.ByteEncoder(msg),
 		}
-		select {
-			case k.producer.Input() <- kMsg:
-		}
+		k.producer.Input() <- kMsg
 
 	}
 

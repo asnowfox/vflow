@@ -34,7 +34,6 @@ var errUknownMarshalDataType = errors.New("unknown data type to marshal")
 
 // JSONMarshal encodes netflow v9 message
 func (m *Message) JSONMarshal(b *bytes.Buffer, datas []DataFlowRecord) ([]byte, error) {
-
 	b.WriteString("{")
 
 	// encode agent id
@@ -165,6 +164,5 @@ func (m *Message) writeValue(b *bytes.Buffer, i int, datas []DecodedField) error
 	default:
 		return errUknownMarshalDataType
 	}
-
 	return nil
 }
