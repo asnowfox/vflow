@@ -20,7 +20,7 @@ func Init(db string, uname string, passwd string) {
 	password = passwd
 }
 
-func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOctList []uint32, ifOutOctList []uint32) {
+func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOctList []uint64, ifOutOctList []uint64) {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     hostUrl,
 		Username: username,
@@ -45,8 +45,8 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 		// Create a point and add to batch
 		tags := map[string]string{"portIndex":strconv.Itoa(index),"ifDes":nameList[i],}
 		fields := map[string]interface{}{
-			"inOtc": ifInOctList[i],
-			"outOtc": ifOutOctList[i],
+			"inOtc": float64(ifInOctList[i]),
+			"outOtc": float64(ifOutOctList[i]),
 		}
 
 		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, time.Now())
