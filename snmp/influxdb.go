@@ -20,7 +20,7 @@ func Init(db string, uname string, passwd string) {
 	password = passwd
 }
 
-func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOctList []uint64, ifOutOctList []uint64) {
+func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOctList []uint32, ifOutOctList []uint32) {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     hostUrl,
 		Username: username,

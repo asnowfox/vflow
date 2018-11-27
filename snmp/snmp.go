@@ -16,8 +16,8 @@ import (
 var ifNameOid = ".1.3.6.1.2.1.31.1.1.1.1"
 var ifIndexOid = ".1.3.6.1.2.1.2.2.1.1"
 var ifDesOid = ".1.3.6.1.2.1.31.1.1.1.18"
-var ifOutOct = ".1.3.6.1.2.1.31.1.1.1.10"
-var ifInOct = ".1.3.6.1.2.1.31.1.1.1.6"
+var ifOutOct = ".1.3.6.1.2.1.2.2.1.16"
+var ifInOct = ".1.3.6.1.2.1.2.2.1.10"
 var devicePortMap = make(map[string][]PortInfo)
 var devicePortIndexMap = make(map[string]map[int]PortInfo)
 var rwLock = new(sync.RWMutex)
@@ -108,8 +108,8 @@ func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string)
 	indexList := make([]int, 0)
 	nameList := make([]string, 0)
 	desList := make([]string, 0)
-	ifInOctList := make([]uint64,0)
-	ifOutOctList := make([]uint64,0)
+	ifInOctList := make([]uint32,0)
+	ifOutOctList := make([]uint32,0)
 
 	if err == nil {
 		for _, v := range indexResp {
@@ -143,7 +143,7 @@ func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string)
 	inResp, err := s.Walk(ifInOct)
 	if err == nil {
 		for _, v := range inResp {
-			ifInOctList = append(ifInOctList, v.Value.(uint64))
+			ifInOctList = append(ifInOctList, v.Value.(uint32))
 		}
 	} else {
 		vlogger.Logger.Printf("snmp walk err %e", err)
@@ -153,7 +153,7 @@ func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string)
 	outResp, err := s.Walk(ifOutOct)
 	if err == nil {
 		for _, v := range outResp {
-			ifOutOctList = append(ifOutOctList, v.Value.(uint64))
+			ifOutOctList = append(ifOutOctList, v.Value.(uint32))
 		}
 	} else {
 		vlogger.Logger.Printf("snmp walk err %e", err)
