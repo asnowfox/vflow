@@ -2,7 +2,7 @@ package snmp
 
 import (
 	"github.com/influxdata/influxdb/client/v2"
-	"log"
+	"../vlogger"
 	"time"
 )
 
@@ -26,7 +26,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 		Password: password,
 	})
 	if err != nil {
-		log.Fatal(err)
+		vlogger.Logger.Fatal(err)
 	}
 	defer c.Close()
 
@@ -36,7 +36,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 		Precision: "s",
 	})
 	if err != nil {
-		log.Fatal(err)
+		vlogger.Logger.Fatal(err)
 	}
 
 	for i, index := range indexList {
@@ -50,18 +50,17 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 
 		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, time.Now())
 		if err != nil {
-			log.Fatal(err)
+			vlogger.Logger.Fatal(err)
 		}
 		bp.AddPoint(pt)
+	}
+	// Write the batch
+	if err := c.Write(bp); err != nil {
+		vlogger.Logger.Fatal(err)
+	}
 
-		// Write the batch
-		if err := c.Write(bp); err != nil {
-			log.Fatal(err)
-		}
-
-		// Close client resources
-		if err := c.Close(); err != nil {
-			log.Fatal(err)
-		}
+	// Close client resources
+	if err := c.Close(); err != nil {
+		vlogger.Logger.Fatal(err)
 	}
 }
