@@ -4,6 +4,7 @@ import (
 	"github.com/influxdata/influxdb/client/v2"
 	"../vlogger"
 	"time"
+	"strconv"
 )
 
 var (
@@ -42,7 +43,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 	for i, index := range indexList {
 
 		// Create a point and add to batch
-		tags := map[string]string{"portIndex": string(index),"ifDes":nameList[i]}
+		tags := map[string]string{"portIndex":strconv.Itoa(index),"ifDes":nameList[i],}
 		fields := map[string]interface{}{
 			"inOtc": ifInOctList[i],
 			"outOtc": ifOutOctList[i],
