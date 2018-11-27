@@ -150,7 +150,7 @@ func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string)
 		return err
 	}
 
-	outResp, err := s.Walk(ifDesOid)
+	outResp, err := s.Walk(ifOutOct)
 	if err == nil {
 		for _, v := range outResp {
 			ifOutOctList = append(ifOutOctList, v.Value.(uint64))
