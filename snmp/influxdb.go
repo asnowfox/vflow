@@ -26,7 +26,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 		Password: password,
 	})
 	if err != nil {
-		vlogger.Logger.Fatal(err)
+		vlogger.Logger.Print(err)
 	}
 	defer c.Close()
 
@@ -36,7 +36,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 		Precision: "s",
 	})
 	if err != nil {
-		vlogger.Logger.Fatal(err)
+		vlogger.Logger.Print(err)
 	}
 
 	for i, index := range indexList {
@@ -50,17 +50,17 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 
 		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, time.Now())
 		if err != nil {
-			vlogger.Logger.Fatal(err)
+			vlogger.Logger.Print("new point error "+err.Error())
 		}
 		bp.AddPoint(pt)
 	}
 	// Write the batch
 	if err := c.Write(bp); err != nil {
-		vlogger.Logger.Fatal(err)
+		vlogger.Logger.Print("write error "+err.Error())
 	}
 
 	// Close client resources
 	if err := c.Close(); err != nil {
-		vlogger.Logger.Fatal(err)
+		vlogger.Logger.Print(err)
 	}
 }
