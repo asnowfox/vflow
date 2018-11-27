@@ -48,7 +48,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 			"outOtc": ifOutOctList[i],
 		}
 
-		pt, err := client.NewPoint(deviceIp, tags, fields, time.Now())
+		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, time.Now())
 		if err != nil {
 			log.Fatal(err)
 		}
