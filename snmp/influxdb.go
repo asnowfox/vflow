@@ -5,6 +5,7 @@ import (
 	"../vlogger"
 	"time"
 	"fmt"
+	"github.com/influxdata/platform/kit/errors"
 )
 
 var (
@@ -45,8 +46,8 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 		// Create a point and add to batch
 		tags := map[string]string{"portIndex":fmt.Sprint("%d",index),"ifDes":nameList[i],}
 		fields := map[string]interface{}{
-			"inOtc": uint64(ifInOctList[i]),
-			"outOtc": uint64(ifOutOctList[i]),
+			"inOtc": 0,
+			"outOtc": 0,
 		}
 
 		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, time.Now())
@@ -57,7 +58,9 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 	}
 	// Write the batch
 	if err := c.Write(bp); err != nil {
+
 		vlogger.Logger.Print("write error "+err.Error())
+		fmt.Println(err.(*errors.Error).Error())
 	}
 
 	// Close client resources
