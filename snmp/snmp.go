@@ -89,7 +89,9 @@ func (task *DevicePortManager) Run() {
 
 func (task *DevicePortManager) taskOnce() {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
-		task.walkIndex(dev.DeviceAddress, dev.Community)
+		go func() {
+			task.walkIndex(dev.DeviceAddress, dev.Community)
+		}()
 	}
 }
 
@@ -171,6 +173,7 @@ func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string)
 			devicePortMap[DeviceAddress] = append(devicePortMap[DeviceAddress], info)
 			devicePortIndexMap[DeviceAddress][index] = info
 		}
+
 		SaveWalkToInflux(DeviceAddress,indexList,nameList,ifInOctList,ifOutOctList)
 	} else {
 		return errors.New("snmp walk err response is not equal")
