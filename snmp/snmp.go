@@ -89,9 +89,7 @@ func (task *DevicePortManager) Run() {
 
 func (task *DevicePortManager) taskOnce() {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
-		go func() {
-			task.walkIndex(dev.DeviceAddress, dev.Community)
-		}()
+		task.walkIndex(dev.DeviceAddress, dev.Community)
 	}
 }
 
