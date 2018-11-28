@@ -4,8 +4,6 @@ import (
 	"github.com/influxdata/influxdb/client/v2"
 	"../vlogger"
 	"time"
-	"fmt"
-	"github.com/influxdata/platform/kit/errors"
 	"strconv"
 )
 
@@ -60,9 +58,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 	}
 	// Write the batch
 	if err := c.Write(bp); err != nil {
-
 		vlogger.Logger.Print("write error "+err.Error())
-		fmt.Println(err.(*errors.Error))
 	}
 
 	// Close client resources
