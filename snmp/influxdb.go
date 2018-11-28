@@ -6,6 +6,7 @@ import (
 	"time"
 	"fmt"
 	"github.com/influxdata/platform/kit/errors"
+	"strconv"
 )
 
 var (
@@ -42,18 +43,19 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 	}
 
 	for i, index := range indexList {
-
 		// Create a point and add to batch
-		tags := map[string]string{"portIndex":fmt.Sprint("%d",index),"ifDes":nameList[i],}
+		tags := map[string]string{"portIndex":strconv.Itoa(index),"ifDes":nameList[i],}
 		fields := map[string]interface{}{
-			"inOtc": 0,
-			"outOtc": 0,
+			"inOtc": uint64(ifInOctList[i]),
+			"outOtc": uint64(ifOutOctList[i]),
 		}
 
 		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, time.Now())
+
 		if err != nil {
 			vlogger.Logger.Print("new point error "+err.Error())
 		}
+
 		bp.AddPoint(pt)
 	}
 	// Write the batch
