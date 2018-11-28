@@ -72,7 +72,7 @@ func NewDevicePortManager(cfgFile string) (*DevicePortManager, error) {
 
 func (task *DevicePortManager) Run() {
 	go func() {
-		task.taskOnce()
+		task.taskOnce(time.Now(),false)
 	}()
 
 	go func() {
@@ -81,15 +81,16 @@ func (task *DevicePortManager) Run() {
 		for {
 			select {
 			case <-timer1.C:
-				task.taskOnce()
+				curTime := time.Now()
+				task.taskOnce(curTime,true)
 			}
 		}
 	}()
 }
 
-func (task *DevicePortManager) taskOnce() {
+func (task *DevicePortManager) taskOnce(curTime time.Time,isSave bool) {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
-		task.walkIndex(dev.DeviceAddress, dev.Community)
+		task.walkIndex(curTime,dev.DeviceAddress, dev.Community,isSave)
 	}
 }
 
@@ -98,7 +99,7 @@ type NameIndex struct {
 	IfIndex string
 }
 
-func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string) error {
+func (task *DevicePortManager) walkIndex(curTime time.Time,DeviceAddress string, Community string,isSave bool) error {
 	s, err := gosnmp.NewGoSNMP(DeviceAddress, Community, gosnmp.Version2c, 5)
 	if err != nil {
 		vlogger.Logger.Fatal(err)
@@ -172,7 +173,9 @@ func (task *DevicePortManager) walkIndex(DeviceAddress string, Community string)
 			devicePortIndexMap[DeviceAddress][index] = info
 		}
 
-		SaveWalkToInflux(DeviceAddress,indexList,nameList,ifInOctList,ifOutOctList)
+		if isSave {
+			SaveWalkToInflux(curTime,DeviceAddress,indexList,nameList,ifInOctList,ifOutOctList)
+		}
 	} else {
 		return errors.New("snmp walk err response is not equal")
 		vlogger.Logger.Printf("snmp walk err response is not equal")
@@ -191,7 +194,7 @@ func (task *DevicePortManager) RefreshConfig(deviceIp string) ([]PortInfo, error
 		}
 	}
 	if found {
-		err := task.walkIndex(deviceIp, community)
+		err := task.walkIndex(time.Now(),deviceIp, community,false)
 		if err == nil {
 			return devicePortMap[deviceIp], nil
 		} else {

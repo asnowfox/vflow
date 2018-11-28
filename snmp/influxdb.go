@@ -20,7 +20,7 @@ func Init(db string, uname string, passwd string) {
 	password = passwd
 }
 
-func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOctList []uint64, ifOutOctList []uint64) {
+func SaveWalkToInflux(curTime time.Time,deviceIp string,indexList []int, nameList []string, ifInOctList []uint64, ifOutOctList []uint64) {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     hostUrl,
 		Username: username,
@@ -48,7 +48,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 			"outOtc": float64(ifOutOctList[i]),
 		}
 
-		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, time.Now())
+		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, curTime)
 
 		if err != nil {
 			vlogger.Logger.Print("new point error "+err.Error())
