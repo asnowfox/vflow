@@ -62,7 +62,7 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 	if err := c.Write(bp); err != nil {
 
 		vlogger.Logger.Print("write error "+err.Error())
-		fmt.Println(err.(*errors.Error).Error())
+		fmt.Println(err.(*errors.Error))
 	}
 
 	// Close client resources
