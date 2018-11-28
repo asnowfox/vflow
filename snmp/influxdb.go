@@ -44,8 +44,8 @@ func SaveWalkToInflux(deviceIp string,indexList []int, nameList []string, ifInOc
 		// Create a point and add to batch
 		tags := map[string]string{"portIndex":strconv.Itoa(index),"ifDes":nameList[i],}
 		fields := map[string]interface{}{
-			"inOtc": uint64(0),
-			"outOtc": uint64(0),
+			"inOtc": float64(ifInOctList[i]),
+			"outOtc": float64(ifOutOctList[i]),
 		}
 
 		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, time.Now())
