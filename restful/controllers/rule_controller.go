@@ -57,7 +57,7 @@ func (o *RuleController) Post() {
 			return
 		}
 		inport,e1 := strconv.Atoi(strs[0])
-		outport,e2 := strconv.Atoi(strs[0])
+		outport,e2 := strconv.Atoi(strs[1])
 		if e1 != nil && e2 != nil{
 			jsonRtn["result"] = -1
 			jsonRtn["id"] = ruleId
