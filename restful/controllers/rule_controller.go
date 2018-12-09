@@ -45,6 +45,8 @@ func (o *RuleController) Post() {
 		jsonRtn["result"] = index
 		jsonRtn["id"] = id
 		jsonRtn["message"] = msg
+		fmt.Printf("add result %s\r\n",jsonRtn)
+
 		o.Data["json"] = jsonRtn
 		o.ServeJSON()
 	}else if method == "delete"{
@@ -80,7 +82,6 @@ func (o *RuleController) Post() {
 		jsonRtn["message"] = msg
 		//result -1_-1_159.226.8.194,5,rule is deleted
 		fmt.Printf("result %s,%d,%s,%s\r\n",ruleId,index,msg,jsonRtn)
-
 		o.Data["json"] = jsonRtn
 		o.ServeJSON()
 		return
