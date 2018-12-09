@@ -18,6 +18,7 @@ var ifIndexOid = ".1.3.6.1.2.1.2.2.1.1"
 var ifDesOid = ".1.3.6.1.2.1.31.1.1.1.18"
 var ifOutOct = ".1.3.6.1.2.1.31.1.1.1.10"
 var ifInOct = ".1.3.6.1.2.1.31.1.1.1.6"
+var nfIndexOid = ".1.3.6.1.4.1.2011.5.25.110.1.2.1.2"
 var devicePortMap = make(map[string][]PortInfo)
 var devicePortIndexMap = make(map[string]map[int]PortInfo)
 var rwLock = new(sync.RWMutex)
@@ -104,14 +105,16 @@ func (task *DevicePortManager) walkIndex(curTime time.Time,DeviceAddress string,
 	if err != nil {
 		vlogger.Logger.Fatal(err)
 	}
-	indexResp, err := s.Walk(ifIndexOid)
+
 
 	indexList := make([]int, 0)
 	nameList := make([]string, 0)
 	desList := make([]string, 0)
 	ifInOctList := make([]uint64,0)
 	ifOutOctList := make([]uint64,0)
-
+	//nfIndexList :=make([]int,0)
+	//ifToNfIndexMap := make(map[int]int)
+	indexResp, err := s.Walk(ifIndexOid)
 	if err == nil {
 		for _, v := range indexResp {
 			indexList = append(indexList, v.Value.(int))
@@ -119,6 +122,15 @@ func (task *DevicePortManager) walkIndex(curTime time.Time,DeviceAddress string,
 	} else {
 		vlogger.Logger.Printf("snmp walk err %e", err)
 		return err
+	}
+	nfIndexResp, err := s.Walk(nfIndexOid)
+	if err == nil{
+		for _, v := range nfIndexResp {
+			ofIndex := v.Name[len(nfIndexOid)-1:len(v.Name)-1]
+			println("ofIndex %s,ifIndex %d",ofIndex,v.Value.(int))
+			//ifToNfIndexMap[v.Value.(int)],_ = strconv.Atoi(v.Name)
+			//nfIndexList = append(indexList, v.Value.(int))
+		}
 	}
 
 	nameResp, err := s.Walk(ifNameOid)
