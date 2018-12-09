@@ -75,10 +75,10 @@ func (o *RuleController) Post() {
 			int32(outport),
 			make([]string,0),
 		}
-		_,msg := mirror.DeleteRule(policyId,rule)
+		index,msg := mirror.DeleteRule(policyId,rule)
 		jsonRtn := map[string]interface{}{}
 		jsonRtn["id"] = ruleId
-		jsonRtn["result"] = 1
+		jsonRtn["result"] = index
 		jsonRtn["message"] = msg
 		o.Data["json"] = jsonRtn
 		fmt.Printf("result %s\r\n",o.Data)
