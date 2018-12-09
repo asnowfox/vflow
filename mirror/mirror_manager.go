@@ -328,6 +328,7 @@ func recycleClients() {
 					dstAddresses := strings.Split(dist, ":")
 					dstAddr := dstAddresses[0]
 					if _, ok := rawSockets[dstAddr]; ok {
+						fmt.Printf("used address add %s .\r\n",dstAddr);
 						usedClient[dstAddr] = dist
 					}
 				}
@@ -341,7 +342,7 @@ func recycleClients() {
 					dstAddrs := strings.Split(dist, ":")
 					dstAddr := dstAddrs[0]
 					if _, ok := usedClient[dstAddr]; !ok {
-						fmt.Printf("recycle dstAddress %s",dstAddr);
+						fmt.Printf("recycle dstAddress %s .\r\n",dstAddr)
 						raw := rawSockets[dstAddr]
 						raw.Close()
 						delete(rawSockets, dstAddr)
