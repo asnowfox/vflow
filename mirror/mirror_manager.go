@@ -285,9 +285,9 @@ func DeleteRule(policyId string, rule Rule) (int, string) {
 		buildMap()
 		recycleClients()
 		saveConfigsTofile()
-		fmt.Printf("before  success delete return.\r\n")
+		fmt.Printf("before success delete return.\r\n")
 
-		return len(policyConfigs[pid].Rules), "rule is deleted"
+		return len(policyConfigs[pid].Rules), "delete success."
 	} else {
 		return -1, "can not find matched rule for policy " + policyId
 	}
