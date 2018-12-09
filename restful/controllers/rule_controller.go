@@ -79,5 +79,6 @@ func (o *RuleController) Post() {
 		jsonRtn["message"] = msg
 		o.Data["json"] = jsonRtn
 		o.ServeJSON()
+		return
 	}
 }

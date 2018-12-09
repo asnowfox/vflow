@@ -274,8 +274,11 @@ func DeleteRule(policyId string, rule Rule) (int, string) {
 			break
 		}
 	}
+	fmt.Printf("before lock delete index %d for pid %d,cur rule length %d",index,pid, len(policyConfigs[pid].Rules))
+
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
+	fmt.Printf("delete index %d for pid %d,cur rule length %d",index,pid, len(policyConfigs[pid].Rules))
 	if index != -1 {
 		policyConfigs[pid].Rules = append(policyConfigs[pid].Rules[:index],
 			policyConfigs[pid].Rules[index+1:]...)
