@@ -322,8 +322,8 @@ func recycleClients() {
 	go func(){
 		usedClient := make(map[string]string)
 		for _, policy := range policyConfigs {
-			vlogger.Logger.Printf("check rule for policy %s .\r\n",policy.PolicyId)
-			fmt.Printf("check rule for policy %s .\r\n",policy.PolicyId)
+			vlogger.Logger.Printf("check rule for policy %s, rules length is %d.\r\n",policy.PolicyId, len(policy.Rules))
+			fmt.Printf("check rule for policy %s, rules length is %d.\r\n",policy.PolicyId, len(policy.Rules))
 			for _, ecr := range policy.Rules {
 				//找到在用的
 				for _,dist := range ecr.DistAddress {
