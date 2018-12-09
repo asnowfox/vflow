@@ -284,7 +284,7 @@ func DeleteRule(policyId string, rule Rule) (int, string) {
 			policyConfigs[pid].Rules[index+1:]...)
 		buildMap()
 		//recycleClients()
-		//saveConfigsTofile()
+		saveConfigsTofile()
 		fmt.Printf("before success delete return.\r\n")
 
 		return len(policyConfigs[pid].Rules), "delete success."
