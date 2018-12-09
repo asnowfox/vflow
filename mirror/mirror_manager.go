@@ -319,32 +319,34 @@ func saveConfigsTofile() {
 }
 
 func recycleClients() {
-	usedClient := make(map[string]string)
-	for _, policy := range policyConfigs {
-		for _, ecr := range policy.Rules {
-			//找到在用的
-			for _,dist := range ecr.DistAddress {
-				dstAddresses := strings.Split(dist, ":")
-				dstAddr := dstAddresses[0]
-				if _, ok := rawSockets[dstAddr]; ok {
-					usedClient[dstAddr] = dist
+	go func(){
+		usedClient := make(map[string]string)
+		for _, policy := range policyConfigs {
+			for _, ecr := range policy.Rules {
+				//找到在用的
+				for _,dist := range ecr.DistAddress {
+					dstAddresses := strings.Split(dist, ":")
+					dstAddr := dstAddresses[0]
+					if _, ok := rawSockets[dstAddr]; ok {
+						usedClient[dstAddr] = dist
+					}
 				}
 			}
 		}
-	}
 
-	for _, mirrorConfig := range policyConfigs {
-		for _, ecr := range mirrorConfig.Rules {
-			//在用的不存在了
-			for _,dist := range ecr.DistAddress {
-				dstAddrs := strings.Split(dist, ":")
-				dstAddr := dstAddrs[0]
-				if _, ok := usedClient[dstAddr]; !ok {
-					raw := rawSockets[dstAddr]
-					raw.Close()
-					delete(rawSockets, dstAddr)
+		for _, mirrorConfig := range policyConfigs {
+			for _, ecr := range mirrorConfig.Rules {
+				//在用的不存在了
+				for _,dist := range ecr.DistAddress {
+					dstAddrs := strings.Split(dist, ":")
+					dstAddr := dstAddrs[0]
+					if _, ok := usedClient[dstAddr]; !ok {
+						raw := rawSockets[dstAddr]
+						raw.Close()
+						delete(rawSockets, dstAddr)
+					}
 				}
 			}
 		}
-	}
+	}()
 }
