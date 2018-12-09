@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"strings"
 	"strconv"
+	"fmt"
 )
 
 // Operations about object
@@ -76,6 +77,7 @@ func (o *RuleController) Post() {
 		jsonRtn["id"] = ruleId
 		jsonRtn["result"] = index
 		jsonRtn["message"] = msg
+		fmt.Printf("result %s,%d,%s\r\n",ruleId,index,msg)
 		o.Data["json"] = jsonRtn
 		o.ServeJSON()
 		return
