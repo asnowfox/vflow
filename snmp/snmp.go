@@ -127,12 +127,13 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	nfIndexResp, err := s.Walk(nfIndexOid)
 	if err == nil {
 		for _, v := range nfIndexResp {
-			ofIndexStr := v.Name[len(nfIndexOid)+1:len(v.Name)]
+			ofIndexStr := v.Name[len(nfIndexOid)+1 : len(v.Name)]
 			fmt.Printf("ofIndex %s,vName is %s,ifIndex %d\n", ofIndexStr, v.Name, v.Value.(int))
 			ofIndex, _ := strconv.Atoi(ofIndexStr)
 			ifToNfIndexMap[v.Value.(int)] = ofIndex
 		}
-	}else{
+	}
+	if len(ifToNfIndexMap) == 0 {
 		for _, v := range indexList {
 			ifToNfIndexMap[v] = v
 		}
@@ -185,7 +186,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		devicePortMap[DeviceAddress] = make([]PortInfo, 0)
 		devicePortIndexMap[DeviceAddress] = make(map[int]PortInfo) //清空
 		for i, index := range indexList {
-			info := PortInfo{index, nameList[i], desList[i],ifToNfIndexMap[index]}
+			info := PortInfo{index, nameList[i], desList[i], ifToNfIndexMap[index]}
 			devicePortMap[DeviceAddress] = append(devicePortMap[DeviceAddress], info)
 			devicePortIndexMap[DeviceAddress][index] = info
 		}
@@ -276,7 +277,7 @@ func (task *DevicePortManager) PortInfo(devAddress string, index int) (PortInfo,
 	defer rwLock.RLock()
 	if index == -1 {
 		info := PortInfo{
-			-1, "all port", "match all port",-1,
+			-1, "all port", "match all port", -1,
 		}
 		return info, nil
 	}
