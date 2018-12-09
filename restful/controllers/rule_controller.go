@@ -77,13 +77,16 @@ func (o *RuleController) Post() {
 		}
 		index,msg := mirror.DeleteRule(policyId,rule)
 		jsonRtn := map[string]interface{}{}
-		//jsonRtn["id"] = ruleId
+		jsonRtn["id"] = ruleId
+		if index > 0{
+			index = 1
+		}
 		jsonRtn["result"] = index
-
-		//jsonRtn["message"] = msg
+		jsonRtn["message"] = msg
 		//result -1_-1_159.226.8.194,5,rule is deleted
-		fmt.Printf("result %s,%d,%s,%s\r\n",ruleId,index,msg,jsonRtn)
 		o.Data["json"] = jsonRtn
+		fmt.Printf("result %s\r\n",o.Data)
+
 		o.ServeJSON()
 		return
 	}
