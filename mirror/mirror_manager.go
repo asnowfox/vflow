@@ -274,15 +274,14 @@ func DeleteRule(policyId string, rule Rule) (int, string) {
 			break
 		}
 	}
-	//cfgMutex.Lock()
-	//defer cfgMutex.Unlock()
+	cfgMutex.Lock()
+	defer cfgMutex.Unlock()
 	if index != -1 {
 		policyConfigs[pid].Rules = append(policyConfigs[pid].Rules[:index],
 			policyConfigs[pid].Rules[index+1:]...)
 		buildMap()
-		recycleClients()
 		saveConfigsTofile()
-
+		recycleClients()
 		return len(policyConfigs[pid].Rules), "delete success."
 	} else {
 		return -1, "can not find matched rule for policy " + policyId
