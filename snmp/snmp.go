@@ -127,7 +127,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	nfIndexResp, err := s.Walk(nfIndexOid)
 	if err == nil {
 		for _, v := range nfIndexResp {
-			ofIndexStr := v.Name[len(nfIndexOid):len(v.Name)]
+			ofIndexStr := v.Name[len(nfIndexOid)+1:len(v.Name)]
 			fmt.Printf("ofIndex %s,vName is %s,ifIndex %d\n", ofIndexStr, v.Name, v.Value.(int))
 			ofIndex, _ := strconv.Atoi(ofIndexStr)
 			ifToNfIndexMap[v.Value.(int)] = ofIndex
