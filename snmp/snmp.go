@@ -11,6 +11,7 @@ import (
 	"sync"
 	"errors"
 	"net"
+	"strconv"
 )
 
 var ifNameOid = ".1.3.6.1.2.1.31.1.1.1.1"
@@ -35,6 +36,7 @@ type PortInfo struct {
 	IfIndex int    `json:"ifIndex"`
 	IfName  string `json:"ifName"`
 	IfDes   string `json:"ifDes"`
+	NfIndex int    `json:"nfIndex"`
 }
 
 type DeviceSnmpConfig struct {
@@ -73,7 +75,7 @@ func NewDevicePortManager(cfgFile string) (*DevicePortManager, error) {
 
 func (task *DevicePortManager) Run() {
 	go func() {
-		task.taskOnce(time.Now(),false)
+		task.taskOnce(time.Now(), false)
 	}()
 
 	go func() {
@@ -83,15 +85,15 @@ func (task *DevicePortManager) Run() {
 			select {
 			case <-timer1.C:
 				curTime := time.Now()
-				task.taskOnce(curTime,true)
+				task.taskOnce(curTime, true)
 			}
 		}
 	}()
 }
 
-func (task *DevicePortManager) taskOnce(curTime time.Time,isSave bool) {
+func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
-		task.walkIndex(curTime,dev.DeviceAddress, dev.Community,isSave)
+		task.walkIndex(curTime, dev.DeviceAddress, dev.Community, isSave)
 	}
 }
 
@@ -100,20 +102,19 @@ type NameIndex struct {
 	IfIndex string
 }
 
-func (task *DevicePortManager) walkIndex(curTime time.Time,DeviceAddress string, Community string,isSave bool) error {
+func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string, Community string, isSave bool) error {
 	s, err := gosnmp.NewGoSNMP(DeviceAddress, Community, gosnmp.Version2c, 5)
 	if err != nil {
 		vlogger.Logger.Fatal(err)
 	}
 
-
 	indexList := make([]int, 0)
 	nameList := make([]string, 0)
 	desList := make([]string, 0)
-	ifInOctList := make([]uint64,0)
-	ifOutOctList := make([]uint64,0)
+	ifInOctList := make([]uint64, 0)
+	ifOutOctList := make([]uint64, 0)
 	//nfIndexList :=make([]int,0)
-	//ifToNfIndexMap := make(map[int]int)
+	ifToNfIndexMap := make(map[int]int)
 	indexResp, err := s.Walk(ifIndexOid)
 	if err == nil {
 		for _, v := range indexResp {
@@ -124,10 +125,16 @@ func (task *DevicePortManager) walkIndex(curTime time.Time,DeviceAddress string,
 		return err
 	}
 	nfIndexResp, err := s.Walk(nfIndexOid)
-	if err == nil{
+	if err == nil {
 		for _, v := range nfIndexResp {
-			ofIndex := v.Name[len(nfIndexOid)-1:len(v.Name)-1]
-			fmt.Printf("ofIndex %s,vName is %s,ifIndex %d\n",ofIndex,v.Name,v.Value.(int))
+			ofIndexStr := v.Name[len(nfIndexOid):len(v.Name)]
+			fmt.Printf("ofIndex %s,vName is %s,ifIndex %d\n", ofIndexStr, v.Name, v.Value.(int))
+			ofIndex, _ := strconv.Atoi(ofIndexStr)
+			ifToNfIndexMap[v.Value.(int)] = ofIndex
+		}
+	}else{
+		for _, v := range indexList {
+			ifToNfIndexMap[v] = v
 		}
 	}
 
@@ -178,13 +185,13 @@ func (task *DevicePortManager) walkIndex(curTime time.Time,DeviceAddress string,
 		devicePortMap[DeviceAddress] = make([]PortInfo, 0)
 		devicePortIndexMap[DeviceAddress] = make(map[int]PortInfo) //清空
 		for i, index := range indexList {
-			info := PortInfo{index, nameList[i], desList[i]}
+			info := PortInfo{index, nameList[i], desList[i],ifToNfIndexMap[index]}
 			devicePortMap[DeviceAddress] = append(devicePortMap[DeviceAddress], info)
 			devicePortIndexMap[DeviceAddress][index] = info
 		}
 
 		if isSave {
-			SaveWalkToInflux(curTime,DeviceAddress,indexList,nameList,ifInOctList,ifOutOctList)
+			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, ifInOctList, ifOutOctList)
 		}
 	} else {
 		return errors.New("snmp walk err response is not equal")
@@ -204,7 +211,7 @@ func (task *DevicePortManager) RefreshConfig(deviceIp string) ([]PortInfo, error
 		}
 	}
 	if found {
-		err := task.walkIndex(time.Now(),deviceIp, community,false)
+		err := task.walkIndex(time.Now(), deviceIp, community, false)
 		if err == nil {
 			return devicePortMap[deviceIp], nil
 		} else {
@@ -264,22 +271,22 @@ func (task *DevicePortManager) ListPortInfo(devAddress string) ([]PortInfo) {
 	return devicePortMap[devAddress]
 }
 
-func (task *DevicePortManager) PortInfo(devAddress string,index int) (PortInfo,error) {
+func (task *DevicePortManager) PortInfo(devAddress string, index int) (PortInfo, error) {
 	rwLock.RLock()
 	defer rwLock.RLock()
-	if index == -1{
+	if index == -1 {
 		info := PortInfo{
-			-1 ,"all port","match all port",
+			-1, "all port", "match all port",-1,
 		}
-		return info,nil
+		return info, nil
 	}
-	if _,ok := devicePortMap[devAddress];!ok{
-		return *new(PortInfo),errors.New("Can not find device")
+	if _, ok := devicePortMap[devAddress]; !ok {
+		return *new(PortInfo), errors.New("Can not find device")
 	}
-	if _,ok := devicePortIndexMap[devAddress][index];!ok{
-		return *new(PortInfo),errors.New("Can not find index")
+	if _, ok := devicePortIndexMap[devAddress][index]; !ok {
+		return *new(PortInfo), errors.New("Can not find index")
 	}
-	return devicePortIndexMap[devAddress][index],nil
+	return devicePortIndexMap[devAddress][index], nil
 }
 
 func saveConfigToFile() error {
