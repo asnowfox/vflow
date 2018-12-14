@@ -13,8 +13,8 @@ type Netflowv9Mirror struct {
 	stats FlowMirrorStatus
 }
 
-func (t *Netflowv9Mirror) ReceiveMessage(msg *netflow9.Message) {
-	netflowChannel <- *msg
+func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
+	netflowChannel <- msg
 }
 
 func (t *Netflowv9Mirror) Status() *FlowMirrorStatus {
@@ -62,7 +62,7 @@ func (t *Netflowv9Mirror) Run() {
 				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
 					continue
 				}
-				
+
 				buf := new(bytes.Buffer)
 				for _,e := range msgFlowSets {
 					b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)

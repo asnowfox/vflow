@@ -216,7 +216,7 @@ LOOP:
 			if decodedMsg.DataFlowSets == nil{
 				decodedMsg.DataFlowSets = make([]netflow9.DataFlowSet,0)
 			}
-			i.messageMirror.ReceiveMessage(decodedMsg)
+			i.messageMirror.ReceiveMessage(*decodedMsg)
 		}
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 		i.pktStat.recordSeq(decodedMsg.AgentID,decodedMsg.Header.SrcID,decodedMsg.Header.SeqNum)
