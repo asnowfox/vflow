@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"../vlogger"
+	"bytes"
 )
 
 type Netflowv9Mirror struct {
@@ -42,16 +43,16 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 			continue
 		}
 
-		//buf := new(bytes.Buffer)
-		//for _,e := range msgFlowSets {
-		//	b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
-		//	if err == nil {
-		//		if strings.Index(string(b), "0.0.0" )>=0{
-		//			vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
-		//		}
-		//
-		//	}
-		//}
+		buf := new(bytes.Buffer)
+		for _,e := range msgFlowSets {
+			b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+			if err == nil {
+				if strings.Contains(string(b),"0.0.0"){
+					vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
+				}
+
+			}
+		}
 
 		//这个是针对这个rule进行发送的过程
 
