@@ -93,6 +93,7 @@ func (task *DevicePortManager) Run() {
 
 func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
+		vlogger.Logger.Printf("start go routine %s.",dev.DeviceAddress)
 		go func(){
 			task.walkIndex(curTime, dev.DeviceAddress, dev.Community, true)
 		}()
@@ -105,8 +106,7 @@ type NameIndex struct {
 }
 
 func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string, Community string, isSave bool) error {
-	vlogger.Logger.Printf("start to walk  ")
-	fmt.Printf("start to walk %s",DeviceAddress)
+	vlogger.Logger.Printf("start to walk  %s",DeviceAddress)
 	s, err := gosnmp.NewGoSNMP(DeviceAddress, Community, gosnmp.Version2c, 5)
 	if err != nil {
 		vlogger.Logger.Fatal(err)
