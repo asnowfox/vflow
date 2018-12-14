@@ -210,22 +210,8 @@ LOOP:
 			}
 		}
 		//所有的worker的消息由 messageMirror接收
-		if i.messageMirror != nil  {
-			if decodedMsg.DataFlowSets != nil{
-				for _, e := range decodedMsg.DataFlowSets {
-					b, err = decodedMsg.JSONMarshal(buf, e.DataFlowRecords)
-					if err != nil {
-						vlogger.Logger.Printf("mashall message error !!!!")
-						continue
-					} else {
-						vlogger.Logger.Printf("mashall message %s\n", string(b))
-					}
-				}
-				i.messageMirror.ReceiveMessage(decodedMsg)
-			}else{
-				vlogger.Logger.Printf("decodedMsg.DataFlowSets is nil")
-			}
-
+		if i.messageMirror != nil && decodedMsg.DataFlowSets != nil{
+			i.messageMirror.ReceiveMessage(decodedMsg)
 		}
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 		i.pktStat.recordSeq(decodedMsg.AgentID,decodedMsg.Header.SrcID,decodedMsg.Header.SeqNum)
