@@ -7,7 +7,6 @@ import (
 	"strings"
 	"net"
 	"sync"
-	"../netflow/v9"
 	"../ipfix"
 	"encoding/binary"
 	"encoding/json"
@@ -25,7 +24,7 @@ var (
 	cfgMutex                sync.RWMutex
 	seqMap                  = make(map[string]uint32)
 	ipfixChannel            = make(chan ipfix.Message, 1000)
-	netflowChannel          = make(chan netflow9.Message, 1000)
+	//netflowChannel          = make(chan netflow9.Message, 1000)
 )
 
 const InputId = 10

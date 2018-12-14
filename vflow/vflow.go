@@ -68,8 +68,6 @@ func main() {
 
 	if err1 != nil {
 		logger.Printf("can not init netflow mirror. reason %s\n", err1)
-	}else{
-		flowMirror.Run()
 	}
 	if err2 != nil {
 		logger.Printf("can not init ipfix mirror. reason %s\n", err2)

@@ -212,9 +212,6 @@ LOOP:
 		//所有的worker的消息由 messageMirror接收
 		if i.messageMirror != nil {
 			msg := *decodedMsg
-			if(msg.DataFlowSets == nil){
-				vlogger.Logger.Printf("{\"i\":8,\"v\":\"0.0.0.0\" in decoder dataSet is nil")
-			}
 			i.messageMirror.ReceiveMessage(msg)
 		}
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
