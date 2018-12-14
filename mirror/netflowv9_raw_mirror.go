@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"../vlogger"
+	"bytes"
 )
 
 type Netflowv9Mirror struct {
@@ -61,6 +62,15 @@ func (t *Netflowv9Mirror) Run() {
 				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
 					continue
 				}
+				
+				buf := new(bytes.Buffer)
+				for _,e := range msgFlowSets {
+					b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+					if err == nil {
+						vlogger.Logger.Println(string(b))
+					}
+				}
+
 				//这个是针对这个rule进行发送的过程
 
 				var seq uint32 = 0
@@ -74,9 +84,6 @@ func (t *Netflowv9Mirror) Run() {
 				}
 				seqMap[key] = seqMap[key] + 1
 				seqMutex.Unlock()
-
-
-
 				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 
 				for _,r := range mRule.DistAddress {
