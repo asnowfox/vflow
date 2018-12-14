@@ -79,6 +79,9 @@ func (task *DevicePortManager) Run() {
 	}()
 
 	go func() {
+		sleepSecond := time.Now().Unix()%120
+		vlogger.Logger.Printf("I will delay for %d",sleepSecond)
+		time.Sleep(time.Duration(sleepSecond)*time.Second)
 		duration := time.Duration(time.Duration(task.snmpConfigs.Interval) * time.Second)
 		timer1 := time.NewTicker(duration)
 		for {
@@ -96,7 +99,7 @@ func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 		addr := dev.DeviceAddress
 		community := dev.Community
 		go func(){
-			task.walkIndex(curTime, addr, community, true)
+			task.walkIndex(curTime, addr, community, isSave)
 		}()
 	}
 }
@@ -183,7 +186,6 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		return err
 	}
 
-	vlogger.Logger.Printf("snmp walk OK of device %s",DeviceAddress )
 
 	rwLock.RLock()
 	defer rwLock.RUnlock()
@@ -198,7 +200,6 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		}
 
 		if isSave {
-			vlogger.Logger.Printf("save to db \r\n")
 			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, ifInOctList, ifOutOctList)
 		}
 	} else {
