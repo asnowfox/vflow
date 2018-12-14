@@ -456,7 +456,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		if err := d.decodeSet(mem, msg); err != nil {
 			switch err.(type) {
 			case nonfatalError:
-				fmt.Printf("%s decodeSet error.", d.raddr)
+				fmt.Printf("%s decodeSet error\r\n.", d.raddr)
 				decodeErrors = append(decodeErrors, err)
 			default:
 				return nil, err

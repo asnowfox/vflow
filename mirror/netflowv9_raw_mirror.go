@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"../vlogger"
+	"bytes"
 )
 
 type Netflowv9Mirror struct {
@@ -42,7 +43,7 @@ func (t *Netflowv9Mirror) Run() {
 			}
 			ec := mirrorMaps[sMsg.AgentID]
 			for _, mRule := range ec {
-				var msgFlowSets []netflow9.DataFlowSet
+				var msgFlowSets = make([]netflow9.DataFlowSet,0)
 				for _, flowSet := range sMsg.DataFlowSets {
 					//TODO 这里可以缓存区查找该flowSet对应的Rule
 					// agentId_inport_outport -> distAddress:port
@@ -69,6 +70,12 @@ func (t *Netflowv9Mirror) Run() {
 				}
 				seqMap[key] = seqMap[key] + 1
 				seqMutex.Unlock()
+				for _,e := range msgFlowSets {
+					buf := new(bytes.Buffer)
+					b, _ := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+					vlogger.Logger.Printf("send msg %s\r\n.",string(b))
+				}
+
 
 				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 
