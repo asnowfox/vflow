@@ -41,6 +41,9 @@ func (t *Netflowv9Mirror) Run() {
 				cfgMutex.RUnlock()
 				continue
 			}
+			if len(sMsg.DataFlowSets) == 1{
+				vlogger.Logger.Printf(" {\"i\":8,\"v\":\"0.0.0.0\" somthing is wrong  length is 1")
+			}
 			ec := mirrorMaps[sMsg.AgentID]
 			//for _,e := range sMsg.DataFlowSets {
 			//	buf := new(bytes.Buffer)

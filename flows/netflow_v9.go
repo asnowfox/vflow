@@ -216,7 +216,11 @@ LOOP:
 			if decodedMsg.DataFlowSets == nil{
 				decodedMsg.DataFlowSets = make([]netflow9.DataFlowSet,0)
 			}
-			i.messageMirror.ReceiveMessage(*decodedMsg)
+			msg := *decodedMsg
+			if len(msg.DataFlowSets) == 1{
+				vlogger.Logger.Printf(" {\"i\":8,\"v\":\"0.0.0.0\" somthing is wrong in decoder length is 1")
+			}
+			i.messageMirror.ReceiveMessage(msg);
 		}
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 		i.pktStat.recordSeq(decodedMsg.AgentID,decodedMsg.Header.SrcID,decodedMsg.Header.SeqNum)
