@@ -47,7 +47,7 @@ func (t *Netflowv9Mirror) Run() {
 				for _, flowSet := range sMsg.DataFlowSets {
 					//TODO 这里可以缓存区查找该flowSet对应的Rule
 					// agentId_inport_outport -> distAddress:port
-					flowDataSet := t.filterFlowDataSet(mRule, flowSet)
+					flowDataSet := t.filterFlowDataSet(sMsg,mRule, flowSet)
 					//该flowSet中有存在的记录
 					if len(flowDataSet.DataFlowRecords) > 0 {
 						msgFlowSets = append(msgFlowSets, flowDataSet)
@@ -103,7 +103,7 @@ func (t *Netflowv9Mirror) Run() {
 	}()
 }
 
-func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule, flowSet netflow9.DataFlowSet) netflow9.DataFlowSet {
+func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message,mRule Rule, flowSet netflow9.DataFlowSet) netflow9.DataFlowSet {
 	rtnFlowSet := new(netflow9.DataFlowSet)
 	rtnFlowSet.SetHeader.FlowSetID = flowSet.SetHeader.FlowSetID
 	var datas []netflow9.DataFlowRecord
@@ -132,5 +132,10 @@ func (t *Netflowv9Mirror) filterFlowDataSet(mRule Rule, flowSet netflow9.DataFlo
 	if rtnFlowSet.SetHeader.Length > 0 {
 		rtnFlowSet.SetHeader.Length += 4
 	}
+	//for _,e := range rtnFlowSet.DataFlowRecords  {
+		buf := new(bytes.Buffer)
+		b, _ := msg.JSONMarshal(buf, rtnFlowSet.DataFlowRecords)
+		vlogger.Logger.Printf("filtered msg %s\r\n.",string(b))
+	//}
 	return *rtnFlowSet
 }
