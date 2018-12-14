@@ -221,6 +221,8 @@ LOOP:
 				if err != nil {
 					vlogger.Logger.Println(err)
 					continue
+				}else {
+					vlogger.Logger.Printf("mashall message %s",string(b))
 				}
 				select {
 				case netflowV9MQCh <- append([]byte{}, b...):
