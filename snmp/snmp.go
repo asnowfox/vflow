@@ -125,7 +125,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			ifInOctList = append(ifInOctList, v.Value.(uint64))
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err %e", err)
+		vlogger.Logger.Printf("snmp walk err1 %e", err)
 		return err
 	}
 
@@ -135,7 +135,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			ifOutOctList = append(ifOutOctList, v.Value.(uint64))
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err %e", err)
+		vlogger.Logger.Printf("snmp walk err2 %e", err)
 		return err
 	}
 
@@ -146,7 +146,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			indexList = append(indexList, v.Value.(int))
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err %e", err)
+		vlogger.Logger.Printf("snmp walk err3 %e", err)
 		return err
 	}
 	nfIndexResp, err := s.Walk(nfIndexOid)
@@ -169,7 +169,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			nameList = append(nameList, v.Value.(string))
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err %e", err)
+		vlogger.Logger.Printf("snmp walk err4 %e", err)
 		return err
 	}
 	desResp, err := s.Walk(ifDesOid)
@@ -178,7 +178,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			desList = append(desList, v.Value.(string))
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err %e", err)
+		vlogger.Logger.Printf("snmp walk err5 %e", err)
 		return err
 	}
 
