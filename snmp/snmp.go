@@ -93,12 +93,9 @@ func (task *DevicePortManager) Run() {
 
 func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
-		vlogger.Logger.Printf("start go routine %s.",dev.DeviceAddress)
 		addr := dev.DeviceAddress
 		community := dev.Community
 		go func(){
-			vlogger.Logger.Printf("in go routine %s.",dev.DeviceAddress)
-
 			task.walkIndex(curTime, addr, community, true)
 		}()
 	}
@@ -110,7 +107,6 @@ type NameIndex struct {
 }
 
 func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string, Community string, isSave bool) error {
-	vlogger.Logger.Printf("start to walk  %s",DeviceAddress)
 	s, err := gosnmp.NewGoSNMP(DeviceAddress, Community, gosnmp.Version2c, 5)
 	if err != nil {
 		vlogger.Logger.Fatal(err)
@@ -189,8 +185,8 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 
 	vlogger.Logger.Printf("snmp walk OK of device %s",DeviceAddress )
 
-	//rwLock.RLock()
-	//defer rwLock.RUnlock()
+	rwLock.RLock()
+	defer rwLock.RUnlock()
 
 	if (len(indexList) == len(nameList)) && (len(indexList) == len(desList)) {
 		devicePortMap[DeviceAddress] = make([]PortInfo, 0)
@@ -201,10 +197,10 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			devicePortIndexMap[DeviceAddress][index] = info
 		}
 
-		//if isSave {
+		if isSave {
 			vlogger.Logger.Printf("save to db \r\n")
 			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, ifInOctList, ifOutOctList)
-		//}
+		}
 	} else {
 		return errors.New("snmp walk err response is not equal")
 		vlogger.Logger.Printf("snmp walk err response is not equal")
