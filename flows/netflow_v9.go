@@ -210,18 +210,10 @@ LOOP:
 			}
 		}
 		//所有的worker的消息由 messageMirror接收
-
-
 		if i.messageMirror != nil {
-			if decodedMsg.DataFlowSets == nil{
-				decodedMsg.DataFlowSets = make([]netflow9.DataFlowSet,0)
-				//if len(decodedMsg.DataFlowSets) == 1{
-					vlogger.Logger.Printf(" {\"i\":8,\"v\":\"0.0.0.0\" somthing is wrong null length is %d", len(decodedMsg.DataFlowSets))
-				//}
-			}
 			msg := *decodedMsg
-			if len(msg.DataFlowSets) == 1{
-				vlogger.Logger.Printf(" {\"i\":8,\"v\":\"0.0.0.0\" somthing is wrong in decoder length is 1")
+			if(msg.DataFlowSets == nil){
+				vlogger.Logger.Printf("{\"i\":8,\"v\":\"0.0.0.0\" in decoder dataSet is nil")
 			}
 			i.messageMirror.ReceiveMessage(msg)
 		}

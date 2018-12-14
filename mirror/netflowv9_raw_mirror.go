@@ -41,9 +41,7 @@ func (t *Netflowv9Mirror) Run() {
 				cfgMutex.RUnlock()
 				continue
 			}
-			if len(sMsg.DataFlowSets) == 1{
-				vlogger.Logger.Printf(" {\"i\":8,\"v\":\"0.0.0.0\" somthing is wrong  length is 1")
-			}
+
 			ec := mirrorMaps[sMsg.AgentID]
 			//for _,e := range sMsg.DataFlowSets {
 			//	buf := new(bytes.Buffer)
@@ -52,15 +50,20 @@ func (t *Netflowv9Mirror) Run() {
 			//}
 			for _, mRule := range ec {
 				var msgFlowSets = make([]netflow9.DataFlowSet,0)
-				for _, flowSet := range sMsg.DataFlowSets {
-					//TODO 这里可以缓存区查找该flowSet对应的Rule
-					// agentId_inport_outport -> distAddress:port
-					flowDataSet := t.filterFlowDataSet(sMsg,mRule, flowSet)
-					//该flowSet中有存在的记录
-					if len(flowDataSet.DataFlowRecords) > 0 {
-						msgFlowSets = append(msgFlowSets, flowDataSet)
+				if sMsg.DataFlowSets != nil{
+					for _, flowSet := range sMsg.DataFlowSets {
+						//TODO 这里可以缓存区查找该flowSet对应的Rule
+						// agentId_inport_outport -> distAddress:port
+						flowDataSet := t.filterFlowDataSet(sMsg,mRule, flowSet)
+						//该flowSet中有存在的记录
+						if len(flowDataSet.DataFlowRecords) > 0 {
+							msgFlowSets = append(msgFlowSets, flowDataSet)
+						}
 					}
+				}else{
+					vlogger.Logger.Printf("{\"i\":8,\"v\":\"0.0.0.0\"  in mirror dataSet is nil")
 				}
+
 				//no data and no template records continue
 				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
 					continue
