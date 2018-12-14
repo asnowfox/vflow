@@ -181,6 +181,8 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		return err
 	}
 
+	vlogger.Logger.Printf("snmp walk OK of device %s",DeviceAddress )
+
 	//rwLock.RLock()
 	//defer rwLock.RUnlock()
 
