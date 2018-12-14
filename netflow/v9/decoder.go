@@ -457,6 +457,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		if err := d.decodeSet(mem, msg); err != nil {
 			switch err.(type) {
 			case nonfatalError:
+				vlogger.Logger.Println(err);
 				decodeErrors = append(decodeErrors, err)
 			default:
 				return nil, err
