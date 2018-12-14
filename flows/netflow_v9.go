@@ -204,7 +204,7 @@ LOOP:
 
 		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {
-			vlogger.Logger.Println("decode data error",msg.raddr.IP.String(),err.Error())
+			vlogger.Logger.Printf("%s decode data error: %e",msg.raddr.IP.String(),err)
 			if decodedMsg == nil {
 				continue
 			}

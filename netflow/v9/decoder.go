@@ -438,11 +438,13 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 	// IPFIX Message Header decoding
 	if err := msg.Header.unmarshal(d.reader); err != nil {
 		fmt.Printf("%s decode header error.", d.raddr)
+		vlogger.Logger.Printf("%s decode header error.", d.raddr)
 		return nil, err
 	}
 	// IPFIX Message Header validation
 	if err := msg.Header.validate(d.raddr.String()); err != nil {
 		fmt.Printf("%s validate error.", d.raddr)
+		vlogger.Logger.Printf("%s validate error.", d.raddr)
 		return nil, err
 	}
 
@@ -457,7 +459,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		if err := d.decodeSet(mem, msg); err != nil {
 			switch err.(type) {
 			case nonfatalError:
-				vlogger.Logger.Println(err)
+				vlogger.Logger.Printf("decode error %e",err)
 				decodeErrors = append(decodeErrors, err)
 			default:
 				return nil, err
@@ -554,6 +556,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 }
 
 func combineErrors(errorSlice ...error) (err error) {
+	vlogger.Logger.Printf("combine error count is %d", len(errorSlice))
 	switch len(errorSlice) {
 	case 0:
 	case 1:
