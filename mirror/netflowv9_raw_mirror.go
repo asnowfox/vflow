@@ -67,7 +67,7 @@ func (t *Netflowv9Mirror) Run() {
 				for _,e := range msgFlowSets {
 					b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
 					if err == nil {
-						vlogger.Logger.Println(string(b))
+						vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
 					}
 				}
 
