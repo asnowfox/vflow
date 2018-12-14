@@ -14,7 +14,85 @@ type Netflowv9Mirror struct {
 }
 
 func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
-	netflowChannel <- msg
+	//netflowChannel <- msg
+	sMsg := msg
+	atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
+	cfgMutex.RLock()
+	if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
+		cfgMutex.RUnlock()
+		return
+	}
+
+	ec := mirrorMaps[sMsg.AgentID]
+	//for _,e := range sMsg.DataFlowSets {
+	//	buf := new(bytes.Buffer)
+	//	b, _ := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+	//	vlogger.Logger.Printf("to be filter data is  msg %s\r\n.",string(b))
+	//}
+	for _, mRule := range ec {
+		var msgFlowSets = make([]netflow9.DataFlowSet,0)
+		if sMsg.DataFlowSets != nil{
+			for _, flowSet := range sMsg.DataFlowSets {
+				//TODO 这里可以缓存区查找该flowSet对应的Rule
+				// agentId_inport_outport -> distAddress:port
+				flowDataSet := t.filterFlowDataSet(sMsg,mRule, flowSet)
+				//该flowSet中有存在的记录
+				if len(flowDataSet.DataFlowRecords) > 0 {
+					msgFlowSets = append(msgFlowSets, flowDataSet)
+				}
+			}
+		}else{
+			vlogger.Logger.Printf("{\"i\":8,\"v\":\"0.0.0.0\"  in mirror dataSet is nil")
+		}
+
+		//no data and no template records continue
+		if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
+			continue
+		}
+
+		buf := new(bytes.Buffer)
+		for _,e := range msgFlowSets {
+			b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+			if err == nil {
+				vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
+			}
+		}
+
+		//这个是针对这个rule进行发送的过程
+
+		var seq uint32 = 0
+		key := sMsg.AgentID + "_" + strconv.FormatUint(uint64(sMsg.Header.SrcID), 10)
+		// add a lock support
+		seqMutex.Lock()
+		if a, ok := seqMap[key]; ok {
+			seq = a
+		} else {
+			seqMap[key] = 0
+		}
+		seqMap[key] = seqMap[key] + 1
+		seqMutex.Unlock()
+		rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
+
+		for _,r := range mRule.DistAddress {
+			dstAddrs := strings.Split(r, ":")
+			dstAddr := dstAddrs[0]
+			dstPort, _ := strconv.Atoi(dstAddrs[1])
+			rBytes = createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
+			if raw, ok := rawSockets[dstAddr]; ok {
+				err := raw.Send(rBytes)
+				if err != nil {
+					atomic.AddUint64(&t.stats.RawErrorCount, 1)
+					vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes), err)
+				} else {
+					atomic.AddUint64(&t.stats.RawSentCount, 1)
+				}
+			} else {
+				vlogger.Logger.Printf("can not find raw socket for dist %s", dstAddr)
+			}
+		}
+
+	} //end rule for
+	cfgMutex.RUnlock()
 }
 
 func (t *Netflowv9Mirror) Status() *FlowMirrorStatus {
@@ -33,86 +111,86 @@ func (t *Netflowv9Mirror) shutdown() {
 
 func (t *Netflowv9Mirror) Run() {
 	go func() {
-		for {
-			sMsg := <-netflowChannel
-			atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
-			cfgMutex.RLock()
-			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
-				cfgMutex.RUnlock()
-				continue
-			}
-
-			ec := mirrorMaps[sMsg.AgentID]
-			//for _,e := range sMsg.DataFlowSets {
-			//	buf := new(bytes.Buffer)
-			//	b, _ := sMsg.JSONMarshal(buf, e.DataFlowRecords)
-			//	vlogger.Logger.Printf("to be filter data is  msg %s\r\n.",string(b))
+		//for {
+			//sMsg := <-netflowChannel
+			//atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
+			//cfgMutex.RLock()
+			//if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
+			//	cfgMutex.RUnlock()
+			//	continue
 			//}
-			for _, mRule := range ec {
-				var msgFlowSets = make([]netflow9.DataFlowSet,0)
-				if sMsg.DataFlowSets != nil{
-					for _, flowSet := range sMsg.DataFlowSets {
-						//TODO 这里可以缓存区查找该flowSet对应的Rule
-						// agentId_inport_outport -> distAddress:port
-						flowDataSet := t.filterFlowDataSet(sMsg,mRule, flowSet)
-						//该flowSet中有存在的记录
-						if len(flowDataSet.DataFlowRecords) > 0 {
-							msgFlowSets = append(msgFlowSets, flowDataSet)
-						}
-					}
-				}else{
-					vlogger.Logger.Printf("{\"i\":8,\"v\":\"0.0.0.0\"  in mirror dataSet is nil")
-				}
-
-				//no data and no template records continue
-				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
-					continue
-				}
-
-				buf := new(bytes.Buffer)
-				for _,e := range msgFlowSets {
-					b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
-					if err == nil {
-						vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
-					}
-				}
-
-				//这个是针对这个rule进行发送的过程
-
-				var seq uint32 = 0
-				key := sMsg.AgentID + "_" + strconv.FormatUint(uint64(sMsg.Header.SrcID), 10)
-				// add a lock support
-				seqMutex.Lock()
-				if a, ok := seqMap[key]; ok {
-					seq = a
-				} else {
-					seqMap[key] = 0
-				}
-				seqMap[key] = seqMap[key] + 1
-				seqMutex.Unlock()
-				rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
-
-				for _,r := range mRule.DistAddress {
-					dstAddrs := strings.Split(r, ":")
-					dstAddr := dstAddrs[0]
-					dstPort, _ := strconv.Atoi(dstAddrs[1])
-					rBytes = createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
-					if raw, ok := rawSockets[dstAddr]; ok {
-						err := raw.Send(rBytes)
-						if err != nil {
-							atomic.AddUint64(&t.stats.RawErrorCount, 1)
-							vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes), err)
-						} else {
-							atomic.AddUint64(&t.stats.RawSentCount, 1)
-						}
-					} else {
-						vlogger.Logger.Printf("can not find raw socket for dist %s", dstAddr)
-					}
-				}
-
-			} //end rule for
-			cfgMutex.RUnlock()
-		} // end loop
+			//
+			//ec := mirrorMaps[sMsg.AgentID]
+			////for _,e := range sMsg.DataFlowSets {
+			////	buf := new(bytes.Buffer)
+			////	b, _ := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+			////	vlogger.Logger.Printf("to be filter data is  msg %s\r\n.",string(b))
+			////}
+			//for _, mRule := range ec {
+			//	var msgFlowSets = make([]netflow9.DataFlowSet,0)
+			//	if sMsg.DataFlowSets != nil{
+			//		for _, flowSet := range sMsg.DataFlowSets {
+			//			//TODO 这里可以缓存区查找该flowSet对应的Rule
+			//			// agentId_inport_outport -> distAddress:port
+			//			flowDataSet := t.filterFlowDataSet(sMsg,mRule, flowSet)
+			//			//该flowSet中有存在的记录
+			//			if len(flowDataSet.DataFlowRecords) > 0 {
+			//				msgFlowSets = append(msgFlowSets, flowDataSet)
+			//			}
+			//		}
+			//	}else{
+			//		vlogger.Logger.Printf("{\"i\":8,\"v\":\"0.0.0.0\"  in mirror dataSet is nil")
+			//	}
+			//
+			//	//no data and no template records continue
+			//	if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
+			//		continue
+			//	}
+			//
+			//	buf := new(bytes.Buffer)
+			//	for _,e := range msgFlowSets {
+			//		b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+			//		if err == nil {
+			//			vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
+			//		}
+			//	}
+			//
+			//	//这个是针对这个rule进行发送的过程
+			//
+			//	var seq uint32 = 0
+			//	key := sMsg.AgentID + "_" + strconv.FormatUint(uint64(sMsg.Header.SrcID), 10)
+			//	// add a lock support
+			//	seqMutex.Lock()
+			//	if a, ok := seqMap[key]; ok {
+			//		seq = a
+			//	} else {
+			//		seqMap[key] = 0
+			//	}
+			//	seqMap[key] = seqMap[key] + 1
+			//	seqMutex.Unlock()
+			//	rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
+			//
+			//	for _,r := range mRule.DistAddress {
+			//		dstAddrs := strings.Split(r, ":")
+			//		dstAddr := dstAddrs[0]
+			//		dstPort, _ := strconv.Atoi(dstAddrs[1])
+			//		rBytes = createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
+			//		if raw, ok := rawSockets[dstAddr]; ok {
+			//			err := raw.Send(rBytes)
+			//			if err != nil {
+			//				atomic.AddUint64(&t.stats.RawErrorCount, 1)
+			//				vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes), err)
+			//			} else {
+			//				atomic.AddUint64(&t.stats.RawSentCount, 1)
+			//			}
+			//		} else {
+			//			vlogger.Logger.Printf("can not find raw socket for dist %s", dstAddr)
+			//		}
+			//	}
+			//
+			//} //end rule for
+			//cfgMutex.RUnlock()
+		//} // end loop
 	}()
 }
 
