@@ -93,7 +93,9 @@ func (task *DevicePortManager) Run() {
 
 func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
-		task.walkIndex(curTime, dev.DeviceAddress, dev.Community, isSave)
+		go func(){
+			task.walkIndex(curTime, dev.DeviceAddress, dev.Community, isSave)
+		}()
 	}
 }
 
@@ -115,6 +117,28 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	ifOutOctList := make([]uint64, 0)
 	//nfIndexList :=make([]int,0)
 	ifToNfIndexMap := make(map[int]int)
+
+	inResp, err := s.Walk(ifInOct)
+	if err == nil {
+		for _, v := range inResp {
+			ifInOctList = append(ifInOctList, v.Value.(uint64))
+		}
+	} else {
+		vlogger.Logger.Printf("snmp walk err %e", err)
+		return err
+	}
+
+	outResp, err := s.Walk(ifOutOct)
+	if err == nil {
+		for _, v := range outResp {
+			ifOutOctList = append(ifOutOctList, v.Value.(uint64))
+		}
+	} else {
+		vlogger.Logger.Printf("snmp walk err %e", err)
+		return err
+	}
+
+
 	indexResp, err := s.Walk(ifIndexOid)
 	if err == nil {
 		for _, v := range indexResp {
@@ -158,25 +182,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		return err
 	}
 
-	inResp, err := s.Walk(ifInOct)
-	if err == nil {
-		for _, v := range inResp {
-			ifInOctList = append(ifInOctList, v.Value.(uint64))
-		}
-	} else {
-		vlogger.Logger.Printf("snmp walk err %e", err)
-		return err
-	}
 
-	outResp, err := s.Walk(ifOutOct)
-	if err == nil {
-		for _, v := range outResp {
-			ifOutOctList = append(ifOutOctList, v.Value.(uint64))
-		}
-	} else {
-		vlogger.Logger.Printf("snmp walk err %e", err)
-		return err
-	}
 
 	rwLock.RLock()
 	defer rwLock.RUnlock()
