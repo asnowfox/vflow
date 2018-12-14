@@ -193,10 +193,10 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			devicePortIndexMap[DeviceAddress][index] = info
 		}
 
-		if isSave {
+		//if isSave {
 			vlogger.Logger.Printf("save to db \r\n")
 			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, ifInOctList, ifOutOctList)
-		}
+		//}
 	} else {
 		return errors.New("snmp walk err response is not equal")
 		vlogger.Logger.Printf("snmp walk err response is not equal")
