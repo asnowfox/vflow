@@ -79,7 +79,7 @@ func (task *DevicePortManager) Run() {
 	}()
 
 	go func() {
-		sleepSecond := time.Now().Unix()%120
+		sleepSecond := 120 - time.Now().Unix()%120
 		vlogger.Logger.Printf("I will delay for %d",sleepSecond)
 		time.Sleep(time.Duration(sleepSecond)*time.Second)
 		duration := time.Duration(time.Duration(task.snmpConfigs.Interval) * time.Second)
