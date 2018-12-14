@@ -105,6 +105,7 @@ type NameIndex struct {
 }
 
 func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string, Community string, isSave bool) error {
+	vlogger.Logger.Printf("start to walk %s ",DeviceAddress)
 	s, err := gosnmp.NewGoSNMP(DeviceAddress, Community, gosnmp.Version2c, 5)
 	if err != nil {
 		vlogger.Logger.Fatal(err)
