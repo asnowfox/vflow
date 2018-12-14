@@ -94,8 +94,12 @@ func (task *DevicePortManager) Run() {
 func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
 		vlogger.Logger.Printf("start go routine %s.",dev.DeviceAddress)
+		addr := dev.DeviceAddress
+		community := dev.Community
 		go func(){
-			task.walkIndex(curTime, dev.DeviceAddress, dev.Community, true)
+			vlogger.Logger.Printf("in go routine %s.",dev.DeviceAddress)
+
+			task.walkIndex(curTime, addr, community, true)
 		}()
 	}
 }
