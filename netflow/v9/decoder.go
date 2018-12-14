@@ -556,7 +556,6 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 }
 
 func combineErrors(errorSlice ...error) (err error) {
-	vlogger.Logger.Printf("combine error count is %d", len(errorSlice))
 	switch len(errorSlice) {
 	case 0:
 	case 1:
