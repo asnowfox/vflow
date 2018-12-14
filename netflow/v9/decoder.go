@@ -30,6 +30,7 @@ import (
 	"net"
 	"../../ipfix"
 	"../../reader"
+	"../../vlogger"
 	"encoding/binary"
 	"time"
 )
@@ -486,6 +487,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		var ok bool
 		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr)
 		if !ok {
+			vlogger.Logger.Printf("unknown flowSetId %d",setHeader.FlowSetID)
 			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d",
 				d.raddr.String(),
 				setHeader.FlowSetID,
