@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"../vlogger"
-	"bytes"
 )
 
 type Netflowv9Mirror struct {
@@ -42,11 +41,11 @@ func (t *Netflowv9Mirror) Run() {
 				continue
 			}
 			ec := mirrorMaps[sMsg.AgentID]
-			for _,e := range sMsg.DataFlowSets {
-				buf := new(bytes.Buffer)
-				b, _ := sMsg.JSONMarshal(buf, e.DataFlowRecords)
-				vlogger.Logger.Printf("to be filter data is  msg %s\r\n.",string(b))
-			}
+			//for _,e := range sMsg.DataFlowSets {
+			//	buf := new(bytes.Buffer)
+			//	b, _ := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+			//	vlogger.Logger.Printf("to be filter data is  msg %s\r\n.",string(b))
+			//}
 			for _, mRule := range ec {
 				var msgFlowSets = make([]netflow9.DataFlowSet,0)
 				for _, flowSet := range sMsg.DataFlowSets {
@@ -133,10 +132,5 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message,mRule Rule, flo
 	if rtnFlowSet.SetHeader.Length > 0 {
 		rtnFlowSet.SetHeader.Length += 4
 	}
-	////for _,e := range rtnFlowSet.DataFlowRecords  {
-	//	buf := new(bytes.Buffer)
-	//	b, _ := msg.JSONMarshal(buf, rtnFlowSet.DataFlowRecords)
-	//	vlogger.Logger.Printf("filtered msg %s\r\n.",string(b))
-	////}
 	return *rtnFlowSet
 }

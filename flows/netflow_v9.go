@@ -210,7 +210,7 @@ LOOP:
 			}
 		}
 		//所有的worker的消息由 messageMirror接收
-		if i.messageMirror != nil {
+		if i.messageMirror != nil && decodedMsg.DataFlowSets != nil {
 			i.messageMirror.ReceiveMessage(decodedMsg)
 		}
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
