@@ -171,7 +171,6 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		vlogger.Logger.Printf("snmp walk err %e", err)
 		return err
 	}
-
 	desResp, err := s.Walk(ifDesOid)
 	if err == nil {
 		for _, v := range desResp {
@@ -182,10 +181,8 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		return err
 	}
 
-
-
-	rwLock.RLock()
-	defer rwLock.RUnlock()
+	//rwLock.RLock()
+	//defer rwLock.RUnlock()
 
 	if (len(indexList) == len(nameList)) && (len(indexList) == len(desList)) {
 		devicePortMap[DeviceAddress] = make([]PortInfo, 0)
@@ -197,6 +194,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		}
 
 		if isSave {
+			vlogger.Logger.Printf("save to db \r\n")
 			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, ifInOctList, ifOutOctList)
 		}
 	} else {
