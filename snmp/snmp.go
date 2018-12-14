@@ -94,7 +94,7 @@ func (task *DevicePortManager) Run() {
 func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
 		go func(){
-			task.walkIndex(curTime, dev.DeviceAddress, dev.Community, isSave)
+			task.walkIndex(curTime, dev.DeviceAddress, dev.Community, true)
 		}()
 	}
 }
