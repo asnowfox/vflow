@@ -61,7 +61,7 @@ type NetflowV9Stats struct {
 	UDPCount     uint64
 	DecodedCount uint64
 	MQErrorCount uint64
-	LostCount 	 uint64
+	LostCount    uint64
 	StartTime    int64
 	Workers      int32
 }
@@ -132,7 +132,7 @@ func (i *NetflowV9) Run() {
 				vlogger.Logger.Fatal(err)
 			}
 		}()
-	}else{
+	} else {
 		vlogger.Logger.Printf("disable netflow v9 json mq transfer")
 	}
 	go func() {
@@ -204,7 +204,7 @@ LOOP:
 
 		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {
-			vlogger.Logger.Printf("%s decode data error: %e",msg.raddr.IP.String(),err)
+			vlogger.Logger.Printf("%s decode data error: %e", msg.raddr.IP.String(), err)
 			if decodedMsg == nil {
 				continue
 			}
@@ -215,7 +215,7 @@ LOOP:
 			i.messageMirror.ReceiveMessage(msg)
 		}
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
-		i.pktStat.recordSeq(decodedMsg.AgentID,decodedMsg.Header.SrcID,decodedMsg.Header.SeqNum)
+		i.pktStat.recordSeq(decodedMsg.AgentID, decodedMsg.Header.SrcID, decodedMsg.Header.SeqNum)
 		if decodedMsg.DataFlowSets != nil && mqEnabled {
 			for _, e := range decodedMsg.DataFlowSets {
 				b, err = decodedMsg.JSONMarshal(buf, e.DataFlowRecords)
@@ -250,7 +250,6 @@ func (i *NetflowV9) status() *NetflowV9Stats {
 
 func (i *NetflowV9) dynWorkers() {
 	var load, nSeq, newWorkers, workers, n int
-
 	tick := time.Tick(120 * time.Second)
 
 	for {
@@ -312,11 +311,11 @@ func (i *NetflowV9) dynWorkers() {
 	}
 }
 
-func (i *NetflowV9) NetflowPacketLoss(agentId string) (int,error){
-	rtn,err:= i.pktStat.getLost(agentId)
-	if err != nil{
-		return -1,err
-	}else {
-		return int(rtn+0),nil
+func (i *NetflowV9) NetflowPacketLoss(agentId string) (int, error) {
+	rtn, err := i.pktStat.getLost(agentId)
+	if err != nil {
+		return -1, err
+	} else {
+		return int(rtn + 0), nil
 	}
 }
