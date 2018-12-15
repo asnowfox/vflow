@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"../vlogger"
-	"bytes"
 )
 
 type Netflowv9Mirror struct {
@@ -43,19 +42,18 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 			continue
 		}
 
-		buf := new(bytes.Buffer)
-		for _,e := range msgFlowSets {
-			b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
-			if err == nil {
-				if strings.Contains(string(b),"0.0.0"){
-					vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
-				}
-
-			}
-		}
+		//buf := new(bytes.Buffer)
+		//for _,e := range msgFlowSets {
+		//	b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
+		//	if err == nil {
+		//		if strings.Contains(string(b),"{\"i\":8,\"v\":\"0.0.0"){
+		//			vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
+		//		}
+		//
+		//	}
+		//}
 
 		//这个是针对这个rule进行发送的过程
-
 		var seq uint32 = 0
 		key := sMsg.AgentID + "_" + strconv.FormatUint(uint64(sMsg.Header.SrcID), 10)
 		// add a lock support
@@ -126,10 +124,7 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message,mRule Rule, flo
 
 		if inputMatch && outputMatch { // input and output matched
 			datas = append(datas, nfData)
-			//for _, data := range nfData.DataSets {
 			rtnFlowSet.SetHeader.Length += nfData.Length
-			//}
-			//rtnFlowSet.SetHeader.Length += dataLen
 			rtnFlowSet.DataFlowRecords = datas
 		}
 	}
