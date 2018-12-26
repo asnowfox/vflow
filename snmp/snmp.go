@@ -196,7 +196,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		for i, index := range indexList {
 			info := PortInfo{index, nameList[i], desList[i], ifToNfIndexMap[index]}
 			devicePortMap[DeviceAddress] = append(devicePortMap[DeviceAddress], info)
-			devicePortIndexMap[DeviceAddress][index] = info
+			devicePortIndexMap[DeviceAddress][info.NfIndex] = info
 		}
 
 		if isSave {
@@ -280,10 +280,10 @@ func (task *DevicePortManager) ListPortInfo(devAddress string) ([]PortInfo) {
 	return devicePortMap[devAddress]
 }
 
-func (task *DevicePortManager) PortInfo(devAddress string, index int) (PortInfo, error) {
+func (task *DevicePortManager) PortInfo(devAddress string, nfIndex int) (PortInfo, error) {
 	rwLock.RLock()
 	defer rwLock.RLock()
-	if index == -1 {
+	if nfIndex == -1 {
 		info := PortInfo{
 			-1, "all port", "match all port", -1,
 		}
@@ -292,10 +292,10 @@ func (task *DevicePortManager) PortInfo(devAddress string, index int) (PortInfo,
 	if _, ok := devicePortMap[devAddress]; !ok {
 		return *new(PortInfo), errors.New("Can not find device")
 	}
-	if _, ok := devicePortIndexMap[devAddress][index]; !ok {
+	if _, ok := devicePortIndexMap[devAddress][nfIndex]; !ok {
 		return *new(PortInfo), errors.New("Can not find index")
 	}
-	return devicePortIndexMap[devAddress][index], nil
+	return devicePortIndexMap[devAddress][nfIndex], nil
 }
 
 func saveConfigToFile() error {

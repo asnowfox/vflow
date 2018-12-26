@@ -43,6 +43,7 @@ func TransRule(deviceIp string,r mirror.Rule)RRule{
 	rule := new(RRule)
 	rule.Rule = r
 	rule.RuleId = strconv.Itoa(int(r.InPort))+"_"+strconv.Itoa(int(r.OutPort))+"_"+r.Source
+	//nfindex inport is nfindex
 	iPortInfo,err := snmp.ManageInstance.PortInfo(deviceIp,int(r.InPort))
 	if err== nil {
 		rule.InportName = iPortInfo.IfName
