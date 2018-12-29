@@ -94,7 +94,7 @@ func buildMap() {
 				mirrorMaps[r.Source] = make([]Rule, 0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
-			fmt.Printf("   (source:%15s, inputPort %5d, outputPort %5d) ->  %s \n", r.Source, r.InPort, r.OutPort, r.DistAddress)
+			fmt.Printf("   (source:%15s, inputPort %5d, outputPort %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.DistAddress)
 
 			for  _,rule:= range r.DistAddress {
 				remoteAddr := strings.Split(rule, ":")[0]
@@ -247,8 +247,8 @@ func AddRule(policyId string, rule Rule) (int, string) {
 
 func isSameRule(r1 Rule, r2 Rule) bool {
 	if r1.Source == r2.Source &&
-		r1.InPort == r2.InPort &&
-		r1.OutPort == r2.OutPort {
+		r1.Port == r2.Port &&
+		r1.Direction == r2.Direction {
 		return true
 	}
 	return false
@@ -267,8 +267,8 @@ func DeleteRule(policyId string, rule Rule) (int, string) {
 	}
 	var index = -1
 	for i, r := range policyConfigs[pid].Rules {
-		if r.OutPort == rule.OutPort &&
-			r.InPort == rule.InPort {
+		if r.Port == rule.Port &&
+			r.Direction == rule.Direction {
 			index = i
 			break
 		}

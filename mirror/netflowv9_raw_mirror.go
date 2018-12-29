@@ -24,12 +24,12 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 	ec := mirrorMaps[sMsg.AgentID]
 
 	for _, mRule := range ec {
-		var msgFlowSets = make([]netflow9.DataFlowSet,0)
-		if sMsg.DataFlowSets != nil{
+		var msgFlowSets = make([]netflow9.DataFlowSet, 0)
+		if sMsg.DataFlowSets != nil {
 			for _, flowSet := range sMsg.DataFlowSets {
 				//TODO 这里可以缓存区查找该flowSet对应的Rule
 				// agentId_inport_outport -> distAddress:port
-				flowDataSet := t.filterFlowDataSet(sMsg,mRule, flowSet)
+				flowDataSet := t.filterFlowDataSet(sMsg, mRule, flowSet)
 				//该flowSet中有存在的记录
 				if len(flowDataSet.DataFlowRecords) > 0 {
 					msgFlowSets = append(msgFlowSets, flowDataSet)
@@ -67,7 +67,7 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 		seqMutex.Unlock()
 		rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
 
-		for _,r := range mRule.DistAddress {
+		for _, r := range mRule.DistAddress {
 			dstAddrs := strings.Split(r, ":")
 			dstAddr := dstAddrs[0]
 			dstPort, _ := strconv.Atoi(dstAddrs[1])
@@ -103,30 +103,52 @@ func (t *Netflowv9Mirror) shutdown() {
 
 }
 
-
-
-func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message,mRule Rule, flowSet netflow9.DataFlowSet) netflow9.DataFlowSet {
+func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, flowSet netflow9.DataFlowSet) netflow9.DataFlowSet {
 	rtnFlowSet := new(netflow9.DataFlowSet)
 	rtnFlowSet.SetHeader.FlowSetID = flowSet.SetHeader.FlowSetID
 	var datas []netflow9.DataFlowRecord
 	// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
 	for _, nfData := range flowSet.DataFlowRecords { //[]DecodedField
 		inputMatch, outputMatch := false, false
+
 		if nfData.InPort == -1 || nfData.OutPort == -1 {
 			inputMatch, outputMatch = true, true
 		}
-		if nfData.InPort == int(mRule.InPort) || mRule.InPort == -1 {
+		if nfData.InPort == int(mRule.Port) {
 			inputMatch = true
 		}
-		if nfData.OutPort == int(mRule.OutPort) || mRule.OutPort == -1 {
+		if nfData.OutPort == int(mRule.Port) {
 			outputMatch = true
 		}
-
-		if inputMatch && outputMatch { // input and output matched
-			datas = append(datas, nfData)
-			rtnFlowSet.SetHeader.Length += nfData.Length
-			rtnFlowSet.DataFlowRecords = datas
+		/*
+		0x00: ingress flow
+		0x01: egress flow
+		*/
+		if mRule.Direction == -1 { //双向
+			if inputMatch || outputMatch { // input and output matched
+				datas = append(datas, nfData)
+				rtnFlowSet.SetHeader.Length += nfData.Length
+				rtnFlowSet.DataFlowRecords = datas
+			}
+		} else if mRule.Direction == 0 { //入方向
+			if inputMatch  { // input and output matched
+				datas = append(datas, nfData)
+				rtnFlowSet.SetHeader.Length += nfData.Length
+				rtnFlowSet.DataFlowRecords = datas
+			}
+		} else if mRule.Direction == 1 { //出方向
+			if outputMatch  { // input and output matched
+				datas = append(datas, nfData)
+				rtnFlowSet.SetHeader.Length += nfData.Length
+				rtnFlowSet.DataFlowRecords = datas
+			}
 		}
+
+		//if inputMatch && outputMatch { // input and output matched
+		//	datas = append(datas, nfData)
+		//	rtnFlowSet.SetHeader.Length += nfData.Length
+		//	rtnFlowSet.DataFlowRecords = datas
+		//}
 	}
 	if rtnFlowSet.SetHeader.Length > 0 {
 		rtnFlowSet.SetHeader.Length += 4

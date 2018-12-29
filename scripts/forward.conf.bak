@@ -6,20 +6,20 @@
         "rules": [
             {
                 "source": "159.226.8.131",
-                "port": 5,
-                "direction": 0,
+                "inport": 5,
+                "outport": -1,
                 "distAddress": ["159.226.61.198:5555"]
             },
             {
                 "source": "159.226.8.194",
-                "port": 5,
-                "direction": 0,
+                "inport": -1,
+                "outport": 38,
                 "distAddress": ["159.226.186.79:6666"]
             },
             {
                 "source": "159.226.8.194",
-                "port": 6,
-                "direction": 0,
+                "inport": 6,
+                "outport": -1,
                 "distAddress": ["159.226.61.198:6666"]
             }
         ]
@@ -31,20 +31,20 @@
         "rules": [
             {
                 "source": "159.226.8.155",
-                "port": 5,
-                "direction": 0,
+                "inport": 5,
+                "outport": -1,
                 "distAddress": ["159.226.61.198:6666","159.226.61.198:6666"]
             },
             {
                 "source": "159.226.8.131",
-                "port": 5,
-                "direction": 0,
+                "inport": -1,
+                "outport": -1,
                 "distAddress": ["159.226.61.198:6666","159.226.61.198:6666"]
             },
             {
                 "source": "159.226.8.160",
-                "port": 5,
-                "direction": 0,
+                "inport": 6,
+                "outport": -1,
                 "distAddress": ["159.226.61.198:6666","159.226.61.198:6666"]
             }
         ]

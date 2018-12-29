@@ -17,8 +17,8 @@ type Policy struct {
 
 type Rule struct {
 	Source      string `json:"source"`
-	InPort      int32  `json:"inport"`
-	OutPort     int32  `json:"outport"`
+	Port      int32  `json:"port"`
+	Direction     int32  `json:"direction"`
 	DistAddress []string `json:"distAddress"`
 }
 
