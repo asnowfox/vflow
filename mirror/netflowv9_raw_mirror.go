@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"../vlogger"
+	"fmt"
 )
 
 type Netflowv9Mirror struct {
@@ -74,6 +75,11 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 			rBytes = createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
 			if raw, ok := rawSockets[dstAddr]; ok {
 				err := raw.Send(rBytes)
+
+				if len(sMsg.TemplateRecords) > 0{
+					fmt.Printf("I will send template record to %s:%d",dstAddr,dstPort)
+				}
+
 				if err != nil {
 					atomic.AddUint64(&t.stats.RawErrorCount, 1)
 					vlogger.Logger.Printf("raw socket send message error  bytes size %d, %s", len(rBytes), err)

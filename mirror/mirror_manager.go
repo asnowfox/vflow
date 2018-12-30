@@ -92,7 +92,7 @@ func buildMap() {
 				mirrorMaps[r.Source] = make([]Rule, 0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
-			fmt.Printf("   (source:%15s, inputPort %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.DistAddress)
+			fmt.Printf("   (Source:%15s, Port %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.DistAddress)
 
 			for  _,rule:= range r.DistAddress {
 				remoteAddr := strings.Split(rule, ":")[0]
