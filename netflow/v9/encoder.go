@@ -54,7 +54,7 @@ import (
 // |        Field Type             |         Field Length          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte {
+func Encode(agentId string,originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte {
 	buf := new(bytes.Buffer)
 	count := uint16(0)
 	for _, e := range DataFlowSets {
@@ -70,7 +70,8 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
 	for _, template := range originalMsg.TemplateRecords {
-		fmt.Printf("write template record template id is %d, field count is %d.\n",
+		fmt.Printf("%s write template record,setId is %d, templateId is %d, field count is %d.\n", agentId,
+			template.SetId,
 			template.Header.TemplateID, template.Header.FieldCount)
 		writeTemplate(buf, template)
 	}

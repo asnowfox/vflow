@@ -65,7 +65,7 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 		}
 		seqMap[key] = seqMap[key] + 1
 		seqMutex.Unlock()
-		rBytes := netflow9.Encode(sMsg, seq, msgFlowSets)
+		rBytes := netflow9.Encode(sMsg.AgentID,sMsg, seq, msgFlowSets)
 
 		for _, r := range mRule.DistAddress {
 			dstAddrs := strings.Split(r, ":")
