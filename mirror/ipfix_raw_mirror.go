@@ -107,13 +107,13 @@ func (t *IPFixMirror) filterFlowDataSet(mRule Rule,flowSet ipfix.DataFlowSet)ipf
 			if id == InputId {
 				inputFound = true
 				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.InPort) || mRule.InPort == -1 {
+				if port == uint32(mRule.Port) {
 					inputMatch = true
 				}
 			} else if id == OutputId {
 				outputFound = true
 				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.OutPort) ||  mRule.OutPort == -1 {
+				if port == uint32(mRule.Port)  {
 					outputMatch = true
 				}
 			}
@@ -127,7 +127,7 @@ func (t *IPFixMirror) filterFlowDataSet(mRule Rule,flowSet ipfix.DataFlowSet)ipf
 		if inputMatch && outputMatch { // input and output matched
 			datas = append(datas, nfData)
 			rtnFlowSet.SetHeader.Length+= dataLen
-			rtnFlowSet.DataSets = datas;
+			rtnFlowSet.DataSets = datas
 		}
 	}
 	if rtnFlowSet.SetHeader.Length > 0 {

@@ -143,12 +143,6 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 				rtnFlowSet.DataFlowRecords = datas
 			}
 		}
-
-		//if inputMatch && outputMatch { // input and output matched
-		//	datas = append(datas, nfData)
-		//	rtnFlowSet.SetHeader.Length += nfData.Length
-		//	rtnFlowSet.DataFlowRecords = datas
-		//}
 	}
 	if rtnFlowSet.SetHeader.Length > 0 {
 		rtnFlowSet.SetHeader.Length += 4
