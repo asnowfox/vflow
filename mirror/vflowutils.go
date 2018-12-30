@@ -44,11 +44,13 @@ func RuleCheck(rule Rule) (bool,error) {
 	if a == nil {
 		return false,errors.New("can not parse ip "+rule.Source)
 	}
-	if rule.InPort < int32(-1) || rule.InPort > int32(65535){
-		return false,errors.New("inport is illegal, too big or to small")
+	if rule.Port < int32(-1) || rule.Port > int32(65535){
+		return false,errors.New("port is illegal, too big or to small")
 	}
-	if rule.OutPort < int32(-1) || rule.OutPort > int32(65535){
-		return false,errors.New("outport is illegal, too big or to small")
+
+	if rule.Direction != 0 && rule.Direction != 1 && rule.Direction != -1{
+		return false,errors.New("direction is error must be 0 1 or -l")
 	}
+
 	return true,nil
 }
