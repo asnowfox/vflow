@@ -380,7 +380,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, u
 			outputId = int(parsePort(value))
 		}
 		if m.FieldID == Direction{
-			directionId = int(parseDirection(value))
+			directionId = parseDirection(value)
 		}
 	}
 
@@ -419,10 +419,10 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, u
 
 	return fields, inputId, outputId, directionId,length, nil
 }
-func parseDirection(value interface{}) byte{
+func parseDirection(value interface{}) int{
 	switch value.(type) {
 		case byte:
-			return value.(byte)
+			return int(value.(byte))
 		default:
 			return -1
 	}
