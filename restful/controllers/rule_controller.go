@@ -59,8 +59,8 @@ func (o *RuleController) Post() {
 			o.ServeJSON()
 			return
 		}
-		inport,e1 := strconv.Atoi(strs[0])
-		outport,e2 := strconv.Atoi(strs[1])
+		port,e1 := strconv.Atoi(strs[0])
+		direction,e2 := strconv.Atoi(strs[1])
 		if e1 != nil && e2 != nil{
 			jsonRtn["result"] = -1
 			jsonRtn["id"] = ruleId
@@ -70,10 +70,10 @@ func (o *RuleController) Post() {
 			return
 		}
 		rule := mirror.Rule{
-			strs[2],
-			int32(inport),
-			int32(outport),
-			make([]string,0),
+			Source:      strs[2],
+			Port:        int32(port),
+			Direction:   int(direction),
+			DistAddress: make([]string,0),
 		}
 		index,msg := mirror.DeleteRule(policyId,rule)
 		jsonRtn := map[string]interface{}{}
