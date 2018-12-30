@@ -70,7 +70,7 @@ func Encode(agentId string,originalMsg Message, seq uint32, DataFlowSets []DataF
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
 	for _, template := range originalMsg.TemplateRecords {
-		fmt.Printf("%s write template record,setId is %d, templateId is %d, field count is %d.\n", agentId,
+		fmt.Printf("%s write template record,setId is %d, templateId is %d, Template Field count is %d.\n", agentId,
 			template.SetId,
 			template.Header.TemplateID, template.Header.FieldCount)
 		writeTemplate(buf, template)

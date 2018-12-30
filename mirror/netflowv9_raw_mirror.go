@@ -66,7 +66,7 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 		}
 		seqMap[key] = seqMap[key] + 1
 		seqMutex.Unlock()
-		rBytes := netflow9.Encode(sMsg.AgentID,sMsg, seq, msgFlowSets)
+		rBytes := netflow9.Encode(sMsg.AgentID, sMsg, seq, msgFlowSets)
 
 		for _, r := range mRule.DistAddress {
 			dstAddrs := strings.Split(r, ":")
@@ -76,8 +76,9 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 			if raw, ok := rawSockets[dstAddr]; ok {
 				err := raw.Send(rBytes)
 
-				if len(sMsg.TemplateRecords) > 0{
-					fmt.Printf("I will send template record to %s:%d\r\n",dstAddr,dstPort)
+				if len(sMsg.TemplateRecords) > 0 {
+					fmt.Printf("I will send template record to %s:%d, parse rule port %d, direction %d.\n",
+						dstAddr, dstPort, mRule.Port, mRule.Direction)
 				}
 
 				if err != nil {
@@ -137,13 +138,13 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 				rtnFlowSet.DataFlowRecords = datas
 			}
 		} else if mRule.Direction == 0 { //入方向
-			if inputMatch  { // input and output matched
+			if inputMatch { // input and output matched
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
 			}
 		} else if mRule.Direction == 1 { //出方向
-			if outputMatch  { // input and output matched
+			if outputMatch { // input and output matched
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
