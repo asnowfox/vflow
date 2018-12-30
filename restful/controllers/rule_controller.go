@@ -38,7 +38,7 @@ func (o *RuleController) Post() {
 			return
 		}
 		index,msg := mirror.AddRule(policyId,ob)
-		id :=  strconv.Itoa(int(ob.InPort))+"_"+strconv.Itoa(int(ob.OutPort))+"_"+ob.Source
+		id :=  strconv.Itoa(int(ob.Port))+"_"+strconv.Itoa(int(ob.Direction))+"_"+ob.Source
 		if index < 0{
 			id = ""
 		}

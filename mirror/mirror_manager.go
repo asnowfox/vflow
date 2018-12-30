@@ -24,7 +24,6 @@ var (
 	cfgMutex                sync.RWMutex
 	seqMap                  = make(map[string]uint32)
 	ipfixChannel            = make(chan ipfix.Message, 1000)
-	//netflowChannel          = make(chan netflow9.Message, 1000)
 )
 
 const InputId = 10
@@ -89,12 +88,11 @@ func buildMap() {
 			continue
 		}
 		for _, r := range policy.Rules {
-
 			if _, ok := mirrorMaps[r.Source]; !ok {
 				mirrorMaps[r.Source] = make([]Rule, 0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
-			fmt.Printf("   (source:%15s, inputPort %5d, outputPort %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.DistAddress)
+			fmt.Printf("   (source:%15s, inputPort %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.DistAddress)
 
 			for  _,rule:= range r.DistAddress {
 				remoteAddr := strings.Split(rule, ":")[0]
@@ -108,7 +106,6 @@ func buildMap() {
 					}
 				}
 			}
-
 		}
 	}
 }
@@ -134,7 +131,6 @@ func createRawPacket(srcAddress string, srcPort int,
 
 func NewNetFlowv9Mirror() (*Netflowv9Mirror, error) {
 	mirrorInstance := new(Netflowv9Mirror)
-
 	Netflowv9MirrorInstance = mirrorInstance
 	return mirrorInstance, nil
 }

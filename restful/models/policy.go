@@ -16,10 +16,10 @@ type RPolicy struct {
 type RRule struct {
 	mirror.Rule
 	RuleId string `json:"ruleId"`
-	InportName string `json:"inportName"`
-	InportDes string `json:"inportDes"`
-	OutportName string `json:"outportName"`
-	OutportDes string `json:"outportDes"`
+	PortName string `json:"portName"`
+	PortDes string `json:"portDes"`
+	DirectionDes string `json:"directionDes"`
+	Direction int `json:"direction"`
 }
 
 func TransPolicy(p mirror.Policy) RPolicy  {
@@ -42,17 +42,20 @@ func TransPolicy(p mirror.Policy) RPolicy  {
 func TransRule(deviceIp string,r mirror.Rule)RRule{
 	rule := new(RRule)
 	rule.Rule = r
-	rule.RuleId = strconv.Itoa(int(r.InPort))+"_"+strconv.Itoa(int(r.OutPort))+"_"+r.Source
+	rule.RuleId = strconv.Itoa(int(r.Port))+"_"+strconv.Itoa(int(r.Direction))+"_"+r.Source
 	//nfindex inport is nfindex
-	iPortInfo,err := snmp.ManageInstance.PortInfo(deviceIp,int(r.InPort))
+	iPortInfo,err := snmp.ManageInstance.PortInfo(deviceIp,int(r.Port))
 	if err== nil {
-		rule.InportName = iPortInfo.IfName
-		rule.InportDes = iPortInfo.IfDes
-	}
-	oPortInfo,err := snmp.ManageInstance.PortInfo(deviceIp,int(r.OutPort))
-	if err== nil {
-		rule.OutportName = oPortInfo.IfName
-		rule.OutportDes = oPortInfo.IfDes
+		rule.PortName = iPortInfo.IfName
+		rule.PortDes = iPortInfo.IfDes
+		rule.Direction = r.Direction
+		if rule.Direction == 0 {
+			rule.DirectionDes = "入方向"
+		}else if rule.Direction == 1{
+			rule.DirectionDes = "出方向"
+		}else{
+			rule.DirectionDes = "双方向"
+		}
 	}
 	return *rule
 }
