@@ -77,7 +77,7 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 				err := raw.Send(rBytes)
 
 				if len(sMsg.TemplateRecords) > 0{
-					fmt.Printf("I will send template record to %s:%d",dstAddr,dstPort)
+					fmt.Printf("I will send template record to %s:%d\r\n",dstAddr,dstPort)
 				}
 
 				if err != nil {
