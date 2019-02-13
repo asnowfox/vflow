@@ -118,7 +118,7 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 	for _, nfData := range flowSet.DataFlowRecords { //[]DecodedField
 		inputMatch, outputMatch := false, false
 
-		if nfData.InPort == -1 || nfData.OutPort == -1 {
+		if int(mRule.Port) == -1 {
 			inputMatch, outputMatch = true, true
 		}
 		if nfData.InPort == int(mRule.Port) {
