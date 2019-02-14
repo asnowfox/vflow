@@ -534,8 +534,8 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			if err == nil {
 				mem.insert(tr.Header.TemplateID, d.raddr, tr)
 				msg.TemplateRecords = append(msg.TemplateRecords, tr)
-				fmt.Printf("%s, FlowSetId is %d, templeteId is %d, msg's templatRecord size is %d\n", msg.AgentID,
-					setId,tr.Header.TemplateID, len(msg.TemplateRecords))
+				fmt.Printf("%s, FlowSetId is %d, templeteId is %d, header record size is %d, msg's templatRecord size is %d\n", msg.AgentID,
+					setId,tr.Header.TemplateID, tr.Header.FieldCount, len(msg.TemplateRecords))
 			} else {
 				fmt.Printf("unable unmarshal %s's template record.\n", msg.AgentID)
 			}
