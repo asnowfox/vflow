@@ -72,9 +72,9 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 			dstAddrs := strings.Split(r, ":")
 			dstAddr := dstAddrs[0]
 			dstPort, _ := strconv.Atoi(dstAddrs[1])
-			rBytes = createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
+			rBytes1 := createRawPacket(sMsg.AgentID, 9999, dstAddr, dstPort, rBytes)
 			if raw, ok := rawSockets[dstAddr]; ok {
-				err := raw.Send(rBytes)
+				err := raw.Send(rBytes1)
 
 				if len(sMsg.TemplateRecords) > 0 {
 					fmt.Printf("I will send template record to %s:%d, parse rule port %d, direction %d.\n",
