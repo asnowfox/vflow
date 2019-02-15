@@ -132,11 +132,20 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 		0x01: egress flow
 		*/
 		if mRule.Direction == -1 { //双向
-			if inputMatch || outputMatch { // input and output matched
+			if nfData.Direction == 0 && nfData.InPort == int(mRule.Port){
+				datas = append(datas, nfData)
+				rtnFlowSet.SetHeader.Length += nfData.Length
+				rtnFlowSet.DataFlowRecords = datas
+			}else if nfData.Direction == 1 && nfData.OutPort == int(mRule.Port) {
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
 			}
+			//if inputMatch || outputMatch { // input and output matched
+			//	datas = append(datas, nfData)
+			//	rtnFlowSet.SetHeader.Length += nfData.Length
+			//	rtnFlowSet.DataFlowRecords = datas
+			//}
 		} else if mRule.Direction == 0 { //入方向
 			if inputMatch { // input and output matched
 				datas = append(datas, nfData)
