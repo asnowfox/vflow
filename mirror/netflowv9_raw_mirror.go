@@ -116,17 +116,6 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 	var datas []netflow9.DataFlowRecord
 	// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
 	for _, nfData := range flowSet.DataFlowRecords { //[]DecodedField
-		inputMatch, outputMatch := false, false
-
-		if int(mRule.Port) == -1 {
-			inputMatch, outputMatch = true, true
-		}
-		if nfData.InPort == int(mRule.Port) {
-			inputMatch = true
-		}
-		if nfData.OutPort == int(mRule.Port) {
-			outputMatch = true
-		}
 		/*
 		0x00: ingress flow
 		0x01: egress flow
@@ -151,13 +140,13 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 			//	rtnFlowSet.DataFlowRecords = datas
 			//}
 		} else if mRule.Direction == 0 { //入方向
-			if inputMatch { // input and output matched
+			if nfData.InPort == int(mRule.Port) || nfData.InPort == -1{ // input matched
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
 			}
 		} else if mRule.Direction == 1 { //出方向
-			if outputMatch { // input and output matched
+			if nfData.OutPort == int(mRule.Port) || nfData.OutPort == -1 { // output matched
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
