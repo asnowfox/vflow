@@ -140,6 +140,10 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
+			} else if -1 == int(mRule.Port){ //所有端口
+				datas = append(datas, nfData)
+				rtnFlowSet.SetHeader.Length += nfData.Length
+				rtnFlowSet.DataFlowRecords = datas
 			}
 			//if inputMatch || outputMatch { // input and output matched
 			//	datas = append(datas, nfData)
