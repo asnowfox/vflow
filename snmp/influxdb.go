@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	hostUrl = "http://vflow-web:8086"
+	hostUrl  = "http://vflow-web:8086"
 	dbName   = "flowMatrix"
 	username = "admin"
 	password = "vlfow"
@@ -20,7 +20,7 @@ func Init(db string, uname string, passwd string) {
 	password = passwd
 }
 
-func SaveWalkToInflux(curTime time.Time,deviceIp string,indexList []int, nameList []string, ifInOctList []uint64, ifOutOctList []uint64,ifToNfIndexMap map[int]int) {
+func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameList []string, ifAlainList [] string, ifInOctList []uint64, ifOutOctList []uint64, ifToNfIndexMap map[int]int) {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     hostUrl,
 		Username: username,
@@ -42,23 +42,26 @@ func SaveWalkToInflux(curTime time.Time,deviceIp string,indexList []int, nameLis
 
 	for i, index := range indexList {
 		// Create a point and add to batch
-		tags := map[string]string{"portIndex":strconv.Itoa(index),"ifDes":nameList[i],"ofIndex":strconv.Itoa(ifToNfIndexMap[index])}
+		tags := map[string]string{"portIndex": strconv.Itoa(index),
+			"ifDes": nameList[i], "ifAlian": ifAlainList[i],
+			"ofIndex": strconv.Itoa(ifToNfIndexMap[index]),
+			"allDes":strconv.Itoa(index)+"|"+nameList[i]+"|"+ ifAlainList[i]+"|"+strconv.Itoa(ifToNfIndexMap[index])}
 		fields := map[string]interface{}{
-			"inOtc": float64(ifInOctList[i]),
+			"inOtc":  float64(ifInOctList[i]),
 			"outOtc": float64(ifOutOctList[i]),
 		}
 
 		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, curTime)
 
 		if err != nil {
-			vlogger.Logger.Print("new point error "+err.Error())
+			vlogger.Logger.Print("new point error " + err.Error())
 		}
 
 		bp.AddPoint(pt)
 	}
 	// Write the batch
 	if err := c.Write(bp); err != nil {
-		vlogger.Logger.Print("write error "+err.Error())
+		vlogger.Logger.Print("write error " + err.Error())
 	}
 
 	// Close client resources
