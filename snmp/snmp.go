@@ -156,7 +156,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		return err
 	}
 
-	statusResp, err := s.Walk(ifIndexOid)
+	statusResp, err := s.Walk(ifOperStatus)
 	if err == nil {
 		for _, v := range statusResp {
 			statusList = append(statusList, v.Value.(int))
