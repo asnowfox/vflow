@@ -187,8 +187,8 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	}
 
 
-	rwLock.RLock()
-	defer rwLock.RUnlock()
+	rwLock.Lock()
+	defer rwLock.Unlock()
 
 	if (len(indexList) == len(nameList)) && (len(indexList) == len(desList)) {
 		devicePortMap[DeviceAddress] = make([]PortInfo, 0)
@@ -275,14 +275,14 @@ func (task *DevicePortManager) ListConfig() ([]CommunityConfig) {
 }
 
 func (task *DevicePortManager) ListPortInfo(devAddress string) ([]PortInfo) {
-	rwLock.RLock()
-	defer rwLock.RLock()
+	rwLock.Lock()
+	defer rwLock.Unlock()
 	return devicePortMap[devAddress]
 }
 
 func (task *DevicePortManager) PortInfo(devAddress string, nfIndex int) (PortInfo, error) {
-	rwLock.RLock()
-	defer rwLock.RLock()
+	rwLock.Lock()
+	defer rwLock.Unlock()
 	if nfIndex == -1 {
 		info := PortInfo{
 			-1, "all port", "match all port", -1,
