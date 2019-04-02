@@ -20,6 +20,7 @@ var ifDesOid = ".1.3.6.1.2.1.31.1.1.1.18"
 var ifOutOct = ".1.3.6.1.2.1.31.1.1.1.10"
 var ifInOct = ".1.3.6.1.2.1.31.1.1.1.6"
 var nfIndexOid = ".1.3.6.1.4.1.2011.5.25.110.1.2.1.2"
+var ifOperStatus = ".1.3.6.1.2.1.2.2.1.8"
 var devicePortMap = make(map[string][]PortInfo)
 var devicePortIndexMap = make(map[string]map[int]PortInfo)
 var rwLock = new(sync.RWMutex)
@@ -121,6 +122,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	ifInOctList := make([]uint64, 0)
 	ifOutOctList := make([]uint64, 0)
 	//nfIndexList :=make([]int,0)
+	statusList :=make([]int, 0)
 	ifToNfIndexMap := make(map[int]int)
 
 	inResp, err := s.Walk(ifInOct)
@@ -148,6 +150,16 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	if err == nil {
 		for _, v := range indexResp {
 			indexList = append(indexList, v.Value.(int))
+		}
+	} else {
+		vlogger.Logger.Printf("snmp walk err3 %e", err)
+		return err
+	}
+
+	statusResp, err := s.Walk(ifIndexOid)
+	if err == nil {
+		for _, v := range statusResp {
+			statusList = append(statusList, v.Value.(int))
 		}
 	} else {
 		vlogger.Logger.Printf("snmp walk err3 %e", err)
@@ -200,7 +212,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		}
 
 		if isSave {
-			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList,desList, ifInOctList, ifOutOctList,ifToNfIndexMap)
+			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList,desList, ifInOctList, ifOutOctList,statusList,ifToNfIndexMap)
 		}
 	} else {
 		return errors.New("snmp walk err response is not equal")
