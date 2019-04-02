@@ -15,12 +15,13 @@ import (
 )
 
 var ifNameOid = ".1.3.6.1.2.1.31.1.1.1.1"
-var ifIndexOid = ".1.3.6.1.2.1.2.2.1.1"
+var ifIndexOid   = ".1.3.6.1.2.1.2.2.1.1"
+var ifOperStatus = ".1.3.6.1.2.1.2.2.1.8"
 var ifDesOid = ".1.3.6.1.2.1.31.1.1.1.18"
 var ifOutOct = ".1.3.6.1.2.1.31.1.1.1.10"
 var ifInOct = ".1.3.6.1.2.1.31.1.1.1.6"
 var nfIndexOid = ".1.3.6.1.4.1.2011.5.25.110.1.2.1.2"
-var ifOperStatus = ".1.3.6.1.2.1.2.2.1.8"
+
 var devicePortMap = make(map[string][]PortInfo)
 var devicePortIndexMap = make(map[string]map[int]PortInfo)
 var rwLock = new(sync.RWMutex)
@@ -81,8 +82,8 @@ func (task *DevicePortManager) Run() {
 
 	go func() {
 		sleepSecond := 120 - time.Now().Unix()%120
-		vlogger.Logger.Printf("I will delay for %d",sleepSecond)
-		time.Sleep(time.Duration(sleepSecond)*time.Second)
+		vlogger.Logger.Printf("I will delay for %d", sleepSecond)
+		time.Sleep(time.Duration(sleepSecond) * time.Second)
 		duration := time.Duration(time.Duration(task.snmpConfigs.Interval) * time.Second)
 		timer1 := time.NewTicker(duration)
 		for {
@@ -99,7 +100,7 @@ func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 	for _, dev := range task.snmpConfigs.DeviceCfg {
 		addr := dev.DeviceAddress
 		community := dev.Community
-		go func(){
+		go func() {
 			task.walkIndex(curTime, addr, community, isSave)
 		}()
 	}
@@ -122,7 +123,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	ifInOctList := make([]uint64, 0)
 	ifOutOctList := make([]uint64, 0)
 	//nfIndexList :=make([]int,0)
-	statusList :=make([]int, 0)
+	statusList := make([]int, 0)
 	ifToNfIndexMap := make(map[int]int)
 
 	inResp, err := s.Walk(ifInOct)
@@ -144,7 +145,6 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		vlogger.Logger.Printf("snmp walk err2 %e", err)
 		return err
 	}
-
 
 	indexResp, err := s.Walk(ifIndexOid)
 	if err == nil {
@@ -198,7 +198,6 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		return err
 	}
 
-
 	rwLock.Lock()
 	defer rwLock.Unlock()
 
@@ -212,7 +211,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		}
 
 		if isSave {
-			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList,desList, ifInOctList, ifOutOctList,statusList,ifToNfIndexMap)
+			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, desList, ifInOctList, ifOutOctList, statusList, ifToNfIndexMap)
 		}
 	} else {
 		return errors.New("snmp walk err response is not equal")
