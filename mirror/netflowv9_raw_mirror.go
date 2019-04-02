@@ -134,11 +134,7 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
 			}
-			//if inputMatch || outputMatch { // input and output matched
-			//	datas = append(datas, nfData)
-			//	rtnFlowSet.SetHeader.Length += nfData.Length
-			//	rtnFlowSet.DataFlowRecords = datas
-			//}
+
 		} else if mRule.Direction == 0 { //入方向
 			if nfData.InPort == int(mRule.Port) || nfData.InPort == -1{ // input matched
 				datas = append(datas, nfData)
