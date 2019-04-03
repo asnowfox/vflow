@@ -211,7 +211,9 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		}
 
 		if isSave {
-			SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, desList, ifInOctList, ifOutOctList, statusList, ifToNfIndexMap)
+			if len(indexList) == len(nameList) && len(nameList) == len(desList) && len(desList) == len(ifInOct) && len(ifOutOct) == len(statusList){
+				SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, desList, ifInOctList, ifOutOctList, statusList, ifToNfIndexMap)
+			}
 		}
 	} else {
 		return errors.New("snmp walk err response is not equal")
