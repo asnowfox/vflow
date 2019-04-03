@@ -123,7 +123,8 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	ifInOctList := make([]uint64, 0)
 	ifOutOctList := make([]uint64, 0)
 	//nfIndexList :=make([]int,0)
-	statusList := make([]int, 0)
+	//statusList := make([]int, 0)
+	ifToStatusMap := make(map[int]int)
 	ifToNfIndexMap := make(map[int]int)
 
 	inResp, err := s.Walk(ifInOct)
@@ -159,7 +160,10 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	statusResp, err := s.Walk(ifOperStatus)
 	if err == nil {
 		for _, v := range statusResp {
-			statusList = append(statusList, v.Value.(int))
+			ifIndexStr := v.Name[len(ifOperStatus)+1 : len(v.Name)]
+			ifIndexOid,_ :=strconv.Atoi(ifIndexStr)
+			ifToStatusMap[ifIndexOid] = v.Value.(int)
+			//statusList = append(statusList, v.Value.(int))
 		}
 	} else {
 		vlogger.Logger.Printf("snmp walk err3 %e", err)
@@ -211,8 +215,8 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		}
 
 		if isSave {
-			if len(indexList) == len(nameList) && len(nameList) == len(desList) && len(desList) == len(ifInOct) && len(ifOutOct) == len(statusList){
-				SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, desList, ifInOctList, ifOutOctList, statusList, ifToNfIndexMap)
+			if len(indexList) == len(nameList) && len(nameList) == len(desList) && len(desList) == len(ifInOct) {
+				SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, desList, ifInOctList, ifOutOctList, ifToStatusMap, ifToNfIndexMap)
 			}
 		}
 	} else {
