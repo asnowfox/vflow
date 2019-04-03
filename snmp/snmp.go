@@ -14,10 +14,10 @@ import (
 	"strconv"
 )
 
-var ifNameOid = ".1.3.6.1.2.1.31.1.1.1.1"
-var ifIndexOid   = ".1.3.6.1.2.1.2.2.1.1"
+var ifDescOid = ".1.3.6.1.2.1.31.1.1.1.1"
+var ifIndexOid = ".1.3.6.1.2.1.2.2.1.1"
 var ifOperStatus = ".1.3.6.1.2.1.2.2.1.8"
-var ifDesOid = ".1.3.6.1.2.1.31.1.1.1.18"
+var ifAlianOid = ".1.3.6.1.2.1.31.1.1.1.18"
 var ifOutOct = ".1.3.6.1.2.1.31.1.1.1.10"
 var ifInOct = ".1.3.6.1.2.1.31.1.1.1.6"
 var nfIndexOid = ".1.3.6.1.4.1.2011.5.25.110.1.2.1.2"
@@ -101,6 +101,7 @@ func (task *DevicePortManager) taskOnce(curTime time.Time, isSave bool) {
 		addr := dev.DeviceAddress
 		community := dev.Community
 		go func() {
+			vlogger.Logger.Printf("I will start pull device %s", addr)
 			task.walkIndex(curTime, addr, community, isSave)
 		}()
 	}
@@ -122,7 +123,6 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	desList := make([]string, 0)
 	ifInOctList := make([]uint64, 0)
 	ifOutOctList := make([]uint64, 0)
-	//nfIndexList :=make([]int,0)
 	statusList := make([]int, 0)
 	ifToNfIndexMap := make(map[int]int)
 
@@ -162,7 +162,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			statusList = append(statusList, v.Value.(int))
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err3 %e", err)
+		vlogger.Logger.Printf("snmp walk err4 %e", err)
 		return err
 	}
 	nfIndexResp, err := s.Walk(nfIndexOid)
@@ -172,6 +172,9 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 			ofIndex, _ := strconv.Atoi(ofIndexStr)
 			ifToNfIndexMap[v.Value.(int)] = ofIndex
 		}
+	} else {
+		vlogger.Logger.Printf("snmp walk err5 %e", err)
+		return err
 	}
 	if len(ifToNfIndexMap) == 0 {
 		for _, v := range indexList {
@@ -179,22 +182,22 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		}
 	}
 
-	nameResp, err := s.Walk(ifNameOid)
+	nameResp, err := s.Walk(ifDescOid)
 	if err == nil {
 		for _, v := range nameResp {
 			nameList = append(nameList, v.Value.(string))
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err4 %e", err)
+		vlogger.Logger.Printf("snmp walk err6 %e", err)
 		return err
 	}
-	desResp, err := s.Walk(ifDesOid)
+	desResp, err := s.Walk(ifAlianOid)
 	if err == nil {
 		for _, v := range desResp {
 			desList = append(desList, v.Value.(string))
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err5 %e", err)
+		vlogger.Logger.Printf("snmp walk err7 %e", err)
 		return err
 	}
 
@@ -211,13 +214,15 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		}
 
 		if isSave {
-			if len(indexList) == len(nameList) && len(nameList) == len(desList) && len(desList) == len(ifInOct) && len(ifOutOct) == len(statusList){
+			if len(indexList) == len(nameList) && len(nameList) == len(desList) && len(desList) == len(ifInOct) && len(ifOutOct) == len(statusList) {
 				SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, desList, ifInOctList, ifOutOctList, statusList, ifToNfIndexMap)
 			}
+		}else{
+			vlogger.Logger.Printf("data is configed not save.\r\n")
 		}
 	} else {
-		return errors.New("snmp walk err response is not equal")
 		vlogger.Logger.Printf("snmp walk err response is not equal")
+		return errors.New("snmp walk err response is not equal")
 	}
 	return nil
 }
