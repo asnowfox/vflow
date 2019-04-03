@@ -20,7 +20,7 @@ func Init(db string, uname string, passwd string) {
 	password = passwd
 }
 
-func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameList []string, ifAlainList [] string,
+func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameList []string,ifAlainMap map[int]string,
 		ifInOctList []uint64, ifOutOctList []uint64, statusMap map[int]int,ifToNfIndexMap map[int]int) {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     hostUrl,
@@ -44,10 +44,10 @@ func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameL
 	for i, index := range indexList {
 		// Create a point and add to batch
 		tags := map[string]string{"portIndex": strconv.Itoa(index),
-			"ifDes": nameList[i], "ifAlian": ifAlainList[i],
+			"ifDes": nameList[i], "ifAlian":ifAlainMap[index],
 			"ofIndex": strconv.Itoa(ifToNfIndexMap[index]),
-			"operStatus":strconv.Itoa(statusMap[i]),
-			"allDes":strconv.Itoa(index)+"|"+nameList[i]+"|"+ ifAlainList[i]+"|"+strconv.Itoa(ifToNfIndexMap[index])}
+			"operStatus":strconv.Itoa(statusMap[index]),
+			"allDes":strconv.Itoa(index)+"|"+nameList[i]+"|"+ ifAlainMap[index]+"|"+strconv.Itoa(ifToNfIndexMap[index])}
 		fields := map[string]interface{}{
 			"inOtc":  float64(ifInOctList[i]),
 			"outOtc": float64(ifOutOctList[i]),
