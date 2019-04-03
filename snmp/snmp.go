@@ -218,10 +218,10 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 				SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, desList, ifInOctList, ifOutOctList, statusList, ifToNfIndexMap)
 			}
 		}else{
-			vlogger.Logger.Printf("data is configed not save.\r\n")
+			vlogger.Logger.Printf("data is configed not save %s.\r\n",DeviceAddress)
 		}
 	} else {
-		vlogger.Logger.Printf("snmp walk err response is not equal")
+		vlogger.Logger.Printf("snmp walk err response is not equal %s",DeviceAddress)
 		return errors.New("snmp walk err response is not equal")
 	}
 	return nil

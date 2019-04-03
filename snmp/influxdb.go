@@ -56,14 +56,16 @@ func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameL
 		pt, err := client.NewPoint(deviceIp+"_snmp", tags, fields, curTime)
 
 		if err != nil {
-			vlogger.Logger.Print("new point error " + err.Error())
+			vlogger.Logger.Printf("new point error " + err.Error())
 		}
 
 		bp.AddPoint(pt)
 	}
 	// Write the batch
 	if err := c.Write(bp); err != nil {
-		vlogger.Logger.Print("write error " + err.Error())
+		vlogger.Logger.Printf("write error " + err.Error())
+	}else{
+		vlogger.Logger.Printf("write data success ")
 	}
 
 	// Close client resources
