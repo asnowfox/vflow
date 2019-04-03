@@ -21,7 +21,7 @@ func Init(db string, uname string, passwd string) {
 }
 
 func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameList []string, ifAlainList [] string,
-		ifInOctList []uint64, ifOutOctList []uint64, statusList []int,ifToNfIndexMap map[int]int) {
+		ifInOctList []uint64, ifOutOctList []uint64, statusMap map[int]int,ifToNfIndexMap map[int]int) {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     hostUrl,
 		Username: username,
@@ -46,7 +46,7 @@ func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameL
 		tags := map[string]string{"portIndex": strconv.Itoa(index),
 			"ifDes": nameList[i], "ifAlian": ifAlainList[i],
 			"ofIndex": strconv.Itoa(ifToNfIndexMap[index]),
-			"operStatus":strconv.Itoa(statusList[i]),
+			"operStatus":strconv.Itoa(statusMap[i]),
 			"allDes":strconv.Itoa(index)+"|"+nameList[i]+"|"+ ifAlainList[i]+"|"+strconv.Itoa(ifToNfIndexMap[index])}
 		fields := map[string]interface{}{
 			"inOtc":  float64(ifInOctList[i]),
