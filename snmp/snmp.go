@@ -217,6 +217,8 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		if isSave {
 			if len(indexList) == len(nameList) && len(nameList) == len(desList) && len(desList) == len(ifInOct) {
 				SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, desList, ifInOctList, ifOutOctList, ifToStatusMap, ifToNfIndexMap)
+			}else{
+				vlogger.Logger.Printf("can not save because not equal %s\r\n",DeviceAddress)
 			}
 		}
 	} else {
