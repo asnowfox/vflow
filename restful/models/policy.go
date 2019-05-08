@@ -1,8 +1,8 @@
 package models
 
 import (
-	"../../mirror"
-	"../../snmp"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/snmp"
 	"strconv"
 )
 

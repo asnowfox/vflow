@@ -24,17 +24,17 @@
 package main
 
 import (
+	"github.com/VerizonDigital/vflow/flows"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/restful"
+	"github.com/VerizonDigital/vflow/snmp"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"sync"
 	"syscall"
-	"../restful"
-	"../mirror"
-	"../flows"
-	"../vlogger"
-	"../snmp"
 )
 
 var (

@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
-	"../../mirror"
-	"../models"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/restful/models"
+	"github.com/astaxie/beego"
 )
 
 // Operations about object

@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/VerizonDigital/vflow/flows"
+	"github.com/VerizonDigital/vflow/mirror"
 	"github.com/astaxie/beego"
-	"../../flows"
-	"../../mirror"
 )
 
 

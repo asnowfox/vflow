@@ -23,16 +23,16 @@
 package netflow9
 
 import (
-	"net"
-	"../../reader"
-	"../../vlogger"
+	"bytes"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"github.com/VerizonDigital/vflow/ipfix"
-	"encoding/binary"
-	"time"
+	"github.com/VerizonDigital/vflow/reader"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"io"
-	"bytes"
-	"errors"
+	"net"
+	"time"
 )
 
 // Decoder represents Netflow payload and remote address

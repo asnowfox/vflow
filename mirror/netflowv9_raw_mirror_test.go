@@ -1,12 +1,12 @@
 package mirror
 
 import (
-	"testing"
-	"log"
-	"os"
-	"time"
 	"fmt"
+	"log"
 	"net"
+	"os"
+	"testing"
+	"time"
 )
 
 func TestReadConfig(t *testing.T) {

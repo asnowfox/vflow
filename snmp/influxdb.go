@@ -1,10 +1,11 @@
 package snmp
 
 import (
+	"github.com/VerizonDigital/vflow/vlogger"
+	"github.com/coreos/etcd/client"
 	"github.com/influxdata/influxdb/client/v2"
-	"../vlogger"
-	"time"
 	"strconv"
+	"time"
 )
 
 var (

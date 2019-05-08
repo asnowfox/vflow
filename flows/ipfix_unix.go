@@ -23,9 +23,9 @@
 package flows
 
 import (
-	"../mirror"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
-	"../vlogger"
 )
 
 func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {

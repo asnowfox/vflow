@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"../models"
 	"encoding/json"
+	"github.com/VerizonDigital/vflow/restful/models"
 	"github.com/astaxie/beego"
 )
 

@@ -7,11 +7,11 @@
 // @LicenseUrl http://www.apache.org/licenses/LICENSE-2.0.html
 package routers
 
-import(
-	"github.com/astaxie/beego"
-	"../controllers"
+import (
 	"fmt"
-	"../../flows"
+	"github.com/VerizonDigital/vflow/flows"
+	"github.com/VerizonDigital/vflow/restful/controllers"
+	"github.com/astaxie/beego"
 )
 
 func Init(netflowv9 *flows.NetflowV9) {

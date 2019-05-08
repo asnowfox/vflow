@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/VerizonDigital/vflow/snmp"
 	"github.com/astaxie/beego"
-	"../../snmp"
 )
 
 // Operations about object

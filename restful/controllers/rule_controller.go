@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
-	"../../mirror"
 	"encoding/json"
-	"strings"
-	"strconv"
 	"fmt"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/astaxie/beego"
+	"strconv"
+	"strings"
 )
 
 // Operations about object

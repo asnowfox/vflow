@@ -1,16 +1,16 @@
 package mirror
 
 import (
-	"io/ioutil"
-	"fmt"
-	"os"
-	"strings"
-	"net"
-	"sync"
-	"../ipfix"
 	"encoding/binary"
 	"encoding/json"
-	"../vlogger"
+	"fmt"
+	"github.com/VerizonDigital/vflow/ipfix"
+	"github.com/VerizonDigital/vflow/vlogger"
+	"io/ioutil"
+	"net"
+	"os"
+	"strings"
+	"sync"
 )
 
 var (

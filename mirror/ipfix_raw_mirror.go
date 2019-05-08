@@ -1,12 +1,12 @@
 package mirror
 
 import (
-	"sync/atomic"
 	"encoding/binary"
+	"github.com/VerizonDigital/vflow/ipfix"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"strconv"
 	"strings"
-	"../ipfix"
-	"../vlogger"
+	"sync/atomic"
 )
 
 type IPFixMirror struct {

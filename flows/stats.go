@@ -24,12 +24,12 @@ package flows
 
 import (
 	"encoding/json"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
 	"net/http"
 	"runtime"
 	"time"
-	"../mirror"
-	"../vlogger"
 )
 
 var startTime = time.Now().Unix()

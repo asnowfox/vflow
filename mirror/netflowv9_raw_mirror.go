@@ -1,12 +1,12 @@
 package mirror
 
 import (
-	"../netflow/v9"
-	"sync/atomic"
+	"fmt"
+	"github.com/VerizonDigital/vflow/netflow/v9"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"strconv"
 	"strings"
-	"../vlogger"
-	"fmt"
+	"sync/atomic"
 )
 
 type Netflowv9Mirror struct {

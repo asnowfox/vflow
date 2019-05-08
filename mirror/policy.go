@@ -1,11 +1,11 @@
 package mirror
 
 import (
-	"io/ioutil"
-	"fmt"
-	"os"
 	"encoding/json"
-	"../vlogger"
+	"fmt"
+	"github.com/VerizonDigital/vflow/vlogger"
+	"io/ioutil"
+	"os"
 )
 
 type Policy struct {

@@ -2,8 +2,8 @@ package restful
 
 import (
 	"./routers"
+	"github.com/VerizonDigital/vflow/flows"
 	"github.com/astaxie/beego"
-	"../flows"
 )
 
 type BegooServer struct {

@@ -1,17 +1,17 @@
 package snmp
 
 import (
-	"time"
-	"github.com/alouca/gosnmp"
-	"fmt"
-	"os"
-	"io/ioutil"
 	"encoding/json"
-	"../vlogger"
-	"sync"
 	"errors"
+	"fmt"
+	"github.com/VerizonDigital/vflow/vlogger"
+	"github.com/alouca/gosnmp"
+	"io/ioutil"
 	"net"
+	"os"
 	"strconv"
+	"sync"
+	"time"
 )
 
 var ifDescOid = ".1.3.6.1.2.1.31.1.1.1.1"

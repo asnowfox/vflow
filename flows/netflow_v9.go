@@ -24,16 +24,16 @@ package flows
 
 import (
 	"bytes"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/netflow/v9"
+	"github.com/VerizonDigital/vflow/producer"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
+	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
-	"../netflow/v9"
-	"../mirror"
-	"../vlogger"
-	"github.com/VerizonDigital/vflow/producer"
-	"path"
 )
 
 // NetflowV9 represents netflow v9 collector

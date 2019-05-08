@@ -25,6 +25,8 @@ package flows
 import (
 	"flag"
 	"fmt"
+	"github.com/VerizonDigital/vflow/vlogger"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
@@ -33,8 +35,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"../vlogger"
-	"gopkg.in/yaml.v2"
 )
 
 var (

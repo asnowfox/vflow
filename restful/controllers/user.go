@@ -1,11 +1,10 @@
 package controllers
 
 import (
-	"../models"
 	"encoding/json"
-
-	"github.com/astaxie/beego"
+	"github.com/VerizonDigital/vflow/restful/models"
 	"fmt"
+	"github.com/astaxie/beego"
 )
 
 // Operations about Users

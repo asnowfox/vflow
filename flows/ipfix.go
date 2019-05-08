@@ -24,16 +24,16 @@ package flows
 
 import (
 	"bytes"
+	"github.com/VerizonDigital/vflow/ipfix"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/producer"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
 	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
-	"../mirror"
-	"../ipfix"
-	"github.com/VerizonDigital/vflow/producer"
-	"../vlogger"
 )
 
 // IPFIX represents IPFIX collector

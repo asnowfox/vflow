@@ -25,15 +25,15 @@ package flows
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/VerizonDigital/vflow/producer"
+	"github.com/VerizonDigital/vflow/sflow"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
+	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
-	"../sflow"
-	"github.com/VerizonDigital/vflow/producer"
-	"path"
-	"../vlogger"
 )
 
 // SFUDPMsg represents sFlow UDP message

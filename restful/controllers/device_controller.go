@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"fmt"
-	"github.com/astaxie/beego"
-	"../../snmp"
-	"../../vlogger"
 	"encoding/json"
+	"fmt"
+	"github.com/VerizonDigital/vflow/snmp"
+	"github.com/VerizonDigital/vflow/vlogger"
+	"github.com/astaxie/beego"
 )
 
 // Operations about object
