@@ -24,6 +24,8 @@ package sflow
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -174,10 +176,12 @@ func TestSFDecode(t *testing.T) {
 	filter := []uint32{DataCounterSample}
 	reader := bytes.NewReader(TestsFlowRawPacket)
 	d := NewSFDecoder(reader, filter)
-	_, err := d.SFDecode()
+	datagram, err := d.SFDecode()
 	if err != nil {
 		t.Error("unexpected error", err)
 	}
+	strbytes, err := json.Marshal(datagram)
+	fmt.Printf("marshal data is %s", string(strbytes))
 }
 
 func TestDecodeSampleHeader(t *testing.T) {

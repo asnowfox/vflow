@@ -33,10 +33,10 @@ const (
 
 // Packet represents layer 2,3,4 available info
 type Packet struct {
-	L2   Datalink
-	L3   interface{}
-	L4   interface{}
-	data []byte
+	L2   Datalink    `json:"l2`
+	L3   interface{} `json:"l3`
+	L4   interface{} `json:"l4`
+	Data []byte      `json:"data`
 }
 
 var (
@@ -55,7 +55,7 @@ func (p *Packet) Decoder(data []byte, protocol uint32) (*Packet, error) {
 		err error
 	)
 
-	p.data = data
+	p.Data = data
 
 	switch protocol {
 	case headerProtocolEthernet:

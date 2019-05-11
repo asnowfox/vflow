@@ -29,29 +29,29 @@ import (
 
 // IPv4Header represents an IPv4 header
 type IPv4Header struct {
-	Version  int    // protocol version
-	TOS      int    // type-of-service
-	TotalLen int    // packet total length
-	ID       int    // identification
-	Flags    int    // flags
-	FragOff  int    // fragment offset
-	TTL      int    // time-to-live
-	Protocol int    // next protocol
-	Checksum int    // checksum
-	Src      string // source address
-	Dst      string // destination address
+	Version  int    `json:"version"`         // protocol version
+	TOS      int    `json:"tos"`             // type-of-service
+	TotalLen int    `json:"total_len"`       // packet total length
+	ID       int    `json:"id"`              // identification
+	Flags    int    `json:"flags"`           // flags
+	FragOff  int    `json:"fragment_offset"` // fragment offset
+	TTL      int    `json:"ttl"`             // time-to-live
+	Protocol int    `json:"protocol"`        // next protocol
+	Checksum int    `json:"check_sum"`       // checksum
+	Src      string `json:"src_ip"`          // source address
+	Dst      string `json:"dst_ip"`          // destination address
 }
 
 // IPv6Header represents an IPv6 header
 type IPv6Header struct {
-	Version      int    // protocol version
-	TrafficClass int    // traffic class
-	FlowLabel    int    // flow label
-	PayloadLen   int    // payload length
-	NextHeader   int    // next header
-	HopLimit     int    // hop limit
-	Src          string // source address
-	Dst          string // destination address
+	Version      int    `json:"version"`        // protocol version
+	TrafficClass int    `json:"traffic_class"`  // traffic class
+	FlowLabel    int    `json:"flow_label"`     // flow label
+	PayloadLen   int    `json:"payload_length"` // payload length
+	NextHeader   int    `json:"next_layer"`     // next header
+	HopLimit     int    `json:"hop_limit"`      // hop limit
+	Src          string `json:"src_ip"`         // source address
+	Dst          string `json:"dst_ip"`         // destination address
 }
 
 const (
@@ -88,7 +88,7 @@ func (p *Packet) decodeNextLayer() error {
 
 	switch proto {
 	case IANAProtoICMP:
-		icmp, err := decodeICMP(p.data)
+		icmp, err := decodeICMP(p.Data)
 		if err != nil {
 			return err
 		}
@@ -96,7 +96,7 @@ func (p *Packet) decodeNextLayer() error {
 		p.L4 = icmp
 		len = 4
 	case IANAProtoTCP:
-		tcp, err := decodeTCP(p.data)
+		tcp, err := decodeTCP(p.Data)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func (p *Packet) decodeNextLayer() error {
 		p.L4 = tcp
 		len = 20
 	case IANAProtoUDP:
-		udp, err := decodeUDP(p.data)
+		udp, err := decodeUDP(p.Data)
 		if err != nil {
 			return err
 		}
@@ -115,61 +115,61 @@ func (p *Packet) decodeNextLayer() error {
 		return errUnknownTransportLayer
 	}
 
-	p.data = p.data[len:]
+	p.Data = p.Data[len:]
 
 	return nil
 }
 
 func (p *Packet) decodeIPv6Header() error {
-	if len(p.data) < IPv6HLen {
+	if len(p.Data) < IPv6HLen {
 		return errShortIPv6HeaderLength
 	}
 
 	var (
-		src net.IP = p.data[8:24]
-		dst net.IP = p.data[24:40]
+		src net.IP = p.Data[8:24]
+		dst net.IP = p.Data[24:40]
 	)
 
 	p.L3 = IPv6Header{
-		Version:      int(p.data[0]) >> 4,
-		TrafficClass: int(p.data[0]&0x0f)<<4 | int(p.data[1])>>4,
-		FlowLabel:    int(p.data[1]&0x0f)<<16 | int(p.data[2])<<8 | int(p.data[3]),
-		PayloadLen:   int(uint16(p.data[4])<<8 | uint16(p.data[5])),
-		NextHeader:   int(p.data[6]),
-		HopLimit:     int(p.data[7]),
+		Version:      int(p.Data[0]) >> 4,
+		TrafficClass: int(p.Data[0]&0x0f)<<4 | int(p.Data[1])>>4,
+		FlowLabel:    int(p.Data[1]&0x0f)<<16 | int(p.Data[2])<<8 | int(p.Data[3]),
+		PayloadLen:   int(uint16(p.Data[4])<<8 | uint16(p.Data[5])),
+		NextHeader:   int(p.Data[6]),
+		HopLimit:     int(p.Data[7]),
 		Src:          src.String(),
 		Dst:          dst.String(),
 	}
 
-	p.data = p.data[IPv6HLen:]
+	p.Data = p.Data[IPv6HLen:]
 
 	return nil
 }
 
 func (p *Packet) decodeIPv4Header() error {
-	if len(p.data) < IPv4HLen {
+	if len(p.Data) < IPv4HLen {
 		return errShortIPv4HeaderLength
 	}
 
 	var (
-		src net.IP = p.data[12:16]
-		dst net.IP = p.data[16:20]
+		src net.IP = p.Data[12:16]
+		dst net.IP = p.Data[16:20]
 	)
 
 	p.L3 = IPv4Header{
-		Version:  int(p.data[0] & 0xf0 >> 4),
-		TOS:      int(p.data[1]),
-		TotalLen: int(p.data[2])<<8 | int(p.data[3]),
-		ID:       int(p.data[4])<<8 | int(p.data[5]),
-		Flags:    int(p.data[6] & 0x07),
-		TTL:      int(p.data[8]),
-		Protocol: int(p.data[9]),
-		Checksum: int(p.data[10])<<8 | int(p.data[11]),
+		Version:  int(p.Data[0] & 0xf0 >> 4),
+		TOS:      int(p.Data[1]),
+		TotalLen: int(p.Data[2])<<8 | int(p.Data[3]),
+		ID:       int(p.Data[4])<<8 | int(p.Data[5]),
+		Flags:    int(p.Data[6] & 0x07),
+		TTL:      int(p.Data[8]),
+		Protocol: int(p.Data[9]),
+		Checksum: int(p.Data[10])<<8 | int(p.Data[11]),
 		Src:      src.String(),
 		Dst:      dst.String(),
 	}
 
-	p.data = p.data[IPv4HLen:]
+	p.Data = p.Data[IPv4HLen:]
 
 	return nil
 }

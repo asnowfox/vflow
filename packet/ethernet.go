@@ -30,16 +30,16 @@ import (
 // Datalink represents layer two IEEE 802.11
 type Datalink struct {
 	// SrcMAC represents source MAC address
-	SrcMAC string
+	SrcMAC string `json:"src_mac"`
 
 	// DstMAC represents destination MAC address
-	DstMAC string
+	DstMAC string `json:"dst_mac"`
 
 	// Vlan represents VLAN value
-	Vlan int
+	Vlan int `json:"vlan_id"`
 
 	// EtherType represents upper layer type value
-	EtherType uint16
+	EtherType uint16 `json:"ether_type"`
 }
 
 const (
@@ -69,21 +69,21 @@ func (p *Packet) decodeEthernet() error {
 		err error
 	)
 
-	if len(p.data) < 14 {
+	if len(p.Data) < 14 {
 		return errShortEthernetHeaderLength
 	}
 
-	d, err = decodeIEEE802(p.data)
+	d, err = decodeIEEE802(p.Data)
 	if err != nil {
 		return err
 	}
 
 	if d.EtherType == EtherTypeIEEE8021Q {
-		vlan := int(p.data[14])<<8 | int(p.data[15])
-		p.data[12], p.data[13] = p.data[16], p.data[17]
-		p.data = append(p.data[:14], p.data[18:]...)
+		vlan := int(p.Data[14])<<8 | int(p.Data[15])
+		p.Data[12], p.Data[13] = p.Data[16], p.Data[17]
+		p.Data = append(p.Data[:14], p.Data[18:]...)
 
-		d, err = decodeIEEE802(p.data)
+		d, err = decodeIEEE802(p.Data)
 		if err != nil {
 			return err
 		}
@@ -91,7 +91,7 @@ func (p *Packet) decodeEthernet() error {
 	}
 
 	p.L2 = d
-	p.data = p.data[14:]
+	p.Data = p.Data[14:]
 
 	return nil
 }

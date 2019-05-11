@@ -43,39 +43,39 @@ const (
 
 // FlowSample represents single flow sample
 type FlowSample struct {
-	SequenceNo   uint32 // Incremented with each flow sample
-	SourceID     byte   // sfSourceID
-	SamplingRate uint32 // sfPacketSamplingRate
-	SamplePool   uint32 // Total number of packets that could have been sampled
-	Drops        uint32 // Number of times a packet was dropped due to lack of resources
-	Input        uint32 // SNMP ifIndex of input interface
-	Output       uint32 // SNMP ifIndex of input interface
-	RecordsNo    uint32 // Number of records to follow
-	Records      map[string]Record
+	SequenceNo   uint32            `json:"sequence_no"`   // Incremented with each flow sample
+	SourceID     byte              `json:"source_id"`     // sfSourceID
+	SamplingRate uint32            `json:"sampling_rate"` // sfPacketSamplingRate
+	SamplePool   uint32            `json:"sample_pool"`   // Total number of packets that could have been sampled
+	Drops        uint32            `json:"drops"`         // Number of times a packet was dropped due to lack of resources
+	Input        uint32            `json:"input"`         // SNMP ifIndex of input interface
+	Output       uint32            `json:"output"`        // SNMP ifIndex of input interface
+	RecordsNo    uint32            `json:"records_no"`    // Number of records to follow
+	Records      map[string]Record `json:"records"`
 }
 
 // SampledHeader represents sampled header
 type SampledHeader struct {
-	Protocol     uint32 // (enum SFLHeader_protocol)
-	FrameLength  uint32 // Original length of packet before sampling
-	Stripped     uint32 // Header/trailer bytes stripped by sender
-	HeaderLength uint32 // Length of sampled header bytes to follow
-	Header       []byte // Header bytes
+	Protocol     uint32 `json:"protocol"`      // (enum SFLHeader_protocol)
+	FrameLength  uint32 `json:"frame_length"`  // Original length of packet before sampling
+	Stripped     uint32 `json:"stripped"`      // Header/trailer bytes stripped by sender
+	HeaderLength uint32 `json:"header_length"` // Length of sampled header bytes to follow
+	Header       []byte `json:"header"`        // Header bytes
 }
 
 // ExtSwitchData represents Extended Switch Data
 type ExtSwitchData struct {
-	SrcVlan     uint32 // The 802.1Q VLAN id of incoming frame
-	SrcPriority uint32 // The 802.1p priority of incoming frame
-	DstVlan     uint32 // The 802.1Q VLAN id of outgoing frame
-	DstPriority uint32 // The 802.1p priority of outgoing frame
+	SrcVlan     uint32 `json:"src_vlan"`     // The 802.1Q VLAN id of incoming frame
+	SrcPriority uint32 `json:"src_priority"` // The 802.1p priority of incoming frame
+	DstVlan     uint32 `json:"dst_vlan"`     // The 802.1Q VLAN id of outgoing frame
+	DstPriority uint32 `json:"dst_priority"` // The 802.1p priority of outgoing frame
 }
 
 // ExtRouterData represents extended router data
 type ExtRouterData struct {
-	NextHop net.IP
-	SrcMask uint32
-	DstMask uint32
+	NextHop net.IP `json:"next_hop"`
+	SrcMask uint32 `json:"src_mask"`
+	DstMask uint32 `json:"dst_mask"`
 }
 
 var (
