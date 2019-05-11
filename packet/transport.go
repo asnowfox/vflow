@@ -47,7 +47,7 @@ type TCPHeader struct {
 // UDPHeader represents UDP header
 type UDPHeader struct {
 	SrcPort int `json:"src_port"`
-	DstPort int `json:"src_port"`
+	DstPort int `json:"dst_port"`
 }
 
 var (

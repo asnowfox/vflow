@@ -86,24 +86,24 @@ type EthernetInterfaceCounters struct {
 
 // TokenRingCounters represents Token Ring Counters - see RFC 1748
 type TokenRingCounters struct {
-	LineErrors         uint32 `json:"index"`
-	BurstErrors        uint32 `json:"index"`
-	ACErrors           uint32 `json:"index"`
-	AbortTransErrors   uint32 `json:"index"`
-	InternalErrors     uint32 `json:"index"`
-	LostFrameErrors    uint32 `json:"index"`
-	ReceiveCongestions uint32 `json:"index"`
-	FrameCopiedErrors  uint32 `json:"index"`
-	TokenErrors        uint32 `json:"index"`
-	SoftErrors         uint32 `json:"index"`
-	HardErrors         uint32 `json:"index"`
-	SignalLoss         uint32 `json:"index"`
-	TransmitBeacons    uint32 `json:"index"`
-	Recoverys          uint32 `json:"index"`
-	LobeWires          uint32 `json:"index"`
-	Removes            uint32 `json:"index"`
-	Singles            uint32 `json:"index"`
-	FreqErrors         uint32 `json:"index"`
+	LineErrors         uint32 `json:"line_errors"`
+	BurstErrors        uint32 `json:"burst_errors"`
+	ACErrors           uint32 `json:"ace_errors"`
+	AbortTransErrors   uint32 `json:"abort_trans_errors"`
+	InternalErrors     uint32 `json:"internal_errors"`
+	LostFrameErrors    uint32 `json:"lost_frame_errors"`
+	ReceiveCongestions uint32 `json:"receive_congestions"`
+	FrameCopiedErrors  uint32 `json:"frame_copied_errors"`
+	TokenErrors        uint32 `json:"token_errors"`
+	SoftErrors         uint32 `json:"soft_errors"`
+	HardErrors         uint32 `json:"hard_errors"`
+	SignalLoss         uint32 `json:"signal_loss"`
+	TransmitBeacons    uint32 `json:"transmit_beacons"`
+	Recoveries         uint32 `json:"recoveries"`
+	LobeWires          uint32 `json:"lobe_wires"`
+	Removes            uint32 `json:"removes"`
+	Singles            uint32 `json:"singles"`
+	FreqErrors         uint32 `json:"freq_errors"`
 }
 
 // VGCounters represents 100 BaseVG interface counters - see RFC 2020
@@ -327,7 +327,7 @@ func (tr *TokenRingCounters) unmarshal(r io.Reader) error {
 		&tr.HardErrors,
 		&tr.SignalLoss,
 		&tr.TransmitBeacons,
-		&tr.Recoverys,
+		&tr.Recoveries,
 		&tr.LobeWires,
 		&tr.Removes,
 		&tr.Singles,
