@@ -33,10 +33,10 @@ const (
 
 // Packet represents layer 2,3,4 available info
 type Packet struct {
-	L2   Datalink    `json:"l2`
-	L3   interface{} `json:"l3`
-	L4   interface{} `json:"l4`
-	Data []byte      `json:"data`
+	L2   Datalink
+	L3   interface{}
+	L4   interface{}
+	Data []byte
 }
 
 var (

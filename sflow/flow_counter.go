@@ -46,110 +46,110 @@ const (
 
 // GenericInterfaceCounters represents Generic Interface Counters RFC2233
 type GenericInterfaceCounters struct {
-	Index               uint32 `json:"index"`
-	Type                uint32 `json:"type"`
-	Speed               uint64 `json:"speed"`
-	Direction           uint32 `json:"direction"`
-	Status              uint32 `json:"status"`
-	InOctets            uint64 `json:"in_octets"`
-	InUnicastPackets    uint32 `json:"in_unicast_packets"`
-	InMulticastPackets  uint32 `json:"in_multicast_packets"`
-	InBroadcastPackets  uint32 `json:"in_broadcast_packets"`
-	InDiscards          uint32 `json:"in_discards"`
-	InErrors            uint32 `json:"in_errors"`
-	InUnknownProtocols  uint32 `json:"in_unknown_protocols"`
-	OutOctets           uint64 `json:"out_octets"`
-	OutUnicastPackets   uint32 `json:"out_unicast_packets"`
-	OutMulticastPackets uint32 `json:"out_multicast_packets"`
-	OutBroadcastPackets uint32 `json:"out_broadcast_packets"`
-	OutDiscards         uint32 `json:"out_discards"`
-	OutErrors           uint32 `json:"out_errors"`
-	PromiscuousMode     uint32 `json:"promiscuous_mode"`
+	Index               uint32
+	Type                uint32
+	Speed               uint64
+	Direction           uint32
+	Status              uint32
+	InOctets            uint64
+	InUnicastPackets    uint32
+	InMulticastPackets  uint32
+	InBroadcastPackets  uint32
+	InDiscards          uint32
+	InErrors            uint32
+	InUnknownProtocols  uint32
+	OutOctets           uint64
+	OutUnicastPackets   uint32
+	OutMulticastPackets uint32
+	OutBroadcastPackets uint32
+	OutDiscards         uint32
+	OutErrors           uint32
+	PromiscuousMode     uint32
 }
 
 // EthernetInterfaceCounters represents Ethernet Interface Counters RFC2358
 type EthernetInterfaceCounters struct {
-	AlignmentErrors           uint32 `json:"alignment_errors"`
-	FCSErrors                 uint32 `json:"fca_errors "`
-	SingleCollisionFrames     uint32 `json:"single_collision_frames"`
-	MultipleCollisionFrames   uint32 `json:"multiple_collision_frames"`
-	SQETestErrors             uint32 `json:"sqe_test_errors"`
-	DeferredTransmissions     uint32 `json:"deferred_transmissions"`
-	LateCollisions            uint32 `json:"late_collisions"`
-	ExcessiveCollisions       uint32 `json:"excessive_collisions"`
-	InternalMACTransmitErrors uint32 `json:"internal_mac_transmit_errors"`
-	CarrierSenseErrors        uint32 `json:"carrier_sense_errors"`
-	FrameTooLongs             uint32 `json:"frame_too_longs"`
-	InternalMACReceiveErrors  uint32 `json:"internal_mac_receive_errors"`
-	SymbolErrors              uint32 `json:"symbol_errors"`
+	AlignmentErrors           uint32
+	FCSErrors                 uint32
+	SingleCollisionFrames     uint32
+	MultipleCollisionFrames   uint32
+	SQETestErrors             uint32
+	DeferredTransmissions     uint32
+	LateCollisions            uint32
+	ExcessiveCollisions       uint32
+	InternalMACTransmitErrors uint32
+	CarrierSenseErrors        uint32
+	FrameTooLongs             uint32
+	InternalMACReceiveErrors  uint32
+	SymbolErrors              uint32
 }
 
 // TokenRingCounters represents Token Ring Counters - see RFC 1748
 type TokenRingCounters struct {
-	LineErrors         uint32 `json:"line_errors"`
-	BurstErrors        uint32 `json:"burst_errors"`
-	ACErrors           uint32 `json:"ace_errors"`
-	AbortTransErrors   uint32 `json:"abort_trans_errors"`
-	InternalErrors     uint32 `json:"internal_errors"`
-	LostFrameErrors    uint32 `json:"lost_frame_errors"`
-	ReceiveCongestions uint32 `json:"receive_congestions"`
-	FrameCopiedErrors  uint32 `json:"frame_copied_errors"`
-	TokenErrors        uint32 `json:"token_errors"`
-	SoftErrors         uint32 `json:"soft_errors"`
-	HardErrors         uint32 `json:"hard_errors"`
-	SignalLoss         uint32 `json:"signal_loss"`
-	TransmitBeacons    uint32 `json:"transmit_beacons"`
-	Recoveries         uint32 `json:"recoveries"`
-	LobeWires          uint32 `json:"lobe_wires"`
-	Removes            uint32 `json:"removes"`
-	Singles            uint32 `json:"singles"`
-	FreqErrors         uint32 `json:"freq_errors"`
+	LineErrors         uint32
+	BurstErrors        uint32
+	ACErrors           uint32
+	AbortTransErrors   uint32
+	InternalErrors     uint32
+	LostFrameErrors    uint32
+	ReceiveCongestions uint32
+	FrameCopiedErrors  uint32
+	TokenErrors        uint32
+	SoftErrors         uint32
+	HardErrors         uint32
+	SignalLoss         uint32
+	TransmitBeacons    uint32
+	Recoveries         uint32
+	LobeWires          uint32
+	Removes            uint32
+	Singles            uint32
+	FreqErrors         uint32
 }
 
 // VGCounters represents 100 BaseVG interface counters - see RFC 2020
 type VGCounters struct {
-	InHighPriorityFrames    uint32 `json:"in_high_priority_frames"`
-	InHighPriorityOctets    uint64 `json:"in_high_priority_octets"`
-	InNormPriorityFrames    uint32 `json:"in_norm_priority_frames"`
-	InNormPriorityOctets    uint64 `json:"in_norm_priority_octets"`
-	InIPMErrors             uint32 `json:"in_ipm_errors"`
-	InOversizeFrameErrors   uint32 `json:"in_oversize_frame_errors"`
-	InDataErrors            uint32 `json:"in_data_errors"`
-	InNullAddressedFrames   uint32 `json:"in_null_addressed_frames"`
-	OutHighPriorityFrames   uint32 `json:"out_high_priority_frames"`
-	OutHighPriorityOctets   uint64 `json:"out_high_priority_octets"`
-	TransitionIntoTrainings uint32 `json:"transition_into_trainings"`
-	HCInHighPriorityOctets  uint64 `json:"hc_in_high_priority_octets"`
-	HCInNormPriorityOctets  uint64 `json:"hc_in_norm_priority_octets"`
-	HCOutHighPriorityOctets uint64 `json:"hc_out_high_priority_octets"`
+	InHighPriorityFrames    uint32
+	InHighPriorityOctets    uint64
+	InNormPriorityFrames    uint32
+	InNormPriorityOctets    uint64
+	InIPMErrors             uint32
+	InOversizeFrameErrors   uint32
+	InDataErrors            uint32
+	InNullAddressedFrames   uint32
+	OutHighPriorityFrames   uint32
+	OutHighPriorityOctets   uint64
+	TransitionIntoTrainings uint32
+	HCInHighPriorityOctets  uint64
+	HCInNormPriorityOctets  uint64
+	HCOutHighPriorityOctets uint64
 }
 
 // VlanCounters represents VLAN Counters
 type VlanCounters struct {
-	ID               uint32 `json:"id"`
-	Octets           uint64 `json:"octets"`
-	UnicastPackets   uint32 `json:"unicast_packets"`
-	MulticastPackets uint32 `json:"multicast_packets"`
-	BroadcastPackets uint32 `json:"broadcast_packets"`
-	Discards         uint32 `json:"discards"`
+	ID               uint32
+	Octets           uint64
+	UnicastPackets   uint32
+	MulticastPackets uint32
+	BroadcastPackets uint32
+	Discards         uint32
 }
 
 // ProcessorCounters represents Processor Information
 type ProcessorCounters struct {
-	CPU5s       uint32 `json:"cpu5s"`
-	CPU1m       uint32 `json:"cpu1m"`
-	CPU5m       uint32 `json:"cpu5m"`
-	TotalMemory uint64 `json:"total_memory"`
-	FreeMemory  uint64 `json:"free_memory"`
+	CPU5s       uint32
+	CPU1m       uint32
+	CPU5m       uint32
+	TotalMemory uint64
+	FreeMemory  uint64
 }
 
 // CounterSample represents the periodic sampling or polling of counters associated with a Data Source
 type CounterSample struct {
-	SequenceNo   uint32            `json:"sequence_no"`
-	SourceIDType byte              `json:"source_id_type"`
-	SourceIDIdx  uint32            `json:"source_id_idx"`
-	RecordsNo    uint32            `json:"records_no"`
-	Records      map[string]Record `json:"records"`
+	SequenceNo   uint32
+	SourceIDType byte
+	SourceIDIdx  uint32
+	RecordsNo    uint32
+	Records      map[string]Record
 }
 
 func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
@@ -181,37 +181,37 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["generic_int"] = d
+			cs.Records["GenericInt"] = d
 		case SFEthernetInterfaceCounters:
 			d, err := decodeEthIntCounters(r)
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["ethernet_int"] = d
+			cs.Records["EthernetInt"] = d
 		case SFTokenRingInterfaceCounters:
 			d, err := decodeTokenRingCounters(r)
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["token_ring_int"] = d
+			cs.Records["TokenRingInt"] = d
 		case SF100BaseVGInterfaceCounters:
 			d, err := decodeVGCounters(r)
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["sf100_vg_int"] = d
+			cs.Records["SF100VgInt"] = d
 		case SFVLANCounters:
 			d, err := decodeVlanCounters(r)
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["vlan"] = d
+			cs.Records["VLAN"] = d
 		case SFProcessorCounters:
 			d, err := decodedProcessorCounters(r)
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["processor"] = d
+			cs.Records["Processor"] = d
 		default:
 			r.Seek(int64(rTypeLength), 1)
 		}

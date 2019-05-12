@@ -9,7 +9,7 @@
 //:
 //: Licensed under the Apache License, Version 2.0 (the "License");
 //: you may not use this file except in compliance with the License.
-//: You may obtain a copy of the License at
+//: You may obtain a copy of the License at:
 //:
 //:     http://www.apache.org/licenses/LICENSE-2.0
 //:
@@ -37,23 +37,22 @@ const (
 
 // TCPHeader represents TCP header
 type TCPHeader struct {
-	SrcPort    int `json:"src_port"`
-	DstPort    int `json:"dst_port"`
-	DataOffset int `json:"data_offset"`
-	Reserved   int `json:"reserved"`
-	Flags      int `json:"flags"`
+	SrcPort    int
+	DstPort    int
+	DataOffset int
+	Reserved   int
+	Flags      int
 }
 
 // UDPHeader represents UDP header
 type UDPHeader struct {
-	SrcPort int `json:"src_port"`
-	DstPort int `json:"dst_port"`
+	SrcPort int
+	DstPort int
 }
 
 var (
-	errShortTCPHeaderLength   = errors.New("short TCP header length")
-	errShortUDPHeaderLength   = errors.New("short UDP header length")
-	errShortVXLanHeaderLength = errors.New("short VXLAN header length")
+	errShortTCPHeaderLength = errors.New("short TCP header length")
+	errShortUDPHeaderLength = errors.New("short UDP header length")
 )
 
 func decodeTCP(b []byte) (TCPHeader, error) {

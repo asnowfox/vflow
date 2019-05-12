@@ -34,13 +34,13 @@ import "errors"
 
 type ICMP struct {
 	// Type is ICMP type
-	Type int `json:"type"`
+	Type int
 
 	// Code is ICMP subtype
-	Code int `json:"code"`
+	Code int
 
 	// Rest of Header
-	RestHeader []byte `json:"rest_header"`
+	RestHeader []byte
 }
 
 var errICMPHLenTooSHort = errors.New("ICMP header length is too short")

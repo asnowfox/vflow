@@ -30,16 +30,16 @@ import (
 // Datalink represents layer two IEEE 802.11
 type Datalink struct {
 	// SrcMAC represents source MAC address
-	SrcMAC string `json:"src_mac"`
+	SrcMAC string
 
 	// DstMAC represents destination MAC address
-	DstMAC string `json:"dst_mac"`
+	DstMAC string
 
 	// Vlan represents VLAN value
-	Vlan int `json:"vlan_id"`
+	Vlan int
 
 	// EtherType represents upper layer type value
-	EtherType uint16 `json:"ether_type"`
+	EtherType uint16
 }
 
 const (

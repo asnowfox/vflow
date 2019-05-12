@@ -29,29 +29,29 @@ import (
 
 // IPv4Header represents an IPv4 header
 type IPv4Header struct {
-	Version  int    `json:"version"`         // protocol version
-	TOS      int    `json:"tos"`             // type-of-service
-	TotalLen int    `json:"total_len"`       // packet total length
-	ID       int    `json:"id"`              // identification
-	Flags    int    `json:"flags"`           // flags
-	FragOff  int    `json:"fragment_offset"` // fragment offset
-	TTL      int    `json:"ttl"`             // time-to-live
-	Protocol int    `json:"protocol"`        // next protocol
-	Checksum int    `json:"check_sum"`       // checksum
-	Src      string `json:"src_ip"`          // source address
-	Dst      string `json:"dst_ip"`          // destination address
+	Version  int    // protocol version
+	TOS      int    // type-of-service
+	TotalLen int    // packet total length
+	ID       int    // identification
+	Flags    int    // flags
+	FragOff  int    // fragment offset
+	TTL      int    // time-to-live
+	Protocol int    // next protocol
+	Checksum int    // checksum
+	Src      string // source address
+	Dst      string // destination address
 }
 
 // IPv6Header represents an IPv6 header
 type IPv6Header struct {
-	Version      int    `json:"version"`        // protocol version
-	TrafficClass int    `json:"traffic_class"`  // traffic class
-	FlowLabel    int    `json:"flow_label"`     // flow label
-	PayloadLen   int    `json:"payload_length"` // payload length
-	NextHeader   int    `json:"next_layer"`     // next header
-	HopLimit     int    `json:"hop_limit"`      // hop limit
-	Src          string `json:"src_ip"`         // source address
-	Dst          string `json:"dst_ip"`         // destination address
+	Version      int    // protocol version
+	TrafficClass int    // traffic class
+	FlowLabel    int    // flow label
+	PayloadLen   int    // payload length
+	NextHeader   int    // next header
+	HopLimit     int    // hop limit
+	Src          string // source address
+	Dst          string // destination address
 }
 
 const (

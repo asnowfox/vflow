@@ -46,17 +46,17 @@ type SFDecoder struct {
 
 // SFDatagram represents sFlow datagram
 type SFDatagram struct {
-	Version    uint32    `json:"version"`        // Datagram version
-	IPVersion  uint32    `json:"ip_version"`     // Data gram sFlow version
-	AgentSubID uint32    `json:"agent_sub_id"`   // Identifies a source of sFlow data
-	SequenceNo uint32    `json:"seq_number"`     // Sequence of sFlow Datagrams
-	SysUpTime  uint32    `json:"sys_uptime"`     // Current time (in milliseconds since device last booted
-	SamplesNo  uint32    `json:"samples_number"` // Number of samples
-	Samples    []Sample  `json:"samples"`
-	Counters   []Counter `json:"counters"`
+	Version    uint32 // Datagram version
+	IPVersion  uint32 // Data gram sFlow version
+	AgentSubID uint32 // Identifies a source of sFlow data
+	SequenceNo uint32 // Sequence of sFlow Datagrams
+	SysUpTime  uint32 // Current time (in milliseconds since device last booted
+	SamplesNo  uint32 // Number of samples
+	Samples    []Sample
+	Counters   []Counter
 
-	IPAddress net.IP `json:"agent_ip"`     // Agent IP address
-	ColTime   int64  `json:"collect_time"` // Collected time
+	IPAddress net.IP // Agent IP address
+	ColTime   int64  // Collected time
 }
 
 // SFSampledHeader represents sFlow sample header
