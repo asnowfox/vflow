@@ -24,12 +24,12 @@ package main
 
 import (
 	"flag"
+	"github.com/VerizonDigital/vflow/stress/hammer"
 	"log"
 	"net"
 	"sync"
 	"time"
-
-	"./hammer"
+	//"./hammer"
 )
 
 var opts = struct {
