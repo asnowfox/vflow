@@ -2,8 +2,8 @@ package snmp
 
 import (
 	"github.com/VerizonDigital/vflow/vlogger"
-	"github.com/coreos/etcd/client"
-	"github.com/influxdata/influxdb/client/v2"
+	//"github.com/coreos/etcd/client"
+	"github.com/influxdata/influxdb1-client/v2"
 	"strconv"
 	"time"
 )
@@ -21,8 +21,8 @@ func Init(db string, uname string, passwd string) {
 	password = passwd
 }
 
-func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameList []string,ifAlainMap map[int]string,
-		ifInOctList []uint64, ifOutOctList []uint64, statusMap map[int]int,ifToNfIndexMap map[int]int) {
+func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameList []string, ifAlainMap map[int]string,
+	ifInOctList []uint64, ifOutOctList []uint64, statusMap map[int]int, ifToNfIndexMap map[int]int) {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     hostUrl,
 		Username: username,
@@ -45,10 +45,10 @@ func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameL
 	for i, index := range indexList {
 		// Create a point and add to batch
 		tags := map[string]string{"portIndex": strconv.Itoa(index),
-			"ifDes": nameList[i], "ifAlian":ifAlainMap[index],
-			"ofIndex": strconv.Itoa(ifToNfIndexMap[index]),
-			"operStatus":strconv.Itoa(statusMap[index]),
-			"allDes":strconv.Itoa(index)+"|"+nameList[i]+"|"+ ifAlainMap[index]+"|"+strconv.Itoa(ifToNfIndexMap[index])}
+			"ifDes": nameList[i], "ifAlian": ifAlainMap[index],
+			"ofIndex":    strconv.Itoa(ifToNfIndexMap[index]),
+			"operStatus": strconv.Itoa(statusMap[index]),
+			"allDes":     strconv.Itoa(index) + "|" + nameList[i] + "|" + ifAlainMap[index] + "|" + strconv.Itoa(ifToNfIndexMap[index])}
 		fields := map[string]interface{}{
 			"inOtc":  float64(ifInOctList[i]),
 			"outOtc": float64(ifOutOctList[i]),
@@ -65,7 +65,7 @@ func SaveWalkToInflux(curTime time.Time, deviceIp string, indexList []int, nameL
 	// Write the batch
 	if err := c.Write(bp); err != nil {
 		vlogger.Logger.Printf("write error " + err.Error())
-	}else{
+	} else {
 		vlogger.Logger.Printf("write data success ")
 	}
 
