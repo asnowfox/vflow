@@ -22,7 +22,10 @@
 
 package sflow
 
-import "io"
+import (
+	"github.com/VerizonDigital/vflow/vlogger"
+	"io"
+)
 
 const (
 	// SFGenericInterfaceCounters is Generic interface counters - see RFC 2233
@@ -213,6 +216,8 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 			}
 			cs.Records["Processor"] = d
 		default:
+			vlogger.Logger.Printf("unknow counter, typeFormat is %d", rTypeFormat)
+
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}
