@@ -25,7 +25,6 @@ package sflow
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/VerizonDigital/vflow/vlogger"
 	"io"
 	"net"
 	"time"
@@ -174,7 +173,6 @@ func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
 		return nil, err
 	}
 	if err = read(d.reader, &datagram.SamplesNo); err != nil {
-		vlogger.Logger.Printf("datagrame SamplesNo is %d", datagram.SamplesNo)
 		return nil, err
 	}
 
