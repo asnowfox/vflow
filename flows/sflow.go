@@ -184,10 +184,9 @@ LOOP:
 		reader = bytes.NewReader(msg.body)
 		d := sflow.NewSFDecoder(reader, opts.SFlowTypeFilter)
 		datagram, err := d.SFDecode()
-		if err != nil || len(datagram.Samples) < 1 {
-			vlogger.Logger.Printf("rcvd sflow data from: %s, error datagrame length is %d",
-				msg.raddr, len(datagram.Samples))
-			vlogger.Logger.Println(err)
+		if err != nil || (len(datagram.Samples) < 1 && len(datagram.Counters) < 1) {
+			vlogger.Logger.Printf("rcvd sflow data from: %s, datagram length is %d, counter length is %d",
+				msg.raddr, len(datagram.Samples), len(datagram.Counters))
 			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 			continue
 		}
