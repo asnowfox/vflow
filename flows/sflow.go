@@ -184,9 +184,9 @@ LOOP:
 		reader = bytes.NewReader(msg.body)
 		d := sflow.NewSFDecoder(reader, opts.SFlowTypeFilter)
 		datagram, err := d.SFDecode()
-		if err != nil || (len(datagram.Samples) < 1 && len(datagram.Counters) < 1) {
+		if err != nil || (len(datagram.FlowSamples) < 1 && len(datagram.CounterSample) < 1) {
 			vlogger.Logger.Printf("rcvd sflow data from: %s, datagram length is %d, counter length is %d",
-				msg.raddr, len(datagram.Samples), len(datagram.Counters))
+				msg.raddr, len(datagram.FlowSamples), len(datagram.CounterSample))
 			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 			continue
 		}
@@ -197,13 +197,12 @@ LOOP:
 			vlogger.Logger.Println(err)
 			continue
 		}
-		vlogger.Logger.Printf("rcvd sflow data from: %s, json is %s",
-			msg.raddr, string(b))
 
 		atomic.AddUint64(&s.stats.DecodedCount, 1)
 
 		if opts.Verbose {
-			vlogger.Logger.Println(string(b))
+			vlogger.Logger.Printf("rcvd sflow data from: %s, json is %s",
+				msg.raddr, string(b))
 		}
 		if mqEnabled {
 			select {
