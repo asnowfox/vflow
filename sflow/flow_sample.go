@@ -24,6 +24,7 @@ package sflow
 
 import (
 	"errors"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"io"
 	"net"
 
@@ -231,16 +232,15 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 			if err != nil {
 				return fs, err
 			}
-
 			fs.Records["ExtSwitch"] = d
 		case SFDataExtRouter:
 			d, err := decodeExtRouterData(r, rTypeLength)
 			if err != nil {
 				return fs, err
 			}
-
 			fs.Records["ExtRouter"] = d
 		default:
+			vlogger.Logger.Printf("unknown type %d.", rTypeFormat)
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}

@@ -45,6 +45,41 @@ const (
 
 	// SFProcessorCounters is processor counters
 	SFProcessorCounters = 1001
+
+	SFLCOUNTERS_80211         = 6
+	SFLCOUNTERS_LACP          = 7
+	SFLCOUNTERS_SFP           = 10
+	SFLCOUNTERS_RADIO         = 1002
+	SFLCOUNTERS_OFPORT        = 1004
+	SFLCOUNTERS_PORTNAME      = 1005
+	SFLCOUNTERS_HOST_HID      = 2000 /* host id */
+	SFLCOUNTERS_ADAPTORS      = 2001 /* host adaptors */
+	SFLCOUNTERS_HOST_PAR      = 2002 /* host parent */
+	SFLCOUNTERS_HOST_CPU      = 2003 /* host cpu  */
+	SFLCOUNTERS_HOST_MEM      = 2004 /* host memory  */
+	SFLCOUNTERS_HOST_DSK      = 2005 /* host storage I/O  */
+	SFLCOUNTERS_HOST_NIO      = 2006 /* host network I/O */
+	SFLCOUNTERS_HOST_IP       = 2007
+	SFLCOUNTERS_HOST_ICMP     = 2008
+	SFLCOUNTERS_HOST_TCP      = 2009
+	SFLCOUNTERS_HOST_UDP      = 2010
+	SFLCOUNTERS_HOST_VRT_NODE = 2100 /* host virt node */
+	SFLCOUNTERS_HOST_VRT_CPU  = 2101 /* host virt cpu */
+	SFLCOUNTERS_HOST_VRT_MEM  = 2102 /* host virt mem */
+	SFLCOUNTERS_HOST_VRT_DSK  = 2103 /* host virt storage */
+	SFLCOUNTERS_HOST_VRT_NIO  = 2104 /* host virt network I/O */
+	SFLCOUNTERS_JVM           = 2105 /* java runtime */
+	SFLCOUNTERS_JMX           = 2106 /* java JMX stats */
+	SFLCOUNTERS_MEMCACHE      = 2200 /* memcached (deprecated) */
+	SFLCOUNTERS_HTTP          = 2201 /* http */
+	SFLCOUNTERS_APP           = 2202
+	SFLCOUNTERS_APP_RESOURCE  = 2203
+	SFLCOUNTERS_MEMCACHE2     = 2204 /* memcached */
+	SFLCOUNTERS_VDI           = 2205
+	SFLCOUNTERS_APP_WORKERS   = 2206
+	SFLCOUNTERS_OVSDP         = 2207
+	SFLCOUNTERS_HOST_GPU_NVML = (5703 << 12) + 1 /* = 23359489 */
+	SFLCOUNTERS_BCM_TABLES    = (4413 << 12) + 3
 )
 
 // GenericInterfaceCounters represents Generic Interface Counters RFC2233
