@@ -51,7 +51,7 @@ type FlowSample struct {
 	Drops        uint32 // Number of times a packet was dropped due to lack of resources
 	Input        uint32 // SNMP ifIndex of input interface
 	Output       uint32 // SNMP ifIndex of input interface
-	RecordsNo    uint32 // Number of records to follow
+	RecordsCount uint32 // Number of records to follow
 	Records      map[string]Record
 }
 
@@ -116,7 +116,7 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
-	err = read(r, &fs.RecordsNo)
+	err = read(r, &fs.RecordsCount)
 
 	return err
 }
@@ -211,8 +211,7 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 	}
 
 	fs.Records = make(map[string]Record)
-	vlogger.Logger.Printf("sample recordNumber is %d. error1", fs.RecordsNo)
-	for i := uint32(0); i < fs.RecordsNo; i++ {
+	for i := uint32(0); i < fs.RecordsCount; i++ {
 		if err = read(r, &rTypeFormat); err != nil {
 			vlogger.Logger.Printf("sample typeFormat is %d. error1,err is %s", rTypeFormat, err)
 			return nil, err
@@ -221,7 +220,6 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 			vlogger.Logger.Printf("sample typeFormat is %d. error2", rTypeFormat)
 			return nil, err
 		}
-		vlogger.Logger.Printf("sample typeFormat is %d.", rTypeFormat)
 		switch rTypeFormat {
 		case SFDataRawHeader:
 			d, err := decodeSampledHeader(r)

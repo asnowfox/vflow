@@ -186,7 +186,7 @@ type CounterSample struct {
 	SequenceNo   uint32
 	SourceIDType byte
 	SourceIDIdx  uint32
-	RecordsNo    uint32
+	RecordsCount uint32
 	Records      map[string]Record
 }
 
@@ -204,7 +204,7 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 
 	cs.Records = make(map[string]Record)
 
-	for i := uint32(0); i < cs.RecordsNo; i++ {
+	for i := uint32(0); i < cs.RecordsCount; i++ {
 		if err = read(r, &rTypeFormat); err != nil {
 			return nil, err
 		}
@@ -252,7 +252,6 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 			cs.Records["Processor"] = d
 		default:
 			vlogger.Logger.Printf("unknown counter, typeFormat is %d", rTypeFormat)
-
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}
@@ -499,7 +498,7 @@ func (cs *CounterSample) unmarshal(r io.Reader) error {
 	}
 	cs.SourceIDIdx = uint32(buf[2]) | uint32(buf[1])<<8 | uint32(buf[0])<<16
 
-	err = read(r, &cs.RecordsNo)
+	err = read(r, &cs.RecordsCount)
 
 	return err
 }

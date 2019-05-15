@@ -229,8 +229,8 @@ func TestDecodeSampleHeader(t *testing.T) {
 		t.Error("expected Output 0x2c3, got", sample.Output)
 	}
 
-	if sample.RecordsNo != 0x3 {
-		t.Error("expected RecordsNo 0x3, got", sample.RecordsNo)
+	if sample.RecordsCount != 0x3 {
+		t.Error("expected RecordsCount 0x3, got", sample.RecordsCount)
 	}
 
 }
