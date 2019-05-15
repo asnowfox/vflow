@@ -214,7 +214,7 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 	vlogger.Logger.Printf("sample recordNumber is %d. error1", fs.RecordsNo)
 	for i := uint32(0); i < fs.RecordsNo; i++ {
 		if err = read(r, &rTypeFormat); err != nil {
-			vlogger.Logger.Printf("sample typeFormat is %d. error1", rTypeFormat)
+			vlogger.Logger.Printf("sample typeFormat is %d. error1,err is %s", rTypeFormat, err)
 			return nil, err
 		}
 		if err = read(r, &rTypeLength); err != nil {
