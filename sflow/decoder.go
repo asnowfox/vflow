@@ -46,14 +46,14 @@ type SFDecoder struct {
 
 // SFDatagram represents sFlow datagram
 type SFDatagram struct {
-	Version       uint32 // Datagram version
-	IPVersion     uint32 // Data gram sFlow version
-	AgentSubID    uint32 // Identifies a source of sFlow data
-	SequenceNo    uint32 // Sequence of sFlow Datagrams
-	SysUpTime     uint32 // Current time (in milliseconds since device last booted
-	SamplesCount  uint32 // Number of samples
-	FlowSamples   []Sample
-	CounterSample []Counter
+	Version        uint32 // Datagram version
+	IPVersion      uint32 // Data gram sFlow version
+	AgentSubID     uint32 // Identifies a source of sFlow data
+	SequenceNo     uint32 // Sequence of sFlow Datagrams
+	SysUpTime      uint32 // Current time (in milliseconds since device last booted
+	SamplesCount   uint32 // Number of samples
+	FlowSamples    []Sample
+	CounterSamples []Counter
 
 	IPAddress net.IP // Agent IP address
 	ColTime   int64  // Collected time
@@ -99,7 +99,7 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 	}
 
 	datagram.FlowSamples = []Sample{}
-	datagram.CounterSample = []Counter{}
+	datagram.CounterSamples = []Counter{}
 
 	for i := uint32(0); i < datagram.SamplesCount; i++ {
 		sfTypeFormat, sfDataLength, err := d.getSampleInfo()
@@ -124,7 +124,7 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 			if err != nil {
 				return datagram, err
 			}
-			datagram.CounterSample = append(datagram.CounterSample, d)
+			datagram.CounterSamples = append(datagram.CounterSamples, d)
 		default:
 			d.reader.Seek(int64(sfDataLength), 1)
 		}
