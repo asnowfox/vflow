@@ -109,7 +109,7 @@ func (s *SFlow) Run() {
 	}
 
 	vlogger.Logger.Printf("sFlow is running (UDP: listening on [::]:%d workers#: %d)", s.port, s.workers)
-	if mqEnabled{
+	if mqEnabled {
 		go func() {
 			p := producer.NewProducer(opts.MQName)
 
@@ -124,7 +124,6 @@ func (s *SFlow) Run() {
 			}
 		}()
 	}
-
 
 	go func() {
 		if !opts.DynWorkers {
@@ -186,6 +185,8 @@ LOOP:
 		d := sflow.NewSFDecoder(reader, opts.SFlowTypeFilter)
 		datagram, err := d.SFDecode()
 		if err != nil || len(datagram.Samples) < 1 {
+			vlogger.Logger.Printf("rcvd sflow data from: %s, error",
+				msg.raddr)
 			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 			continue
 		}
@@ -196,13 +197,15 @@ LOOP:
 			vlogger.Logger.Println(err)
 			continue
 		}
+		vlogger.Logger.Printf("rcvd sflow data from: %s, json is %s",
+			msg.raddr, string(b))
 
 		atomic.AddUint64(&s.stats.DecodedCount, 1)
 
 		if opts.Verbose {
 			vlogger.Logger.Println(string(b))
 		}
-		if mqEnabled{
+		if mqEnabled {
 			select {
 			case sFlowMQCh <- append([]byte{}, b...):
 			default:
