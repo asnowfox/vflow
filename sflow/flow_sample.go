@@ -219,7 +219,7 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 		if err = read(r, &rTypeLength); err != nil {
 			return nil, err
 		}
-
+		vlogger.Logger.Printf("sample typeFormat is %d.", rTypeFormat)
 		switch rTypeFormat {
 		case SFDataRawHeader:
 			d, err := decodeSampledHeader(r)
@@ -240,7 +240,7 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 			}
 			fs.Records["ExtRouter"] = d
 		default:
-			vlogger.Logger.Printf("unknown type %d.", rTypeFormat)
+			vlogger.Logger.Printf("unknown sample, typeFormat is %d.", rTypeFormat)
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}

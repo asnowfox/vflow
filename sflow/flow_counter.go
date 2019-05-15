@@ -251,7 +251,7 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 			}
 			cs.Records["Processor"] = d
 		default:
-			vlogger.Logger.Printf("unknow counter, typeFormat is %d", rTypeFormat)
+			vlogger.Logger.Printf("unknown counter, typeFormat is %d", rTypeFormat)
 
 			r.Seek(int64(rTypeLength), 1)
 		}
