@@ -4,17 +4,18 @@ import "io"
 
 //ExpandedFlowSample represents expanded flow sample
 type ExpandedFlowSample struct {
-	SequenceNo   uint32 // Incremented with each flow sample
-	SourceID     byte   // sfSourceID
-	SamplingRate uint32 // sfPacketSamplingRate
-	SamplePool   uint32 // Total number of packets that could have been sampled
-	Drops        uint32 // Number of times a packet was dropped due to lack of resources
-	InputFormat  uint32
-	Input        uint32 // SNMP ifIndex of input interface
-	OutputFormat uint32
-	Output       uint32 // SNMP ifIndex of input interface
-	RecordsNo    uint32 // Number of records to follow
-	Records      map[string]Record
+	SequenceNo    uint32 // Incremented with each flow sample
+	SourceIDType  uint32
+	SourceIDIndex uint32
+	SamplingRate  uint32 // sfPacketSamplingRate
+	SamplePool    uint32 // Total number of packets that could have been sampled
+	Drops         uint32 // Number of times a packet was dropped due to lack of resources
+	InputFormat   uint32
+	Input         uint32 // SNMP ifIndex of input interface
+	OutputFormat  uint32
+	Output        uint32 // SNMP ifIndex of input interface
+	RecordsNo     uint32 // Number of records to follow
+	Records       map[string]Record
 }
 
 func decodeExpandedFlowSample(r io.ReadSeeker) (*ExpandedFlowSample, error) {
@@ -75,11 +76,13 @@ func (fs *ExpandedFlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
-	if err = read(r, &fs.SourceID); err != nil {
+	if err = read(r, &fs.SourceIDType); err != nil {
 		return err
 	}
 
-	r.Seek(3, 1) // skip counter sample decoding
+	if err = read(r, &fs.SourceIDIndex); err != nil {
+		return err
+	}
 
 	if err = read(r, &fs.SamplingRate); err != nil {
 		return err
