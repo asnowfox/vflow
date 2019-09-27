@@ -118,8 +118,8 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		vlogger.Logger.Fatal(err)
 	}
 
-	indexList := make([]int, 0)
-	nameList := make([]string, 0)
+	indexMap := make(map[int]int)
+	nameMap := make(map[int]string)
 	ifAlainMap := make(map[int]string, 0)
 	ifInOctList := make([]uint64, 0)
 	ifOutOctList := make([]uint64, 0)
@@ -149,7 +149,9 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	indexResp, err := s.Walk(ifIndexOid)
 	if err == nil {
 		for _, v := range indexResp {
-			indexList = append(indexList, v.Value.(int))
+			ifIndexStr := v.Name[len(ifOperStatus)+1 : len(v.Name)]
+			ifIndex, _ := strconv.Atoi(ifIndexStr)
+			indexMap[ifIndex] = v.Value.(int)
 		}
 	} else {
 		vlogger.Logger.Printf("snmp walk err3 %e", err)
@@ -181,7 +183,7 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 		return err
 	}
 	if len(ifToNfIndexMap) == 0 {
-		for _, v := range indexList {
+		for _, v := range indexMap {
 			ifToNfIndexMap[v] = v
 		}
 	}
@@ -189,7 +191,9 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	nameResp, err := s.Walk(ifDescOid)
 	if err == nil {
 		for _, v := range nameResp {
-			nameList = append(nameList, v.Value.(string))
+			ifIndexStr := v.Name[len(ifOperStatus)+1 : len(v.Name)]
+			ifIndex, _ := strconv.Atoi(ifIndexStr)
+			nameMap[ifIndex] = v.Value.(string)
 		}
 	} else {
 		vlogger.Logger.Printf("snmp walk err6 %e", err)
@@ -211,28 +215,35 @@ func (task *DevicePortManager) walkIndex(curTime time.Time, DeviceAddress string
 	rwLock.Lock()
 	defer rwLock.Unlock()
 
-	if len(indexList) == len(nameList)  {
-		devicePortMap[DeviceAddress] = make([]PortInfo, 0)
-		devicePortIndexMap[DeviceAddress] = make(map[int]PortInfo) //清空
-		for i, index := range indexList {
-			info := PortInfo{index, nameList[i], ifAlainMap[index], ifToNfIndexMap[index]}
+	devicePortMap[DeviceAddress] = make([]PortInfo, 0)
+	devicePortIndexMap[DeviceAddress] = make(map[int]PortInfo) //清空
+	deletedIndex := make([]int, 0)
+	for _, v := range indexMap {
+		if _, ok := nameMap[v]; ok{ //name中存在这个index
+			info := PortInfo{v, nameMap[v], ifAlainMap[v], ifToNfIndexMap[v]}
 			devicePortMap[DeviceAddress] = append(devicePortMap[DeviceAddress], info)
 			devicePortIndexMap[DeviceAddress][info.NfIndex] = info
+		}else{
+			deletedIndex = append(deletedIndex, v)
 		}
-
-		if isSave {
-			if len(indexList) == len(nameList) && len(nameList) == len(ifInOctList) {
-				SaveWalkToInflux(curTime, DeviceAddress, indexList, nameList, ifAlainMap, ifInOctList, ifOutOctList, statusMap, ifToNfIndexMap)
-			} else {
-				vlogger.Logger.Printf(" %s data not equal  %d,%d", DeviceAddress, len(indexList), len(nameList))
-			}
-		} else {
-			vlogger.Logger.Printf("data is configed not save %s.\r\n", DeviceAddress)
-		}
-	} else {
-		vlogger.Logger.Printf("snmp walk err response is not equal %s", DeviceAddress)
-		return errors.New("snmp walk err response is not equal")
 	}
+
+	for e := range deletedIndex {
+		delete(indexMap,e)
+	}
+
+
+
+	if isSave {
+		//if len(indexList) == len(nameList) && len(nameList) == len(ifInOctList) {
+			SaveWalkToInflux(curTime, DeviceAddress, indexMap, nameMap, ifAlainMap, ifInOctList, ifOutOctList, statusMap, ifToNfIndexMap)
+		//} else {
+		//	vlogger.Logger.Printf(" %s data not equal  %d,%d", DeviceAddress, len(indexList), len(nameList))
+		//}
+	} else {
+		vlogger.Logger.Printf("data is configed not save %s.\r\n", DeviceAddress)
+	}
+
 	return nil
 }
 
