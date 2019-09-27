@@ -36,6 +36,9 @@ const (
 
 	// DataCounterSample defines counter sampling
 	DataCounterSample = 2
+
+	//DataExpandedFlowSample defines expanded flow sampling
+	DataExpandedFlowSample = 3
 )
 
 // SFDecoder represents sFlow decoder
@@ -46,14 +49,14 @@ type SFDecoder struct {
 
 // SFDatagram represents sFlow datagram
 type SFDatagram struct {
-	Version        uint32 // Datagram version
-	IPVersion      uint32 // Data gram sFlow version
-	AgentSubID     uint32 // Identifies a source of sFlow data
-	SequenceNo     uint32 // Sequence of sFlow Datagrams
-	SysUpTime      uint32 // Current time (in milliseconds since device last booted
-	SamplesCount   uint32 // Number of samples
-	FlowSamples    []Sample
-	CounterSamples []Counter
+	Version    uint32 // Datagram version
+	IPVersion  uint32 // Data gram sFlow version
+	AgentSubID uint32 // Identifies a source of sFlow data
+	SequenceNo uint32 // Sequence of sFlow Datagrams
+	SysUpTime  uint32 // Current time (in milliseconds since device last booted
+	SamplesNo  uint32 // Number of samples
+	Samples    []Sample
+	Counters   []Counter
 
 	IPAddress net.IP // Agent IP address
 	ColTime   int64  // Collected time
@@ -68,10 +71,10 @@ type SFSampledHeader struct {
 	HeaderBytes    []byte // Header bytes
 }
 
-// FlowSample represents sFlow sample flow
+// Sample represents sFlow sample flow
 type Sample interface{}
 
-// CounterSample represents sFlow counters
+// Counter represents sFlow counters
 type Counter interface{}
 
 // Record represents sFlow sample record record
@@ -98,10 +101,10 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		return nil, err
 	}
 
-	datagram.FlowSamples = []Sample{}
-	datagram.CounterSamples = []Counter{}
+	datagram.Samples = []Sample{}
+	datagram.Counters = []Counter{}
 
-	for i := uint32(0); i < datagram.SamplesCount; i++ {
+	for i := uint32(0); i < datagram.SamplesNo; i++ {
 		sfTypeFormat, sfDataLength, err := d.getSampleInfo()
 		if err != nil {
 			return nil, err
@@ -118,13 +121,19 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 			if err != nil {
 				return datagram, err
 			}
-			datagram.FlowSamples = append(datagram.FlowSamples, d)
+			datagram.Samples = append(datagram.Samples, d)
 		case DataCounterSample:
 			d, err := decodeFlowCounter(d.reader)
 			if err != nil {
 				return datagram, err
 			}
-			datagram.CounterSamples = append(datagram.CounterSamples, d)
+			datagram.Counters = append(datagram.Counters, d)
+		case DataExpandedFlowSample:
+			d, err := decodeExpandedFlowSample(d.reader)
+			if err != nil {
+				return datagram, err
+			}
+			datagram.Samples = append(datagram.Samples, d)
 		default:
 			d.reader.Seek(int64(sfDataLength), 1)
 		}
@@ -172,7 +181,7 @@ func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
 	if err = read(d.reader, &datagram.SysUpTime); err != nil {
 		return nil, err
 	}
-	if err = read(d.reader, &datagram.SamplesCount); err != nil {
+	if err = read(d.reader, &datagram.SamplesNo); err != nil {
 		return nil, err
 	}
 

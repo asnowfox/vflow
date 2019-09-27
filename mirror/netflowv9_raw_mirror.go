@@ -117,26 +117,26 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 	// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
 	for _, nfData := range flowSet.DataFlowRecords { //[]DecodedField
 		/*
-		0x00: ingress flow
-		0x01: egress flow
+			0x00: ingress flow
+			0x01: egress flow
 		*/
 		if mRule.Direction == -1 { //双向
-			if nfData.Direction == 0 && nfData.InPort == int(mRule.Port){
+			if nfData.Direction == 0 && nfData.InPort == int(mRule.Port) {
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
-			}else if nfData.Direction == 1 && nfData.OutPort == int(mRule.Port) {
+			} else if nfData.Direction == 1 && nfData.OutPort == int(mRule.Port) {
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
-			} else if -1 == int(mRule.Port){ //所有端口
+			} else if -1 == int(mRule.Port) { //所有端口
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
 			}
 
 		} else if mRule.Direction == 0 { //入方向
-			if nfData.InPort == int(mRule.Port) || nfData.InPort == -1{ // input matched
+			if nfData.InPort == int(mRule.Port) || nfData.InPort == -1 { // input matched
 				datas = append(datas, nfData)
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
