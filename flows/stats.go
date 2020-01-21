@@ -25,6 +25,7 @@ package flows
 import (
 	"encoding/json"
 	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
 	"net/http"
@@ -120,7 +121,7 @@ func StatsForwardHandler(exchanger *mirror.Netflowv9Mirror) http.HandlerFunc {
 }
 
 func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger *mirror.Netflowv9Mirror) {
-	if !opts.StatsEnabled {
+	if !utils.Opts.StatsEnabled {
 		return
 	}
 
@@ -131,8 +132,7 @@ func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger 
 		mux.HandleFunc("/forward", StatsForwardHandler(exchanger))
 	}
 
-
-	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
+	addr := net.JoinHostPort(utils.Opts.StatsHTTPAddr, utils.Opts.StatsHTTPPort)
 
 	vlogger.Logger.Println("starting stats web server ...")
 	err := http.ListenAndServe(addr, mux)
@@ -140,4 +140,3 @@ func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger 
 		vlogger.Logger.Fatal(err)
 	}
 }
-

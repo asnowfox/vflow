@@ -42,6 +42,11 @@ type NSQConfig struct {
 	Server string `yaml:"server"`
 }
 
+func (n *NSQ) close() error {
+	n.producer.Stop()
+	return nil
+}
+
 func (n *NSQ) setup(configFile string, logger *log.Logger) error {
 	var (
 		err error
@@ -71,15 +76,15 @@ func (n *NSQ) setup(configFile string, logger *log.Logger) error {
 	return nil
 }
 
-func (n *NSQ) inputMsg(topic string, mCh chan []byte, ec *uint64) {
+func (n *NSQ) inputMsg(mCh chan MQMessage, ec *uint64) {
 	var (
-		msg []byte
+		msg MQMessage
 		err error
 		ok  bool
 	)
 
 	n.logger.Printf("start producer: NSQ, server: %+v, topic: %s\n",
-		n.config.Server, topic)
+		n.config.Server, msg.Topic)
 
 	for {
 		msg, ok = <-mCh
@@ -87,7 +92,7 @@ func (n *NSQ) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 			break
 		}
 
-		err = n.producer.Publish(topic, msg)
+		err = n.producer.Publish(msg.Topic, []byte(msg.Msg))
 		if err != nil {
 			n.logger.Println(err)
 			*ec++

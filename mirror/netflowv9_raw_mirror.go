@@ -3,6 +3,7 @@ package mirror
 import (
 	"fmt"
 	"github.com/VerizonDigital/vflow/netflow/v9"
+	"github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"strconv"
 	"strings"
@@ -24,13 +25,15 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 
 	ec := mirrorMaps[sMsg.AgentID]
 
+	//所有的rule都要匹配一圈
 	for _, mRule := range ec {
 		var msgFlowSets = make([]netflow9.DataFlowSet, 0)
 		if sMsg.DataFlowSets != nil {
 			for _, flowSet := range sMsg.DataFlowSets {
 				//TODO 这里可以缓存区查找该flowSet对应的Rule
 				// agentId_inport_outport -> distAddress:port
-				flowDataSet := t.filterFlowDataSet(sMsg, mRule, flowSet)
+
+				flowDataSet := t.filterFlowDataSet(mRule, flowSet)
 				//该flowSet中有存在的记录
 				if len(flowDataSet.DataFlowRecords) > 0 {
 					msgFlowSets = append(msgFlowSets, flowDataSet)
@@ -42,17 +45,6 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 		if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
 			continue
 		}
-
-		//buf := new(bytes.Buffer)
-		//for _,e := range msgFlowSets {
-		//	b, err := sMsg.JSONMarshal(buf, e.DataFlowRecords)
-		//	if err == nil {
-		//		if strings.Contains(string(b),"{\"i\":8,\"v\":\"0.0.0"){
-		//			vlogger.Logger.Printf("msg is %s, length is %d.",string(b),len(sMsg.DataFlowSets))
-		//		}
-		//
-		//	}
-		//}
 
 		//这个是针对这个rule进行发送的过程
 		var seq uint32 = 0
@@ -98,8 +90,6 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 
 func (t *Netflowv9Mirror) Status() *FlowMirrorStatus {
 	return &FlowMirrorStatus{
-		//QueueSize: len(netflowChannel),
-		//MessageErrorCount:    atomic.LoadUint64(&t.stats.MessageErrorCount),
 		MessageReceivedCount: atomic.LoadUint64(&t.stats.MessageReceivedCount),
 		RawSentCount:         atomic.LoadUint64(&t.stats.RawSentCount),
 		RawErrorCount:        atomic.LoadUint64(&t.stats.RawErrorCount),
@@ -110,12 +100,12 @@ func (t *Netflowv9Mirror) shutdown() {
 
 }
 
-func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, flowSet netflow9.DataFlowSet) netflow9.DataFlowSet {
+func (t *Netflowv9Mirror) filterFlowDataSet(mRule utils.Rule, flowSet netflow9.DataFlowSet) netflow9.DataFlowSet {
 	rtnFlowSet := new(netflow9.DataFlowSet)
 	rtnFlowSet.SetHeader.FlowSetID = flowSet.SetHeader.FlowSetID
 	var datas []netflow9.DataFlowRecord
 	// 从data里面进行匹配，过滤出这个flowSet中满足条件的的flowData,放入 datas数据结构
-	for _, nfData := range flowSet.DataFlowRecords { //[]DecodedField
+	for _, nfData := range flowSet.DataFlowRecords {
 		/*
 			0x00: ingress flow
 			0x01: egress flow
@@ -134,7 +124,6 @@ func (t *Netflowv9Mirror) filterFlowDataSet(msg netflow9.Message, mRule Rule, fl
 				rtnFlowSet.SetHeader.Length += nfData.Length
 				rtnFlowSet.DataFlowRecords = datas
 			}
-
 		} else if mRule.Direction == 0 { //入方向
 			if nfData.InPort == int(mRule.Port) || nfData.InPort == -1 { // input matched
 				datas = append(datas, nfData)

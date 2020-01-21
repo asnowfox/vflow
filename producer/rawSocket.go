@@ -46,6 +46,9 @@ type RawSocketConfig struct {
 	MaxRetry int    `yaml:"retry-max"`
 }
 
+func (rs *RawSocket) close() error {
+	return rs.connection.Close()
+}
 func (rs *RawSocket) setup(configFile string, logger *log.Logger) error {
 	var err error
 	rs.config = RawSocketConfig{
@@ -70,9 +73,9 @@ func (rs *RawSocket) setup(configFile string, logger *log.Logger) error {
 	return nil
 }
 
-func (rs *RawSocket) inputMsg(topic string, mCh chan []byte, ec *uint64) {
+func (rs *RawSocket) inputMsg(mCh chan MQMessage, ec *uint64) {
 	var (
-		msg []byte
+		msg MQMessage
 		err error
 		ok  bool
 	)
@@ -87,7 +90,7 @@ func (rs *RawSocket) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 		}
 
 		for i := 0; ; i++ {
-			_, err = fmt.Fprintf(rs.connection, string(msg)+"\n")
+			_, err = fmt.Fprintf(rs.connection, msg.Msg+"\n")
 			if err == nil {
 				break
 			}

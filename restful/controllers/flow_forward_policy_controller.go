@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/VerizonDigital/vflow/mirror"
 	"github.com/VerizonDigital/vflow/restful/models"
+	"github.com/VerizonDigital/vflow/utils"
 	"github.com/astaxie/beego"
 )
 
@@ -35,9 +36,9 @@ func (o *PolicyController) Get() {
 			return
 		}
 	} else {
-		data := make([]models.RPolicy,0)
+		data := make([]models.RPolicy, 0)
 		configs := mirror.GetPolicies()
-		for _,p := range configs {
+		for _, p := range configs {
 			data = append(data, models.TransPolicy(p))
 		}
 		fmt.Printf("serve all configs\r\n")
@@ -45,9 +46,6 @@ func (o *PolicyController) Get() {
 		o.ServeJSON()
 		return
 	}
-	o.Data["json"] = map[string]interface{}{}
-	o.ServeJSON()
-	return
 }
 
 // @Title Create
@@ -59,59 +57,59 @@ func (o *PolicyController) Get() {
 func (o *PolicyController) Post() {
 	method := o.GetString("method")
 	if method == "add" {
-		var ob mirror.Policy
+		var ob utils.Policy
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-		json := map[string]interface{}{}
+		jsonMap := map[string]interface{}{}
 		if err != nil {
-			json["result"] = -1
-			json["id"] = ""
-			json["message"] = "parse json error"
-			o.Data["json"] = json
+			jsonMap["result"] = -1
+			jsonMap["id"] = ""
+			jsonMap["message"] = "parse json error"
+			o.Data["json"] = jsonMap
 			o.ServeJSON()
 			return
 		}
 		index, msg := mirror.AddPolicy(ob)
-		json["result"] = index
-		json["id"] = ob.PolicyId
-		json["message"] = msg
-		o.Data["json"] = json
+		jsonMap["result"] = index
+		jsonMap["id"] = ob.PolicyId
+		jsonMap["message"] = msg
+		o.Data["json"] = jsonMap
 		o.ServeJSON()
 		return
 	} else if method == "delete" {
 		policyId := o.GetString("policyId")
 		index, msg := mirror.DeletePolicy(policyId)
-		json := map[string]interface{}{}
-		json["result"] = index
-		json["message"] = msg
-		o.Data["json"] = json
+		jsonMap := map[string]interface{}{}
+		jsonMap["result"] = index
+		jsonMap["message"] = msg
+		o.Data["json"] = jsonMap
 		o.ServeJSON()
 		return
 	} else if method == "update" {
 		policyId := o.GetString("policyId")
-		var ob mirror.Policy
+		var ob utils.Policy
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-		json := map[string]interface{}{}
+		jsonMap := map[string]interface{}{}
 		if err != nil {
-			json["result"] = -1
-			json["id"] = ob.PolicyId
-			json["message"] = "parse json error"
-			o.Data["json"] = json
+			jsonMap["result"] = -1
+			jsonMap["id"] = ob.PolicyId
+			jsonMap["message"] = "parse json error"
+			o.Data["json"] = jsonMap
 			o.ServeJSON()
 			return
 		}
 		index, msg := mirror.UpdatePolicy(policyId, ob)
-		json["result"] = index
-		json["message"] = msg
-		json["id"] = ob.PolicyId
-		o.Data["json"] = json
+		jsonMap["result"] = index
+		jsonMap["message"] = msg
+		jsonMap["id"] = ob.PolicyId
+		o.Data["json"] = jsonMap
 		o.ServeJSON()
 		return
 	} else {
-		json := map[string]interface{}{}
-		json["result"] = -1
-		o.Data["json"] = json
-		json["id"] = ""
-		json["message"] = "can not handle method " + method
+		jsonMap := map[string]interface{}{}
+		jsonMap["result"] = -1
+		o.Data["json"] = jsonMap
+		jsonMap["id"] = ""
+		jsonMap["message"] = "can not handle method " + method
 		o.ServeJSON()
 	}
 }

@@ -25,6 +25,8 @@ package producer
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"github.com/Shopify/sarama"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
@@ -32,8 +34,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/Shopify/sarama"
-	"gopkg.in/yaml.v2"
 )
 
 // Kafka represents kafka producer
@@ -54,6 +54,10 @@ type KafkaConfig struct {
 	TLSKeyFile     string   `yaml:"tls-key" env:"TLS_KEY"`
 	CAFile         string   `yaml:"ca-file" env:"CA_FILE"`
 	VerifySSL      bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
+}
+
+func (k *Kafka) close() error {
+	return k.producer.Close()
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
@@ -112,23 +116,22 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
+func (k *Kafka) inputMsg(mCh chan MQMessage, ec *uint64) {
 	var (
-		msg []byte
+		msg MQMessage
 		ok  bool
 	)
 
 	k.logger.Printf("start producer: Kafka, brokers: %+v, topic: %s\n",
-		k.config.Brokers, topic)
+		k.config.Brokers, msg.Topic)
 
 	go func() {
 		for err := range k.producer.Errors() {
 			k.logger.Println(err)
-			str := string(msg[:])
+			str := msg.Msg
 			k.logger.Println(str)
 			*ec++
 		}
@@ -138,16 +141,16 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 		if !ok {
 			break
 		}
+		//如果自带topic，覆盖topic
 
 		kMsg := &sarama.ProducerMessage{
-			Topic: topic,
-			Value: sarama.ByteEncoder(msg),
+			Topic: msg.Topic,
+			Value: sarama.ByteEncoder(msg.Msg),
 		}
 		k.producer.Input() <- kMsg
 
 	}
-
-	k.producer.Close()
+	_ = k.producer.Close()
 }
 
 func (k *Kafka) load(f string) error {
@@ -160,7 +163,6 @@ func (k *Kafka) load(f string) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -187,7 +189,6 @@ func (k Kafka) tlsConfig() *tls.Config {
 			InsecureSkipVerify: k.config.VerifySSL,
 		}
 	}
-
 	return t
 }
 

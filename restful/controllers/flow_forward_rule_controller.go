@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/utils"
 	"github.com/astaxie/beego"
 	"strconv"
 	"strings"
@@ -22,14 +23,14 @@ type RuleController struct {
 // @Failure 403 body is empty
 // @router / [post]
 func (o *RuleController) Post() {
-	var ob mirror.Rule
+	var ob utils.Rule
 	policyId := o.GetString("policyId")
 	ruleId := o.GetString("ruleId")
 	method := o.GetString("method")
 	jsonRtn := map[string]interface{}{}
-	if method == "add"{
+	if method == "add" {
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-		if err != nil{
+		if err != nil {
 			jsonRtn["result"] = -1
 			jsonRtn["id"] = ""
 			jsonRtn["message"] = "parse json error"
@@ -37,21 +38,21 @@ func (o *RuleController) Post() {
 			o.ServeJSON()
 			return
 		}
-		index,msg := mirror.AddRule(policyId,ob)
-		id :=  strconv.Itoa(int(ob.Port))+"_"+strconv.Itoa(int(ob.Direction))+"_"+ob.Source
-		if index < 0{
+		index, msg := mirror.AddRule(policyId, ob)
+		id := strconv.Itoa(int(ob.Port)) + "_" + strconv.Itoa(int(ob.Direction)) + "_" + ob.Source
+		if index < 0 {
 			id = ""
 		}
 		jsonRtn["result"] = index
 		jsonRtn["id"] = id
 		jsonRtn["message"] = msg
-		fmt.Printf("add result %s\r\n",jsonRtn)
+		fmt.Printf("add result %s\r\n", jsonRtn)
 
 		o.Data["json"] = jsonRtn
 		o.ServeJSON()
-	}else if method == "delete"{
-		strs := strings.Split(ruleId,"_")
-		if len(strs) != 3{
+	} else if method == "delete" {
+		strs := strings.Split(ruleId, "_")
+		if len(strs) != 3 {
 			jsonRtn["result"] = -1
 			jsonRtn["id"] = ruleId
 			jsonRtn["message"] = "unknow id"
@@ -59,9 +60,9 @@ func (o *RuleController) Post() {
 			o.ServeJSON()
 			return
 		}
-		port,e1 := strconv.Atoi(strs[0])
-		direction,e2 := strconv.Atoi(strs[1])
-		if e1 != nil && e2 != nil{
+		port, e1 := strconv.Atoi(strs[0])
+		direction, e2 := strconv.Atoi(strs[1])
+		if e1 != nil && e2 != nil {
 			jsonRtn["result"] = -1
 			jsonRtn["id"] = ruleId
 			jsonRtn["message"] = "Unknow rule id"
@@ -69,19 +70,19 @@ func (o *RuleController) Post() {
 			o.ServeJSON()
 			return
 		}
-		rule := mirror.Rule{
+		rule := utils.Rule{
 			Source:      strs[2],
 			Port:        int32(port),
 			Direction:   int(direction),
-			DistAddress: make([]string,0),
+			DistAddress: make([]string, 0),
 		}
-		index,msg := mirror.DeleteRule(policyId,rule)
+		index, msg := mirror.DeleteRule(policyId, rule)
 		jsonRtn := map[string]interface{}{}
 		jsonRtn["id"] = ruleId
 		jsonRtn["result"] = index
 		jsonRtn["message"] = msg
 		o.Data["json"] = jsonRtn
-		fmt.Printf("result %s\r\n",o.Data)
+		fmt.Printf("result %s\r\n", o.Data)
 		o.ServeJSON()
 		return
 	}

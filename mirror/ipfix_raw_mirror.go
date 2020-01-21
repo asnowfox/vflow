@@ -3,6 +3,7 @@ package mirror
 import (
 	"encoding/binary"
 	"github.com/VerizonDigital/vflow/ipfix"
+	"github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"strconv"
 	"strings"
@@ -37,31 +38,31 @@ func (t *IPFixMirror) Run() {
 			atomic.AddUint64(&t.stats.MessageReceivedCount, 1)
 			//cfgMutex.Lock()
 			if _, ok := mirrorMaps[sMsg.AgentID]; !ok {
-			//	cfgMutex.Unlock()
-				vlogger.Logger.Printf("Can not find agent cache, %s. ",sMsg.AgentID)
+				//	cfgMutex.Unlock()
+				vlogger.Logger.Printf("Can not find agent cache, %s. ", sMsg.AgentID)
 				continue
 			}
 			ec := mirrorMaps[sMsg.AgentID]
-			for _, mRule := range ec{
+			for _, mRule := range ec {
 				var msgFlowSets []ipfix.DataFlowSet
-				for _,flowSet := range sMsg.DataFlowSets {
-					flowDataSet := t.filterFlowDataSet(mRule,flowSet)
+				for _, flowSet := range sMsg.DataFlowSets {
+					flowDataSet := t.filterFlowDataSet(mRule, flowSet)
 					//该flowSet中有存在的记录
-					if len(flowDataSet.DataSets) > 0  {
+					if len(flowDataSet.DataSets) > 0 {
 						msgFlowSets = append(msgFlowSets, flowDataSet)
 					}
 				}
 				//no data and no template records continue
-				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0{
+				if len(msgFlowSets) == 0 && len(sMsg.TemplateRecords) == 0 {
 					continue
 				}
 				var seq uint32 = 0
-				key := sMsg.AgentID+"_"+strconv.FormatUint(uint64(sMsg.Header.DomainID),10)
+				key := sMsg.AgentID + "_" + strconv.FormatUint(uint64(sMsg.Header.DomainID), 10)
 				// add a lock support
 				seqMutex.Lock()
 				if a, ok := seqMap[key]; ok {
 					seq = a
-				}else{
+				} else {
 					seqMap[key] = 0
 				}
 				seqMap[key] = seqMap[key] + 1
@@ -69,7 +70,7 @@ func (t *IPFixMirror) Run() {
 
 				rBytes := ipfix.Encode(sMsg, seq, msgFlowSets)
 
-				for _,r := range mRule.DistAddress {
+				for _, r := range mRule.DistAddress {
 					dstAddrs := strings.Split(r, ":")
 					dstAddr := dstAddrs[0]
 					dstPort, _ := strconv.Atoi(dstAddrs[1])
@@ -86,13 +87,13 @@ func (t *IPFixMirror) Run() {
 						vlogger.Logger.Printf("can not find raw socket for dist %s", dstAddr)
 					}
 				}
-			}//end rule for
+			} //end rule for
 			//cfgMutex.Unlock()
-		}// end loop
+		} // end loop
 	}()
 }
 
-func (t *IPFixMirror) filterFlowDataSet(mRule Rule,flowSet ipfix.DataFlowSet)ipfix.DataFlowSet{
+func (t *IPFixMirror) filterFlowDataSet(mRule utils.Rule, flowSet ipfix.DataFlowSet) ipfix.DataFlowSet {
 	rtnFlowSet := new(ipfix.DataFlowSet)
 	rtnFlowSet.SetHeader.SetID = flowSet.SetHeader.SetID
 	var datas [][]ipfix.DecodedField
@@ -113,7 +114,7 @@ func (t *IPFixMirror) filterFlowDataSet(mRule Rule,flowSet ipfix.DataFlowSet)ipf
 			} else if id == OutputId {
 				outputFound = true
 				port := parsePort(decodedData.Value)
-				if port == uint32(mRule.Port)  {
+				if port == uint32(mRule.Port) {
 					outputMatch = true
 				}
 			}
@@ -126,13 +127,12 @@ func (t *IPFixMirror) filterFlowDataSet(mRule Rule,flowSet ipfix.DataFlowSet)ipf
 		}
 		if inputMatch && outputMatch { // input and output matched
 			datas = append(datas, nfData)
-			rtnFlowSet.SetHeader.Length+= dataLen
+			rtnFlowSet.SetHeader.Length += dataLen
 			rtnFlowSet.DataSets = datas
 		}
 	}
 	if rtnFlowSet.SetHeader.Length > 0 {
-		rtnFlowSet.SetHeader.Length+=4
+		rtnFlowSet.SetHeader.Length += 4
 	}
 	return *rtnFlowSet
 }
-

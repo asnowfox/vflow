@@ -8,20 +8,6 @@ import (
 	"os"
 )
 
-type Policy struct {
-	PolicyId      string `json:"policyId"`
-	TargetAddress []string `json:"targetAddress"`
-	Enable        int    `json:"enable"`
-	Rules         []Rule `json:"rules"`
-}
-
-type Rule struct {
-	Source      string `json:"source"`
-	Port      int32  `json:"port"`
-	Direction     int   `json:"direction"`
-	DistAddress []string `json:"distAddress"`
-}
-
 func LoadPolicy(mirrorCfg string) error {
 	b, err := ioutil.ReadFile(mirrorCfg)
 	if err != nil {
@@ -31,8 +17,8 @@ func LoadPolicy(mirrorCfg string) error {
 	}
 	err = json.Unmarshal(b, &policyConfigs)
 	if err != nil {
-		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
-		fmt.Printf("Mirror config file is worong,exit! \n")
+		vlogger.Logger.Printf("Mirror config file is wrong, exit! \n")
+		fmt.Printf("Mirror config file is wrong,exit! \n")
 		os.Exit(-1)
 		return err
 	}

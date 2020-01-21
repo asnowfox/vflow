@@ -33,8 +33,8 @@ type Producer struct {
 	MQConfigFile string
 	MQErrorCount *uint64
 
-	Topic string
-	Chan  chan []byte
+	//Topic string
+	Chan chan MQMessage
 
 	Logger *log.Logger
 }
@@ -42,7 +42,13 @@ type Producer struct {
 // MQueue represents messaging queue methods
 type MQueue interface {
 	setup(string, *log.Logger) error
-	inputMsg(string, chan []byte, *uint64)
+	close() error
+	inputMsg(chan MQMessage, *uint64)
+}
+
+type MQMessage struct {
+	Topic string
+	Msg   string
 }
 
 // NewProducer constructs new Messaging Queue
@@ -74,8 +80,8 @@ func (p *Producer) Run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		topic := p.Topic
-		p.MQ.inputMsg(topic, p.Chan, p.MQErrorCount)
+		//topic := p.Topic
+		p.MQ.inputMsg(p.Chan, p.MQErrorCount)
 	}()
 
 	wg.Wait()
@@ -86,4 +92,7 @@ func (p *Producer) Run() error {
 // Shutdown stops the producer
 func (p *Producer) Shutdown() {
 	close(p.Chan)
+}
+
+func (p *Producer) ListPolicy() {
 }

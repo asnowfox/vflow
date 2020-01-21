@@ -24,6 +24,7 @@ package flows
 
 import (
 	"github.com/VerizonDigital/vflow/mirror"
+	. "github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
 )
@@ -35,22 +36,22 @@ func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 		msg IPFIXUDPMsg
 	)
 
-	if opts.IPFIXMirrorAddr == "" {
+	if Opts.IPFIXMirrorAddr == "" {
 		return
 	}
 
-	for w := 0; w < opts.IPFIXMirrorWorkers; w++ {
-		dst := net.ParseIP(opts.IPFIXMirrorAddr)
+	for w := 0; w < Opts.IPFIXMirrorWorkers; w++ {
+		dst := net.ParseIP(Opts.IPFIXMirrorAddr)
 
 		if dst.To4() != nil {
-			go mirrorIPFIX(dst, opts.IPFIXMirrorPort, ch4)
+			go mirrorIPFIX(dst, Opts.IPFIXMirrorPort, ch4)
 		} else {
-			go mirrorIPFIX(dst, opts.IPFIXMirrorPort, ch6)
+			go mirrorIPFIX(dst, Opts.IPFIXMirrorPort, ch6)
 		}
 	}
 
 	ipfixMirrorEnabled = true
-	vlogger.Logger.Printf("ipfix mirror service is running (workers#: %d) ...", opts.IPFIXMirrorWorkers)
+	vlogger.Logger.Printf("ipfix mirror service is running (workers#: %d) ...", Opts.IPFIXMirrorWorkers)
 
 	for {
 		msg = <-ch
@@ -64,7 +65,7 @@ func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 
 func mirrorIPFIX(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 	var (
-		packet = make([]byte, opts.IPFIXUDPSize)
+		packet = make([]byte, Opts.IPFIXUDPSize)
 		msg    IPFIXUDPMsg
 		pLen   int
 		err    error
@@ -113,7 +114,7 @@ func mirrorIPFIX(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 		copy(packet[ipHLen:ipHLen+8], udpHdr)
 		copy(packet[ipHLen+8:], msg.body)
 
-		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
+		ipfixBuffer.Put(msg.body[:Opts.IPFIXUDPSize])
 
 		if err = conn.Send(packet[0 : ipHLen+8+pLen]); err != nil {
 			return err

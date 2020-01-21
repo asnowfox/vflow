@@ -27,7 +27,9 @@ import (
 	"github.com/VerizonDigital/vflow/mirror"
 	"github.com/VerizonDigital/vflow/netflow/v9"
 	"github.com/VerizonDigital/vflow/producer"
+	"github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
+	"github.com/mohae/deepcopy"
 	"net"
 	"path"
 	"strconv"
@@ -38,14 +40,14 @@ import (
 
 // NetflowV9 represents netflow v9 collector
 type NetflowV9 struct {
-	port          int
-	addr          string
-	workers       int
-	stop          bool
-	stats         NetflowV9Stats
-	pktStat       PacketStatistics
-	pool          chan chan struct{}
-	messageMirror *mirror.Netflowv9Mirror
+	port      int
+	addr      string
+	workers   int
+	stop      bool
+	stats     NetflowV9Stats
+	pktStat   PacketStatistics
+	pool      chan chan struct{}
+	udpMirror *mirror.Netflowv9Mirror
 }
 
 // NetflowV9UDPMsg represents netflow v9 UDP data
@@ -67,13 +69,13 @@ type NetflowV9Stats struct {
 }
 
 var (
-	netflowV9UDPCh = make(chan NetflowV9UDPMsg, 1000)
-	netflowV9MQCh  = make(chan []byte, 1000)
-	mCacheNF9      netflow9.MemCache
+	netflowV9UDPCh         = make(chan NetflowV9UDPMsg, 10000)
+	netflowV9MainMQChannel = make(chan producer.MQMessage, 10000)
+	mCacheNF9              netflow9.MemCache
 	// ipfix udp payload pool
 	netflowV9Buffer = &sync.Pool{
 		New: func() interface{} {
-			return make([]byte, opts.NetflowV9UDPSize)
+			return make([]byte, utils.Opts.NetflowV9UDPSize)
 		},
 	}
 )
@@ -81,17 +83,17 @@ var (
 // NewNetflowV9 constructs NetflowV9
 func NewNetflowV9(exc *mirror.Netflowv9Mirror) *NetflowV9 {
 	return &NetflowV9{
-		port:          opts.NetflowV9Port,
-		workers:       opts.NetflowV9Workers,
-		pool:          make(chan chan struct{}, maxWorkers),
-		messageMirror: exc,
+		port:      utils.Opts.NetflowV9Port,
+		workers:   utils.Opts.NetflowV9Workers,
+		pool:      make(chan chan struct{}, utils.MaxWorkers),
+		udpMirror: exc,
 	}
 }
 
 func (i *NetflowV9) Run() {
 
 	// exit if the netflow v9 is disabled
-	if !opts.NetflowV9Enabled {
+	if !utils.Opts.NetflowV9Enabled {
 		vlogger.Logger.Println("netflowv9 has been disabled")
 		return
 	}
@@ -117,16 +119,15 @@ func (i *NetflowV9) Run() {
 	vlogger.Logger.Printf("netflow v9 is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 	i.stats.StartTime = time.Now().Unix()
 
-	mCacheNF9 = netflow9.GetCache(opts.NetflowV9TplCacheFile)
-	if mqEnabled {
+	mCacheNF9 = netflow9.GetCache(utils.Opts.NetflowV9TplCacheFile)
+	if utils.MqEnabled {
 		go func() {
-			p := producer.NewProducer(opts.MQName)
-
-			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
+			// 启动Producer 发送消息到消息队列
+			p := producer.NewProducer(utils.Opts.MQName)
+			p.MQConfigFile = path.Join(utils.Opts.VFlowConfigPath, utils.Opts.MQConfigFile)
 			p.MQErrorCount = &i.stats.MQErrorCount
 			p.Logger = vlogger.Logger
-			p.Chan = netflowV9MQCh
-			p.Topic = opts.NetflowV9Topic
+			p.Chan = netflowV9MainMQChannel
 
 			if err := p.Run(); err != nil {
 				vlogger.Logger.Fatal(err)
@@ -136,29 +137,28 @@ func (i *NetflowV9) Run() {
 		vlogger.Logger.Printf("disable netflow v9 json mq transfer")
 	}
 	go func() {
-		if !opts.DynWorkers {
+		if !utils.Opts.DynWorkers {
 			vlogger.Logger.Println("netflow v9 dynamic worker disabled")
 			return
 		}
-
 		i.dynWorkers()
 	}()
 
 	for !i.stop {
 		b := netflowV9Buffer.Get().([]byte)
-		conn.SetReadDeadline(time.Now().Add(1e9))
-		n, raddr, err := conn.ReadFromUDP(b)
+		_ = conn.SetReadDeadline(time.Now().Add(1e9))
+		n, remoteAddress, err := conn.ReadFromUDP(b)
 		if err != nil {
 			continue
 		}
 		atomic.AddUint64(&i.stats.UDPCount, 1)
-		netflowV9UDPCh <- NetflowV9UDPMsg{raddr, b[:n]}
+		netflowV9UDPCh <- NetflowV9UDPMsg{remoteAddress, b[:n]}
 	}
 }
 
 func (i *NetflowV9) Shutdown() {
 	// exit if the netflow v9 is disabled
-	if !opts.NetflowV9Enabled {
+	if !utils.Opts.NetflowV9Enabled {
 		vlogger.Logger.Println("netflow v9 disabled")
 		return
 	}
@@ -169,7 +169,7 @@ func (i *NetflowV9) Shutdown() {
 	time.Sleep(1 * time.Second)
 
 	// dump the templates to storage
-	if err := mCacheNF9.Dump(opts.NetflowV9TplCacheFile); err != nil {
+	if err := mCacheNF9.Dump(utils.Opts.NetflowV9TplCacheFile); err != nil {
 		vlogger.Logger.Println("couldn't not dump template", err)
 	}
 
@@ -190,7 +190,7 @@ func (i *NetflowV9) netflowV9Worker(wQuit chan struct{}) {
 
 LOOP:
 	for {
-		netflowV9Buffer.Put(msg.body[:opts.NetflowV9UDPSize])
+		netflowV9Buffer.Put(msg.body[:utils.Opts.NetflowV9UDPSize])
 		buf.Reset()
 
 		select {
@@ -210,27 +210,71 @@ LOOP:
 			}
 		}
 		//所有的worker的消息由 messageMirror接收
-		if i.messageMirror != nil {
+		if i.udpMirror != nil {
 			msg := *decodedMsg
-			i.messageMirror.ReceiveMessage(msg)
+			i.udpMirror.ReceiveMessage(msg)
 		}
+
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 		i.pktStat.recordSeq(decodedMsg.AgentID, decodedMsg.Header.SrcID, decodedMsg.Header.SeqNum)
-		if decodedMsg.DataFlowSets != nil && mqEnabled {
-			for _, e := range decodedMsg.DataFlowSets {
-				b, err = decodedMsg.JSONMarshal(buf, e.DataFlowRecords)
+
+		dstMessage := deepcopy.Copy(*decodedMsg).(netflow9.Message)
+
+		if dstMessage.DataFlowSets != nil && utils.MqEnabled {
+			for _, e := range dstMessage.DataFlowSets {
+				b, err = dstMessage.JSONMarshal(buf, e.DataFlowRecords)
 				if err != nil {
 					vlogger.Logger.Println(err)
 					continue
 				}
-				select {
-				case netflowV9MQCh <- append([]byte{}, b...):
-				default:
+				netflowV9MainMQChannel <- producer.MQMessage{Topic: utils.Opts.NetflowV9Topic, Msg: string(b[:])} //append([]byte{}, b...)
+				if len(netflowV9MainMQChannel) >= 10000 {
+					vlogger.Logger.Printf("current kafka channel length is great than 10000, length is %d .", len(netflowV9MainMQChannel))
 				}
-				if opts.Verbose {
+
+				if utils.Opts.Verbose {
 					vlogger.Logger.Println(string(b))
 				}
+			} // 发送到主mq之后
+			//这里匹配分发规则到各个消息队列
+			forwardMessageToSubMQ(&dstMessage)
+		} else if dstMessage.DataFlowSets == nil {
+			vlogger.Logger.Printf("DecodedMsg.DataFlowSets is nil, AgentId %s. seqNum is %d.", decodedMsg.AgentID, decodedMsg.Header.SeqNum)
+		}
+	}
+}
+
+func forwardMessageToSubMQ(decodedMsg *netflow9.Message) {
+	topicDataFlowSet := make(map[string][]netflow9.DataFlowRecord)
+	for _, e := range decodedMsg.DataFlowSets {
+		for _, record := range e.DataFlowRecords {
+			topics := producer.ParseTopic(decodedMsg.AgentID, int32(record.InPort), int32(record.OutPort), record.Direction)
+			if topics != nil { //找到了该条数据需要发送的topics
+				for _, topic := range topics {
+					if topicDataFlowSet[topic] == nil {
+						topicDataFlowSet[topic] = make([]netflow9.DataFlowRecord, 0)
+					}
+					topicDataFlowSet[topic] = append(topicDataFlowSet[topic], record)
+				}
 			}
+		}
+	}
+	buf := new(bytes.Buffer)
+	for k := range topicDataFlowSet {
+		decodedMsg.Header.Count = uint16(len(topicDataFlowSet[k]))
+		b, err := decodedMsg.JSONMarshal(buf, topicDataFlowSet[k])
+		if err != nil {
+			vlogger.Logger.Println(err)
+			continue
+		}
+		//k 为 需要发送到的topic
+		//msg := k + "||" + string(b[:])
+		//message1 :=  MQMessage{k,string(b[:])}
+
+		netflowV9MainMQChannel <- producer.MQMessage{Topic: k, Msg: string(b[:])}
+
+		if utils.Opts.Verbose {
+			vlogger.Logger.Println(string(b))
 		}
 	}
 }
@@ -238,7 +282,7 @@ LOOP:
 func (i *NetflowV9) status() *NetflowV9Stats {
 	return &NetflowV9Stats{
 		UDPQueue:     len(netflowV9UDPCh),
-		MessageQueue: len(netflowV9MQCh),
+		MessageQueue: len(netflowV9MainMQChannel),
 		UDPCount:     atomic.LoadUint64(&i.stats.UDPCount),
 		DecodedCount: atomic.LoadUint64(&i.stats.DecodedCount),
 		MQErrorCount: atomic.LoadUint64(&i.stats.MQErrorCount),
@@ -275,7 +319,7 @@ func (i *NetflowV9) dynWorkers() {
 			}
 
 			workers = int(atomic.LoadInt32(&i.stats.Workers))
-			if workers+newWorkers > maxWorkers {
+			if workers+newWorkers > utils.MaxWorkers {
 				vlogger.Logger.Println("netflow v9 :: max out workers")
 				continue
 			}

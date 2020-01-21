@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/VerizonDigital/vflow/ipfix"
+	. "github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"io/ioutil"
 	"net"
@@ -37,10 +38,11 @@ type FlowMirrorStatus struct {
 }
 
 func Init(mirrorCfg string) error {
+	vlogger.Logger.Println("Load flow forward file " + mirrorCfg)
 	err := LoadPolicy(mirrorCfg)
 	if err != nil {
-		vlogger.Logger.Printf("Mirror config file is worong, exit! \n")
-		fmt.Printf("Mirror config file is worong,exit! \n")
+		vlogger.Logger.Printf("Mirror config file is wrong, exit! \n")
+		fmt.Printf("Mirror config file is wrong,exit! \n")
 		os.Exit(-1)
 		return err
 	}
@@ -73,7 +75,7 @@ func parsePort(value interface{}) uint32 {
 func buildMap() {
 	mirrorMaps = make(map[string][]Rule)
 	for _, policy := range policyConfigs {
-		if policy.Enable == 0{
+		if policy.Enable == 0 {
 			continue
 		}
 		targetAddress := policy.TargetAddress
@@ -94,7 +96,7 @@ func buildMap() {
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
 			fmt.Printf("   (Source:%15s, Port %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.DistAddress)
 
-			for  _,rule:= range r.DistAddress {
+			for _, rule := range r.DistAddress {
 				remoteAddr := strings.Split(rule, ":")[0]
 				if _, ok := rawSockets[remoteAddr]; !ok {
 					connect, err := NewRawConn(net.ParseIP(remoteAddr))
@@ -129,7 +131,7 @@ func createRawPacket(srcAddress string, srcPort int,
 	return payload
 }
 
-func NewNetFlowv9Mirror() (*Netflowv9Mirror, error) {
+func NewNetflowv9Mirror() (*Netflowv9Mirror, error) {
 	mirrorInstance := new(Netflowv9Mirror)
 	Netflowv9MirrorInstance = mirrorInstance
 	return mirrorInstance, nil
@@ -141,10 +143,10 @@ func NewIPFixMirror() (*IPFixMirror, error) {
 	return mirrorInstance, nil
 }
 
-func GetPolicies() ([]Policy) {
+func GetPolicies() []Policy {
 	return policyConfigs
 }
-func GetPolicyById(policyId string) (*Policy) {
+func GetPolicyById(policyId string) *Policy {
 	for _, policy := range policyConfigs {
 		if policy.PolicyId == policyId {
 			return &policy
@@ -179,12 +181,12 @@ func UpdatePolicy(policyId string, nPolicy Policy) (int, string) {
 func AddPolicy(policy Policy) (int, string) {
 	vlogger.Logger.Printf("add config sourceId %s, target is %s, configs %d",
 		policy.PolicyId, policy.TargetAddress, len(policy.Rules))
-	for _,target := range policy.TargetAddress {
+	for _, target := range policy.TargetAddress {
 		result, e := HostAddrCheck(target)
 		if !result {
 			return -1, e.Error()
 		}
-		if e != nil{
+		if e != nil {
 			return -1, e.Error()
 		}
 	}
@@ -200,7 +202,6 @@ func AddPolicy(policy Policy) (int, string) {
 			return -1, "already have this policy " + policy.PolicyId
 		}
 	}
-
 
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
@@ -309,24 +310,24 @@ func saveConfigsTofile() {
 	b, err := json.MarshalIndent(policyConfigs, "", "    ")
 
 	if err == nil {
-		ioutil.WriteFile(mirrorCfgFile, b, 0x777)
+		_ = ioutil.WriteFile(mirrorCfgFile, b, 0x777)
 	}
 }
 
 func recycleClients() {
-	go func(){
+	go func() {
 		usedClient := make(map[string]string)
 		for _, policy := range policyConfigs {
-			vlogger.Logger.Printf("check rule for policy %s, rules length is %d.\r\n",policy.PolicyId, len(policy.Rules))
-			fmt.Printf("check rule for policy %s, rules length is %d.\r\n",policy.PolicyId, len(policy.Rules))
+			vlogger.Logger.Printf("check rule for policy %s, rules length is %d.\r\n", policy.PolicyId, len(policy.Rules))
+			fmt.Printf("check rule for policy %s, rules length is %d.\r\n", policy.PolicyId, len(policy.Rules))
 			for _, ecr := range policy.Rules {
 				//找到在用的
-				for _,dist := range ecr.DistAddress {
+				for _, dist := range ecr.DistAddress {
 					dstAddresses := strings.Split(dist, ":")
 					dstAddr := dstAddresses[0]
 					if _, ok := rawSockets[dstAddr]; ok {
-						vlogger.Logger.Printf("used address add %s .\r\n",dstAddr)
-						fmt.Printf("used address add %s .\r\n",dstAddr)
+						vlogger.Logger.Printf("used address add %s .\r\n", dstAddr)
+						fmt.Printf("used address add %s .\r\n", dstAddr)
 						usedClient[dstAddr] = dist
 					}
 				}
@@ -336,14 +337,14 @@ func recycleClients() {
 		for _, mirrorConfig := range policyConfigs {
 			for _, ecr := range mirrorConfig.Rules {
 				//在用的不存在了
-				for _,dist := range ecr.DistAddress {
+				for _, dist := range ecr.DistAddress {
 					dstAddrs := strings.Split(dist, ":")
 					dstAddr := dstAddrs[0]
 					if _, ok := usedClient[dstAddr]; !ok {
-						vlogger.Logger.Printf("recycle dstAddress %s .\r\n",dstAddr)
-						fmt.Printf("recycle dstAddress %s .\r\n",dstAddr)
+						vlogger.Logger.Printf("recycle dstAddress %s .\r\n", dstAddr)
+						fmt.Printf("recycle dstAddress %s .\r\n", dstAddr)
 						raw := rawSockets[dstAddr]
-						raw.Close()
+						_ = raw.Close()
 						delete(rawSockets, dstAddr)
 					}
 				}

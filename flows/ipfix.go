@@ -27,6 +27,7 @@ import (
 	"github.com/VerizonDigital/vflow/ipfix"
 	"github.com/VerizonDigital/vflow/mirror"
 	"github.com/VerizonDigital/vflow/producer"
+	. "github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
 	"path"
@@ -67,7 +68,7 @@ type IPFIXStats struct {
 var (
 	ipfixUDPCh         = make(chan IPFIXUDPMsg, 1000)
 	ipfixMCh           = make(chan IPFIXUDPMsg, 1000)
-	ipfixMQCh          = make(chan []byte, 1000)
+	ipfixMQCh          = make(chan producer.MQMessage, 1000)
 	ipfixMirrorEnabled bool
 
 	// templates memory cache
@@ -76,7 +77,7 @@ var (
 	// ipfix udp payload pool
 	ipfixBuffer = &sync.Pool{
 		New: func() interface{} {
-			return make([]byte, opts.IPFIXUDPSize)
+			return make([]byte, Opts.IPFIXUDPSize)
 		},
 	}
 )
@@ -84,17 +85,17 @@ var (
 // NewIPFIX constructs IPFIX
 func NewIPFIX(flowMirror *mirror.IPFixMirror) *IPFIX {
 	return &IPFIX{
-		port:       opts.IPFIXPort,
-		addr:       opts.IPFIXAddr,
-		workers:    opts.IPFIXWorkers,
+		port:       Opts.IPFIXPort,
+		addr:       Opts.IPFIXAddr,
+		workers:    Opts.IPFIXWorkers,
 		flowMirror: flowMirror,
-		pool:       make(chan chan struct{}, maxWorkers),
+		pool:       make(chan chan struct{}, MaxWorkers),
 	}
 }
 
 func (i *IPFIX) Run() {
 	// exit if the ipfix is disabled
-	if !opts.IPFIXEnabled {
+	if !Opts.IPFIXEnabled {
 		vlogger.Logger.Println("ipfix has been disabled")
 		return
 	}
@@ -117,35 +118,35 @@ func (i *IPFIX) Run() {
 	}
 
 	vlogger.Logger.Printf("ipfix is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
-	ipfix.LoadExtElements(opts.VFlowConfigPath)
+	ipfix.LoadExtElements(Opts.VFlowConfigPath)
 
-	mCache = ipfix.GetCache(opts.IPFIXTplCacheFile)
+	mCache = ipfix.GetCache(Opts.IPFIXTplCacheFile)
 	go ipfix.RPC(mCache, &ipfix.RPCConfig{
-		Enabled: opts.IPFIXRPCEnabled,
+		Enabled: Opts.IPFIXRPCEnabled,
 		Logger:  vlogger.Logger,
 	})
 
 	go mirrorIPFIXDispatcher(ipfixMCh)
-	if mqEnabled {
+	if MqEnabled {
 		go func() {
-			p := producer.NewProducer(opts.MQName)
+			p := producer.NewProducer(Opts.MQName)
 
-			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
+			p.MQConfigFile = path.Join(Opts.VFlowConfigPath, Opts.MQConfigFile)
 			p.MQErrorCount = &i.stats.MQErrorCount
 			p.Logger = vlogger.Logger
 			p.Chan = ipfixMQCh
-			p.Topic = opts.IPFIXTopic
+			//p.Topic = Opts.IPFIXTopic
 
 			if err := p.Run(); err != nil {
 				vlogger.Logger.Fatal(err)
 			}
 		}()
-	}else{
+	} else {
 		vlogger.Logger.Printf("disable json mq transfer")
 	}
 
 	go func() {
-		if !opts.DynWorkers {
+		if !Opts.DynWorkers {
 			vlogger.Logger.Println("IPFIX dynamic worker disabled")
 			return
 		}
@@ -155,7 +156,7 @@ func (i *IPFIX) Run() {
 
 	for !i.stop {
 		b := ipfixBuffer.Get().([]byte)
-		conn.SetReadDeadline(time.Now().Add(1e9))
+		_ = conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
 			continue
@@ -167,7 +168,7 @@ func (i *IPFIX) Run() {
 
 func (i *IPFIX) Shutdown() {
 	// exit if the ipfix is disabled
-	if !opts.IPFIXEnabled {
+	if !Opts.IPFIXEnabled {
 		vlogger.Logger.Println("ipfix disabled")
 		return
 	}
@@ -176,7 +177,7 @@ func (i *IPFIX) Shutdown() {
 	vlogger.Logger.Println("stopping ipfix service gracefully ...")
 	time.Sleep(1 * time.Second)
 	// dump the templates to storage
-	if err := mCache.Dump(opts.IPFIXTplCacheFile); err != nil {
+	if err := mCache.Dump(Opts.IPFIXTplCacheFile); err != nil {
 		vlogger.Logger.Println("couldn't not dump template", err)
 	}
 	// logging and close UDP channel
@@ -186,18 +187,18 @@ func (i *IPFIX) Shutdown() {
 
 func (i *IPFIX) ipfixWorker(wQuit chan struct{}) {
 	var (
-		decodedMsg *ipfix.Message
-		mirror     IPFIXUDPMsg
-		msg        = IPFIXUDPMsg{body: ipfixBuffer.Get().([]byte)}
-		buf        = new(bytes.Buffer)
-		err        error
-		ok         bool
-		b          []byte
+		decodedMsg  *ipfix.Message
+		ipfixMirror IPFIXUDPMsg
+		msg         = IPFIXUDPMsg{body: ipfixBuffer.Get().([]byte)}
+		buf         = new(bytes.Buffer)
+		err         error
+		ok          bool
+		b           []byte
 	)
 
 LOOP:
 	for {
-		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
+		ipfixBuffer.Put(msg.body[:Opts.IPFIXUDPSize])
 		buf.Reset()
 
 		select {
@@ -209,17 +210,17 @@ LOOP:
 			}
 		}
 
-		if opts.Verbose {
+		if Opts.Verbose {
 			vlogger.Logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
 
 		if ipfixMirrorEnabled {
-			mirror.body = ipfixBuffer.Get().([]byte)
-			mirror.raddr = msg.raddr
-			mirror.body = append(mirror.body[:0], msg.body...)
+			ipfixMirror.body = ipfixBuffer.Get().([]byte)
+			ipfixMirror.raddr = msg.raddr
+			ipfixMirror.body = append(ipfixMirror.body[:0], msg.body...)
 			select {
-			case ipfixMCh <- mirror:
+			case ipfixMCh <- ipfixMirror:
 			default:
 			}
 		}
@@ -241,7 +242,7 @@ LOOP:
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
-		if decodedMsg.DataFlowSets != nil && mqEnabled {
+		if decodedMsg.DataFlowSets != nil && MqEnabled {
 			for _, e := range decodedMsg.DataFlowSets {
 				if len(e.DataSets) > 0 {
 					b, err = decodedMsg.JSONMarshal(buf, e.DataSets)
@@ -250,11 +251,11 @@ LOOP:
 						continue
 					}
 					select {
-					case ipfixMQCh <- append([]byte{}, b...):
+					case ipfixMQCh <- producer.MQMessage{Topic: Opts.IPFIXTopic, Msg: string(b[:])}:
 					default:
 					}
 
-					if opts.Verbose {
+					if Opts.Verbose {
 						vlogger.Logger.Println(string(b))
 					}
 				}
@@ -303,7 +304,7 @@ func (i *IPFIX) dynWorkers() {
 			}
 
 			workers = int(atomic.LoadInt32(&i.stats.Workers))
-			if workers+newWorkers > maxWorkers {
+			if workers+newWorkers > MaxWorkers {
 				vlogger.Logger.Println("ipfix :: max out workers")
 				continue
 			}

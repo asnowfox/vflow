@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"github.com/VerizonDigital/vflow/producer"
 	"github.com/VerizonDigital/vflow/sflow"
+	"github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"net"
 	"path"
@@ -69,7 +70,7 @@ var (
 	// sflow udp payload pool
 	sFlowBuffer = &sync.Pool{
 		New: func() interface{} {
-			return make([]byte, opts.SFlowUDPSize)
+			return make([]byte, utils.Opts.SFlowUDPSize)
 		},
 	}
 )
@@ -78,15 +79,15 @@ var (
 func NewSFlow() *SFlow {
 
 	return &SFlow{
-		port:    opts.SFlowPort,
-		workers: opts.SFlowWorkers,
-		pool:    make(chan chan struct{}, maxWorkers),
+		port:    utils.Opts.SFlowPort,
+		workers: utils.Opts.SFlowWorkers,
+		pool:    make(chan chan struct{}, utils.MaxWorkers),
 	}
 }
 
 func (s *SFlow) Run() {
 	// exit if the sflow is disabled
-	if !opts.SFlowEnabled {
+	if !utils.Opts.SFlowEnabled {
 		vlogger.Logger.Println("sflow has been disabled")
 		return
 	}
@@ -109,15 +110,15 @@ func (s *SFlow) Run() {
 	}
 
 	vlogger.Logger.Printf("sFlow is running (UDP: listening on [::]:%d workers#: %d)", s.port, s.workers)
-	if mqEnabled {
+	if utils.MqEnabled {
 		go func() {
-			p := producer.NewProducer(opts.MQName)
+			p := producer.NewProducer(utils.Opts.MQName)
 
-			p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
+			p.MQConfigFile = path.Join(utils.Opts.VFlowConfigPath, utils.Opts.MQConfigFile)
 			p.MQErrorCount = &s.stats.MQErrorCount
 			p.Logger = vlogger.Logger
-			p.Chan = sFlowMQCh
-			p.Topic = opts.SFlowTopic
+			//p.Chan = sFlowMQCh
+			//p.Topic = utils.Opts.SFlowTopic
 
 			if err := p.Run(); err != nil {
 				vlogger.Logger.Fatal(err)
@@ -126,7 +127,7 @@ func (s *SFlow) Run() {
 	}
 
 	go func() {
-		if !opts.DynWorkers {
+		if !utils.Opts.DynWorkers {
 			vlogger.Logger.Println("sFlow dynamic worker disabled")
 			return
 		}
@@ -136,7 +137,7 @@ func (s *SFlow) Run() {
 
 	for !s.stop {
 		b := sFlowBuffer.Get().([]byte)
-		conn.SetReadDeadline(time.Now().Add(1e9))
+		_ = conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
 			continue
@@ -176,43 +177,43 @@ LOOP:
 			}
 		}
 
-		if opts.Verbose {
+		if utils.Opts.Verbose {
 			vlogger.Logger.Printf("rcvd sflow data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
 
 		reader = bytes.NewReader(msg.body)
-		d := sflow.NewSFDecoder(reader, opts.SFlowTypeFilter)
+		d := sflow.NewSFDecoder(reader, utils.Opts.SFlowTypeFilter)
 		datagram, err := d.SFDecode()
 		if err != nil || (len(datagram.Samples) < 1 && len(datagram.Counters) < 1) {
-			if opts.Verbose {
+			if utils.Opts.Verbose {
 				vlogger.Logger.Printf("rcvd sflow data from: %s, datagram length is %d, counter length is %d",
 					msg.raddr, len(datagram.Samples), len(datagram.Counters))
 			}
-			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
+			sFlowBuffer.Put(msg.body[:utils.Opts.SFlowUDPSize])
 			continue
 		}
 
 		b, err = json.Marshal(datagram)
 		if err != nil {
-			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
+			sFlowBuffer.Put(msg.body[:utils.Opts.SFlowUDPSize])
 			vlogger.Logger.Println(err)
 			continue
 		}
 
 		atomic.AddUint64(&s.stats.DecodedCount, 1)
 
-		if opts.Verbose {
+		if utils.Opts.Verbose {
 			vlogger.Logger.Printf("rcvd sflow data from: %s, json is %s",
 				msg.raddr, string(b))
 		}
-		if mqEnabled {
+		if utils.MqEnabled {
 			select {
 			case sFlowMQCh <- append([]byte{}, b...):
 			default:
 			}
 		}
-		sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
+		sFlowBuffer.Put(msg.body[:utils.Opts.SFlowUDPSize])
 	}
 }
 
@@ -255,7 +256,7 @@ func (s *SFlow) dynWorkers() {
 			}
 
 			workers = int(atomic.LoadInt32(&s.stats.Workers))
-			if workers+newWorkers > maxWorkers {
+			if workers+newWorkers > utils.MaxWorkers {
 				vlogger.Logger.Println("sflow :: max out workers")
 				continue
 			}

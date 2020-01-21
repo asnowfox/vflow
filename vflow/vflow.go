@@ -26,8 +26,10 @@ package main
 import (
 	"github.com/VerizonDigital/vflow/flows"
 	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/producer"
 	"github.com/VerizonDigital/vflow/restful"
 	"github.com/VerizonDigital/vflow/snmp"
+	"github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"log"
 	"os"
@@ -38,11 +40,9 @@ import (
 )
 
 var (
-	opts   *flows.Options
+	opts   *utils.Options
 	logger *log.Logger
 )
-
-
 
 func main() {
 	var (
@@ -50,28 +50,38 @@ func main() {
 		signalCh = make(chan os.Signal, 1)
 	)
 
-	opts = flows.GetOptions()
+	opts = utils.InitOptions()
 
 	runtime.GOMAXPROCS(opts.GetCPU())
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
-
-	vlogger.Logger.Printf("startting flow mirror with config file %s....\n",opts.ForwardFile)
-	task,_:=snmp.NewDevicePortManager(opts.CommunityFile)
+	vlogger.Logger.Printf("startting flow mirror with config file %s....\n", opts.FlowForwardFile)
+	task, _ := snmp.NewDevicePortManager(opts.CommunityFile)
 	task.Run()
+	// 初始化流转发文件
+	err := mirror.Init(opts.FlowForwardFile)
+	if err != nil {
+		vlogger.Logger.Printf("Init forwarding error,Exit!")
+		os.Exit(-1)
+	}
+	// 初始化消息转发文件
+	err = producer.Init(opts.QueueForwardFile)
+	if err != nil {
+		vlogger.Logger.Printf("Init queue forward error,Exit!")
+		os.Exit(-1)
+	}
 
-
-	mirror.Init(opts.ForwardFile)
-
-	flowMirror,err1 := mirror.NewNetFlowv9Mirror()
-	ipfixMirror,err2 := mirror.NewIPFixMirror()
+	flowMirror, err1 := mirror.NewNetflowv9Mirror()
+	ipfixMirror, err2 := mirror.NewIPFixMirror()
 
 	if err1 != nil {
 		logger.Printf("can not init netflow mirror. reason %s\n", err1)
+		os.Exit(-1)
 	}
 	if err2 != nil {
 		logger.Printf("can not init ipfix mirror. reason %s\n", err2)
-	}else{
+		os.Exit(-1)
+	} else {
 		ipfixMirror.Run()
 	}
 
@@ -80,11 +90,9 @@ func main() {
 	netflow9 := flows.NewNetflowV9(flowMirror)
 	//delay int32,dstAddress[] DeviceSnmpConfig
 
-
-
-
 	protos := []flows.Proto{sFlow, ipfix, netflow9}
 
+	//利用wait group 确保三种协议启动
 	for _, p := range protos {
 		wg.Add(1)
 		go func(p flows.Proto) {
@@ -94,7 +102,7 @@ func main() {
 	}
 
 	//go statsHTTPServer(ipfix, sFlow, netflow9, flowMirror)
-
+	//启动BeegoServer
 	beegoServer := restful.NewBeegoServer(netflow9)
 	beegoServer.Run()
 

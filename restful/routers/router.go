@@ -19,10 +19,14 @@ func Init(netflowv9 *flows.NetflowV9) {
 	beego.Router("/user", &controllers.UserController{})
 	beego.Router("/policy", &controllers.PolicyController{})
 	beego.Router("/rule", &controllers.RuleController{})
+
+	beego.Router("/queue-policy", &controllers.MQPolicyController{})
+	beego.Router("/queue-rule", &controllers.MQRuleController{})
+
 	beego.Router("/device", &controllers.DeviceController{})
 	beego.Router("/port", &controllers.PortController{})
 
 	controller := &controllers.StatsController{}
 	controller.InitService(*netflowv9)
-	beego.Router("/stats",controller)
+	beego.Router("/stats", controller)
 }

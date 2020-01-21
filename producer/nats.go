@@ -42,6 +42,11 @@ type NATSConfig struct {
 	URL string `yaml:"url"`
 }
 
+func (n *NATS) close() error {
+	n.connection.Close()
+	return nil
+}
+
 func (n *NATS) setup(configFile string, logger *log.Logger) error {
 	var err error
 	n.config = NATSConfig{
@@ -64,15 +69,15 @@ func (n *NATS) setup(configFile string, logger *log.Logger) error {
 	return nil
 }
 
-func (n *NATS) inputMsg(topic string, mCh chan []byte, ec *uint64) {
+func (n *NATS) inputMsg(mCh chan MQMessage, ec *uint64) {
 	var (
-		msg []byte
+		msg MQMessage
 		err error
 		ok  bool
 	)
 
 	n.logger.Printf("start producer: NATS, server: %+v, topic: %s\n",
-		n.config.URL, topic)
+		n.config.URL, msg.Topic)
 
 	for {
 		msg, ok = <-mCh
@@ -80,7 +85,7 @@ func (n *NATS) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 			break
 		}
 
-		err = n.connection.Publish(topic, msg)
+		err = n.connection.Publish(msg.Topic, []byte(msg.Msg))
 		if err != nil {
 			n.logger.Println(err)
 			*ec++

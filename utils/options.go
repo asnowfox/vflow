@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-package flows
+package utils
 
 import (
 	"flag"
@@ -39,25 +39,26 @@ import (
 
 var (
 	version    string
-	maxWorkers = runtime.NumCPU() * 1e4
+	MaxWorkers = runtime.NumCPU() * 1e4
 )
 
 type arrUInt32Flags []uint32
 
-var opts *Options
+var Opts *Options
 
-var mqEnabled = false
+var MqEnabled = false
 
 // Options represents options
 type Options struct {
 	// global options
-	Verbose       bool   `yaml:"verbose"`
-	LogFile       string `yaml:"log-file"`
-	ForwardFile   string `yaml:"mirror-config-file"`
-	CommunityFile string `yaml:"community-config-file"`
-	PIDFile       string `yaml:"pid-file"`
-	CPUCap        string `yaml:"cpu-cap"`
-	DynWorkers    bool   `yaml:"dynamic-workers"`
+	Verbose          bool   `yaml:"verbose"`
+	LogFile          string `yaml:"log-file"`
+	FlowForwardFile  string `yaml:"flow-forward-cfg"`
+	QueueForwardFile string `yaml:"queue-forward-cfg"`
+	CommunityFile    string `yaml:"device-community-cfg"`
+	PIDFile          string `yaml:"pid-file"`
+	CPUCap           string `yaml:"cpu-cap"`
+	DynWorkers       bool   `yaml:"dynamic-workers"`
 	//Logger      *log.Logger
 	version bool
 
@@ -126,15 +127,16 @@ func (a *arrUInt32Flags) Set(value string) error {
 }
 
 // NewOptions constructs new options
-func NewOptions() *Options {
+func newOptions() *Options {
 	return &Options{
-		Verbose:       false,
-		version:       false,
-		DynWorkers:    true,
-		PIDFile:       "/var/run/vflow.pid",
-		ForwardFile:   "/etc/vflow/forward.conf",
-		CommunityFile: "/etc/vflow/snmp.conf",
-		CPUCap:        "100%",
+		Verbose:          false,
+		version:          false,
+		DynWorkers:       true,
+		PIDFile:          "/var/run/vflow.pid",
+		FlowForwardFile:  "/etc/vflow/flow-forward.conf",
+		QueueForwardFile: "/etc/vflow/queue-forward.conf",
+		CommunityFile:    "/etc/vflow/snmp.conf",
+		CPUCap:           "100%",
 
 		StatsEnabled:  true,
 		StatsHTTPPort: "8081",
@@ -172,20 +174,20 @@ func NewOptions() *Options {
 	}
 }
 
-// GetOptions gets options through cmd and file
-func GetOptions() *Options {
-	opts = NewOptions()
+// InitOptions gets options through cmd and file
+func InitOptions() *Options {
+	Opts = newOptions()
 
-	opts.vFlowFlagSet()
-	opts.vFlowVersion()
+	Opts.vFlowFlagSet()
+	Opts.vFlowVersion()
 
-	if opts.Verbose {
+	if Opts.Verbose {
 		vlogger.Logger.Printf("the full logging enabled")
 		vlogger.Logger.SetFlags(log.LstdFlags | log.Lshortfile)
 	}
 
-	if opts.LogFile != "" {
-		f, err := os.OpenFile(opts.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if Opts.LogFile != "" {
+		f, err := os.OpenFile(Opts.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			vlogger.Logger.Println(err)
 		} else {
@@ -193,22 +195,22 @@ func GetOptions() *Options {
 		}
 	}
 
-	if ok := opts.vFlowIsRunning(); ok {
+	if ok := Opts.vFlowIsRunning(); ok {
 		vlogger.Logger.Fatal("the vFlow already is running!")
 	}
 
-	opts.vFlowPIDWrite()
+	Opts.vFlowPIDWrite()
 
 	vlogger.Logger.Printf("Welcome to vFlow v.%s Apache License 2.0", version)
 	vlogger.Logger.Printf("Copyright (C) 2018 Verizon. github.com/VerizonDigital/vflow")
-	if opts.MQName != "none" {
-		mqEnabled = true
+	if Opts.MQName != "none" {
+		MqEnabled = true
 	}
-	return opts
+	return Opts
 }
 
-func (opts Options) vFlowPIDWrite() {
-	f, err := os.OpenFile(opts.PIDFile, os.O_WRONLY|os.O_CREATE, 0666)
+func (Opts Options) vFlowPIDWrite() {
+	f, err := os.OpenFile(Opts.PIDFile, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		vlogger.Logger.Println(err)
 		return
@@ -220,8 +222,8 @@ func (opts Options) vFlowPIDWrite() {
 	}
 }
 
-func (opts Options) vFlowIsRunning() bool {
-	b, err := ioutil.ReadFile(opts.PIDFile)
+func (Opts Options) vFlowIsRunning() bool {
+	b, err := ioutil.ReadFile(Opts.PIDFile)
 	if err != nil {
 		return false
 	}
@@ -235,15 +237,15 @@ func (opts Options) vFlowIsRunning() bool {
 	return true
 }
 
-func (opts Options) vFlowVersion() {
-	if opts.version {
+func (Opts Options) vFlowVersion() {
+	if Opts.version {
 		fmt.Printf("vFlow version: %s\n", version)
 		os.Exit(0)
 	}
 }
 
 // GetCPU returns the number of the CPU
-func (opts Options) GetCPU() int {
+func (Opts Options) GetCPU() int {
 	var (
 		numCPU      int
 		availCPU    = runtime.NumCPU()
@@ -251,8 +253,8 @@ func (opts Options) GetCPU() int {
 		numCPUErr   = "the CPU number should be greater than zero!"
 	)
 
-	if strings.Contains(opts.CPUCap, "%") {
-		pctStr := strings.Trim(opts.CPUCap, "%")
+	if strings.Contains(Opts.CPUCap, "%") {
+		pctStr := strings.Trim(Opts.CPUCap, "%")
 
 		pctInt, err := strconv.Atoi(pctStr)
 		if err != nil {
@@ -265,7 +267,7 @@ func (opts Options) GetCPU() int {
 
 		numCPU = int(float32(availCPU) * (float32(pctInt) / 100))
 	} else {
-		numInt, err := strconv.Atoi(opts.CPUCap)
+		numInt, err := strconv.Atoi(Opts.CPUCap)
 		if err != nil {
 			vlogger.Logger.Fatalf("invalid CPU cap")
 		}
@@ -284,62 +286,63 @@ func (opts Options) GetCPU() int {
 	return numCPU
 }
 
-func (opts *Options) vFlowFlagSet() {
+func (Opts *Options) vFlowFlagSet() {
 
 	var config string
 	flag.StringVar(&config, "config", "/etc/vflow/vflow.conf", "path to config file")
 
-	vFlowLoadCfg(opts)
+	vFlowLoadCfg(Opts)
 
 	// global options
-	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable/disable verbose logging")
-	flag.BoolVar(&opts.DynWorkers, "dynamic-workers", opts.DynWorkers, "enable/disable dynamic workers")
-	flag.BoolVar(&opts.version, "version", opts.version, "show version")
-	flag.StringVar(&opts.LogFile, "log-file", opts.LogFile, "log file name")
-	flag.StringVar(&opts.PIDFile, "pid-file", opts.PIDFile, "pid file name")
-	flag.StringVar(&opts.CPUCap, "cpu-cap", opts.CPUCap, "Maximum amount of CPU [percent / number]")
-	flag.StringVar(&opts.ForwardFile, "mirror-config-file", opts.ForwardFile, "netflow v9 forward config file")
+	flag.BoolVar(&Opts.Verbose, "verbose", Opts.Verbose, "enable/disable verbose logging")
+	flag.BoolVar(&Opts.DynWorkers, "dynamic-workers", Opts.DynWorkers, "enable/disable dynamic workers")
+	flag.BoolVar(&Opts.version, "version", Opts.version, "show version")
+	flag.StringVar(&Opts.LogFile, "log-file", Opts.LogFile, "log file name")
+	flag.StringVar(&Opts.PIDFile, "pid-file", Opts.PIDFile, "pid file name")
+	flag.StringVar(&Opts.CPUCap, "cpu-cap", Opts.CPUCap, "Maximum amount of CPU [percent / number]")
+	flag.StringVar(&Opts.FlowForwardFile, "flow-forward-cfg", Opts.FlowForwardFile, "netflow v9 forward config file")
+	flag.StringVar(&Opts.QueueForwardFile, "queue-forward-cfg", Opts.QueueForwardFile, "netflow v9 kafka queue forward rule file")
 	// stats options
-	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable/disable stats listener")
-	flag.StringVar(&opts.StatsHTTPPort, "stats-http-port", opts.StatsHTTPPort, "stats port listener")
-	flag.StringVar(&opts.StatsHTTPAddr, "stats-http-addr", opts.StatsHTTPAddr, "stats bind address listener")
+	flag.BoolVar(&Opts.StatsEnabled, "stats-enabled", Opts.StatsEnabled, "enable/disable stats listener")
+	flag.StringVar(&Opts.StatsHTTPPort, "stats-http-port", Opts.StatsHTTPPort, "stats port listener")
+	flag.StringVar(&Opts.StatsHTTPAddr, "stats-http-addr", Opts.StatsHTTPAddr, "stats bind address listener")
 
 	// sflow options
-	flag.BoolVar(&opts.SFlowEnabled, "sflow-enabled", opts.SFlowEnabled, "enable/disable sflow listener")
-	flag.IntVar(&opts.SFlowPort, "sflow-port", opts.SFlowPort, "sflow port number")
-	flag.IntVar(&opts.SFlowUDPSize, "sflow-max-udp-size", opts.SFlowUDPSize, "sflow maximum UDP size")
-	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers number")
-	flag.StringVar(&opts.SFlowTopic, "sflow-topic", opts.SFlowTopic, "sflow topic name")
-	flag.Var(&opts.SFlowTypeFilter, "sflow-type-filter", "sflow type filter")
+	flag.BoolVar(&Opts.SFlowEnabled, "sflow-enabled", Opts.SFlowEnabled, "enable/disable sflow listener")
+	flag.IntVar(&Opts.SFlowPort, "sflow-port", Opts.SFlowPort, "sflow port number")
+	flag.IntVar(&Opts.SFlowUDPSize, "sflow-max-udp-size", Opts.SFlowUDPSize, "sflow maximum UDP size")
+	flag.IntVar(&Opts.SFlowWorkers, "sflow-workers", Opts.SFlowWorkers, "sflow workers number")
+	flag.StringVar(&Opts.SFlowTopic, "sflow-topic", Opts.SFlowTopic, "sflow topic name")
+	flag.Var(&Opts.SFlowTypeFilter, "sflow-type-filter", "sflow type filter")
 
 	// ipfix options
-	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable/disable IPFIX listener")
-	flag.BoolVar(&opts.IPFIXRPCEnabled, "ipfix-rpc-enabled", opts.IPFIXRPCEnabled, "enable/disable RPC IPFIX")
-	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
-	flag.StringVar(&opts.IPFIXAddr, "ipfix-addr", opts.IPFIXAddr, "IPFIX IP address to bind to")
-	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
-	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers number")
-	flag.StringVar(&opts.IPFIXTopic, "ipfix-topic", opts.IPFIXTopic, "ipfix topic name")
-	flag.StringVar(&opts.IPFIXTplCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTplCacheFile, "IPFIX template cache file")
-	flag.StringVar(&opts.IPFIXMirrorAddr, "ipfix-mirror-addr", opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
-	flag.IntVar(&opts.IPFIXMirrorPort, "ipfix-mirror-port", opts.IPFIXMirrorPort, "IPFIX mirror destination port number")
-	flag.IntVar(&opts.IPFIXMirrorWorkers, "ipfix-mirror-workers", opts.IPFIXMirrorWorkers, "IPFIX mirror workers number")
+	flag.BoolVar(&Opts.IPFIXEnabled, "ipfix-enabled", Opts.IPFIXEnabled, "enable/disable IPFIX listener")
+	flag.BoolVar(&Opts.IPFIXRPCEnabled, "ipfix-rpc-enabled", Opts.IPFIXRPCEnabled, "enable/disable RPC IPFIX")
+	flag.IntVar(&Opts.IPFIXPort, "ipfix-port", Opts.IPFIXPort, "IPFIX port number")
+	flag.StringVar(&Opts.IPFIXAddr, "ipfix-addr", Opts.IPFIXAddr, "IPFIX IP address to bind to")
+	flag.IntVar(&Opts.IPFIXUDPSize, "ipfix-max-udp-size", Opts.IPFIXUDPSize, "IPFIX maximum UDP size")
+	flag.IntVar(&Opts.IPFIXWorkers, "ipfix-workers", Opts.IPFIXWorkers, "IPFIX workers number")
+	flag.StringVar(&Opts.IPFIXTopic, "ipfix-topic", Opts.IPFIXTopic, "ipfix topic name")
+	flag.StringVar(&Opts.IPFIXTplCacheFile, "ipfix-tpl-cache-file", Opts.IPFIXTplCacheFile, "IPFIX template cache file")
+	flag.StringVar(&Opts.IPFIXMirrorAddr, "ipfix-mirror-addr", Opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
+	flag.IntVar(&Opts.IPFIXMirrorPort, "ipfix-mirror-port", Opts.IPFIXMirrorPort, "IPFIX mirror destination port number")
+	flag.IntVar(&Opts.IPFIXMirrorWorkers, "ipfix-mirror-workers", Opts.IPFIXMirrorWorkers, "IPFIX mirror workers number")
 
 	// netflow version 9
-	flag.BoolVar(&opts.NetflowV9Enabled, "netflow9-enabled", opts.NetflowV9Enabled, "enable/disable netflow version 9 listener")
-	flag.IntVar(&opts.NetflowV9Port, "netflow9-port", opts.NetflowV9Port, "Netflow Version 9 port number")
-	flag.IntVar(&opts.NetflowV9UDPSize, "netflow9-max-udp-size", opts.NetflowV9UDPSize, "Netflow version 9 maximum UDP size")
-	flag.IntVar(&opts.NetflowV9Workers, "netflow9-workers", opts.NetflowV9Workers, "Netflow version 9 workers number")
-	flag.StringVar(&opts.NetflowV9Topic, "netflow9-topic", opts.NetflowV9Topic, "Netflow version 9 topic name")
-	flag.StringVar(&opts.NetflowV9TplCacheFile, "netflow9-tpl-cache-file", opts.NetflowV9TplCacheFile, "Netflow version 9 template cache file")
+	flag.BoolVar(&Opts.NetflowV9Enabled, "netflow9-enabled", Opts.NetflowV9Enabled, "enable/disable netflow version 9 listener")
+	flag.IntVar(&Opts.NetflowV9Port, "netflow9-port", Opts.NetflowV9Port, "Netflow Version 9 port number")
+	flag.IntVar(&Opts.NetflowV9UDPSize, "netflow9-max-udp-size", Opts.NetflowV9UDPSize, "Netflow version 9 maximum UDP size")
+	flag.IntVar(&Opts.NetflowV9Workers, "netflow9-workers", Opts.NetflowV9Workers, "Netflow version 9 workers number")
+	flag.StringVar(&Opts.NetflowV9Topic, "netflow9-topic", Opts.NetflowV9Topic, "Netflow version 9 topic name")
+	flag.StringVar(&Opts.NetflowV9TplCacheFile, "netflow9-tpl-cache-file", Opts.NetflowV9TplCacheFile, "Netflow version 9 template cache file")
 
 	// producer options
-	flag.StringVar(&opts.MQName, "mqueue", opts.MQName, "producer message queue name")
-	flag.StringVar(&opts.MQConfigFile, "mqueue-conf", opts.MQConfigFile, "producer message queue configuration file")
+	flag.StringVar(&Opts.MQName, "mqueue", Opts.MQName, "producer message queue name")
+	flag.StringVar(&Opts.MQConfigFile, "mqueue-conf", Opts.MQConfigFile, "producer message queue configuration file")
 
 	flag.Usage = func() {
 		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, `
+		_, _ = fmt.Fprintf(os.Stderr, `
     Example:
 	# set workers
 	vflow -sflow-workers 15 -ipfix-workers 20
@@ -360,13 +363,13 @@ func (opts *Options) vFlowFlagSet() {
 	flag.Parse()
 }
 
-func vFlowLoadCfg(opts *Options) {
-	var file = path.Join(opts.VFlowConfigPath, "vflow.conf")
+func vFlowLoadCfg(Opts *Options) {
+	var file = path.Join(Opts.VFlowConfigPath, "vflow.conf")
 
-	for i, flag := range os.Args {
-		if flag == "-config" {
+	for i, flagString := range os.Args {
+		if flagString == "-config" {
 			file = os.Args[i+1]
-			opts.VFlowConfigPath, _ = path.Split(file)
+			Opts.VFlowConfigPath, _ = path.Split(file)
 			break
 		}
 	}
@@ -376,7 +379,7 @@ func vFlowLoadCfg(opts *Options) {
 		vlogger.Logger.Println(err)
 		return
 	}
-	err = yaml.Unmarshal(b, opts)
+	err = yaml.Unmarshal(b, Opts)
 	if err != nil {
 		vlogger.Logger.Println(err)
 	}

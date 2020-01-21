@@ -45,6 +45,7 @@ type nonfatalError error
 const InputId = 10
 const OutputId = 14
 const Direction = 61
+
 /*
 0x00: ingress flow
 0x01: egress flow
@@ -83,8 +84,8 @@ type TemplateFieldSpecifier struct {
 
 // TemplateRecord represents template fields
 type TemplateRecord struct {
-	Header TemplateHeader
-	SetId  uint16
+	Header               TemplateHeader
+	SetId                uint16
 	FieldSpecifiers      []TemplateFieldSpecifier
 	ScopeFieldCount      uint16
 	ScopeFieldSpecifiers []TemplateFieldSpecifier
@@ -104,11 +105,11 @@ type DataFlowSet struct {
 }
 
 type DataFlowRecord struct {
-	DataSets []DecodedField
-	InPort   int
-	OutPort  int
+	DataSets  []DecodedField
+	InPort    int
+	OutPort   int
 	Direction int
-	Length   uint16
+	Length    uint16
 }
 
 // DecodedField represents a decoded field
@@ -116,6 +117,21 @@ type DecodedField struct {
 	ID    uint16
 	Value interface{}
 }
+
+//func buildMessage(orginalMsg Message,records []DataFlowRecord) *Message{
+//	msg := new(Message)
+//	msg.AgentID = orginalMsg.AgentID
+//	msg.Header = *new(PacketHeader)
+//	msg.Header.Count = uint16(len(records))
+//	msg.Header.SeqNum = orginalMsg.Header.SeqNum
+//	msg.Header.CaptureTimeSec = orginalMsg.Header.CaptureTimeSec
+//	msg.Header.SrcID = orginalMsg.Header.SrcID
+//	msg.Header.SysUpTime = orginalMsg.Header.SysUpTime
+//	msg.Header.Version = orginalMsg.Header.Version
+//	msg.Header.UNIXSecs = orginalMsg.Header.UNIXSecs
+//
+//	return  msg
+//}
 
 //   The Packet Header format is specified as:
 //
@@ -340,7 +356,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 	return nil
 }
 
-func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, uint16, error) {
+func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int, int, uint16, error) {
 	var (
 		fields []DecodedField
 		err    error
@@ -355,7 +371,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, u
 		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
 		length += uint16(len(b))
 		if err != nil {
-			return nil, -1, -1, -1,0, err
+			return nil, -1, -1, -1, 0, err
 		}
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
 			0,
@@ -363,7 +379,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, u
 		}]
 
 		if !ok {
-			return nil, -1, -1, -1,0, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
+			return nil, -1, -1, -1, 0, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
 				tr.FieldSpecifiers[i].ElementID))
 		}
 
@@ -379,7 +395,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, u
 		if m.FieldID == OutputId {
 			outputId = int(parsePort(value))
 		}
-		if m.FieldID == Direction{
+		if m.FieldID == Direction {
 			directionId = parseDirection(value)
 		}
 	}
@@ -388,7 +404,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, u
 		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
 		length += uint16(len(b))
 		if err != nil {
-			return nil, -1, -1,-1, 0, err
+			return nil, -1, -1, -1, 0, err
 		}
 
 		m, ok := ipfix.InfoModel[ipfix.ElementKey{
@@ -397,7 +413,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, u
 		}]
 
 		if !ok {
-			return nil, -1, -1,-1, 0, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
+			return nil, -1, -1, -1, 0, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
 				tr.ScopeFieldSpecifiers[i].ElementID))
 		}
 		id := m.FieldID
@@ -417,24 +433,24 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, int, int,int, u
 		}
 	}
 
-	return fields, inputId, outputId, directionId,length, nil
+	return fields, inputId, outputId, directionId, length, nil
 }
-func parseDirection(value interface{}) int{
+func parseDirection(value interface{}) int {
 	switch value.(type) {
-		case byte:
-			return int(value.(byte))
-		default:
-			return -1
+	case byte:
+		return int(value.(byte))
+	default:
+		return -1
 	}
 }
 
 func parsePort(value interface{}) uint32 {
 	switch value.(type) {
 	case []byte:
-		bytes := value.([]byte)
-		if len(bytes) == 2 {
+		portBytes := value.([]byte)
+		if len(portBytes) == 2 {
 			return uint32(binary.BigEndian.Uint16(value.([]byte)))
-		} else if len(bytes) == 4 {
+		} else if len(portBytes) == 4 {
 			return uint32(binary.BigEndian.Uint32(value.([]byte)))
 		}
 	case uint32:
@@ -480,7 +496,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		if err := d.decodeSet(mem, msg); err != nil {
 			switch err.(type) {
 			case nonfatalError:
-				vlogger.Logger.Printf("decode error %e",err)
+				vlogger.Logger.Printf("decode error %e", err)
 				decodeErrors = append(decodeErrors, err)
 			default:
 				return nil, err
@@ -510,7 +526,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		var ok bool
 		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr)
 		if !ok {
-			vlogger.Logger.Printf("unknown flowSetId %d",setHeader.FlowSetID)
+			vlogger.Logger.Printf("unknown flowSetId %d", setHeader.FlowSetID)
 			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d",
 				d.raddr.String(),
 				setHeader.FlowSetID,
@@ -535,18 +551,17 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 				mem.insert(tr.Header.TemplateID, d.raddr, tr)
 				msg.TemplateRecords = append(msg.TemplateRecords, tr)
 				fmt.Printf("%s, FlowSetId is %d, templeteId is %d, header record size is %d, msg's templatRecord size is %d\n", msg.AgentID,
-					setId,tr.Header.TemplateID, tr.Header.FieldCount, len(msg.TemplateRecords))
+					setId, tr.Header.TemplateID, tr.Header.FieldCount, len(msg.TemplateRecords))
 			} else {
 				fmt.Printf("unable unmarshal %s's template record.\n", msg.AgentID)
 			}
-
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break
 		} else {
 			// Data set
 			//var data []DecodedField
-			data, i, o,d, length, err := d.decodeData(tr)
+			data, i, o, d, length, err := d.decodeData(tr)
 
 			if err == nil {
 				decodedFlowSet.SetHeader = *setHeader
