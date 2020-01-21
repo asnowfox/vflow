@@ -124,9 +124,9 @@ func TestSFHeaderDecode(t *testing.T) {
 			datagram.SysUpTime)
 	}
 
-	if datagram.SamplesCount != 5 {
+	if datagram.SamplesNo != 5 {
 		t.Error("expected SamplesCount: 5, got",
-			datagram.SamplesCount)
+			datagram.SamplesNo)
 	}
 
 	if datagram.SequenceNo != 36195 {
@@ -195,11 +195,11 @@ func TestDecodeSampleHeader(t *testing.T) {
 		t.Error("unexpected error", err)
 	}
 
-	if len(datagram.FlowSamples) != 5 {
-		t.Error("expected samples## 5, got", len(datagram.FlowSamples))
+	if len(datagram.Samples) != 5 {
+		t.Error("expected samples## 5, got", len(datagram.Samples))
 	}
 
-	sample := datagram.FlowSamples[0].(*FlowSample)
+	sample := datagram.Samples[0].(*FlowSample)
 
 	if sample.SequenceNo != 0xa65cc8eb {
 		t.Error("expected SequenceNo 0xa65cc8eb, got", sample.SequenceNo)

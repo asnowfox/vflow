@@ -32,6 +32,7 @@ import (
 	"github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"log"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"

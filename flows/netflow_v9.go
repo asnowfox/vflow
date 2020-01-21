@@ -227,6 +227,7 @@ LOOP:
 					vlogger.Logger.Println(err)
 					continue
 				}
+
 				netflowV9MainMQChannel <- producer.MQMessage{Topic: utils.Opts.NetflowV9Topic, Msg: string(b[:])} //append([]byte{}, b...)
 				if len(netflowV9MainMQChannel) >= 10000 {
 					vlogger.Logger.Printf("current kafka channel length is great than 10000, length is %d .", len(netflowV9MainMQChannel))
@@ -248,6 +249,7 @@ func forwardMessageToSubMQ(decodedMsg *netflow9.Message) {
 	topicDataFlowSet := make(map[string][]netflow9.DataFlowRecord)
 	for _, e := range decodedMsg.DataFlowSets {
 		for _, record := range e.DataFlowRecords {
+
 			topics := producer.ParseTopic(decodedMsg.AgentID, int32(record.InPort), int32(record.OutPort), record.Direction)
 			if topics != nil { //找到了该条数据需要发送的topics
 				for _, topic := range topics {
@@ -259,20 +261,18 @@ func forwardMessageToSubMQ(decodedMsg *netflow9.Message) {
 			}
 		}
 	}
-	buf := new(bytes.Buffer)
+
 	for k := range topicDataFlowSet {
+		buf := new(bytes.Buffer)
 		decodedMsg.Header.Count = uint16(len(topicDataFlowSet[k]))
 		b, err := decodedMsg.JSONMarshal(buf, topicDataFlowSet[k])
 		if err != nil {
 			vlogger.Logger.Println(err)
 			continue
 		}
-		//k 为 需要发送到的topic
-		//msg := k + "||" + string(b[:])
-		//message1 :=  MQMessage{k,string(b[:])}
+		//k 为需要发送到的topic
 
 		netflowV9MainMQChannel <- producer.MQMessage{Topic: k, Msg: string(b[:])}
-
 		if utils.Opts.Verbose {
 			vlogger.Logger.Println(string(b))
 		}

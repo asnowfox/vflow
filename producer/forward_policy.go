@@ -36,11 +36,6 @@ type QueueRule struct {
 	TargetQueues []string `json:"targetQueue"`
 }
 
-/*
-根据AgentId inPort outPort 以及方向来匹配规则
-返回需要转发的队列名称
-这里的实现目前还用的是循环的方式，后期可以优化为从map中查找的能力。
-*/
 var (
 	cachedQueueNames = make(map[string][]string)
 )
@@ -49,16 +44,17 @@ func ParseTopic(agentId string, inPort int32, outPort int32, direction int) []st
 	//加锁，防止修改policy的时候并发修改的问题
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
-	key := agentId + strconv.Itoa(int(inPort)) + strconv.Itoa(int(outPort)) + strconv.Itoa(direction)
+	key := agentId + strconv.Itoa(int(inPort)) + "_" + strconv.Itoa(int(outPort)) + "_" + strconv.Itoa(direction)
 	topics := cachedQueueNames[key]
+
 	if topics == nil {
 		topics = innerParse(agentId, inPort, outPort, direction)
 		if topics != nil {
 			cachedQueueNames[key] = topics
-			return topics
 		}
 	}
-	return nil
+	return topics
+
 }
 
 func innerParse(agentId string, inport int32, outport int32, direction int) []string {
@@ -81,23 +77,21 @@ func innerParse(agentId string, inport int32, outport int32, direction int) []st
 
 func (r *QueueRule) isParsed(agentId string, inPort int32, outPort int32, direction int) bool {
 	if r.Source == agentId {
-		if r.Port == -1 {
-			return true
-		}
+
 		if r.Direction == 0 { //入方向
-			if r.Port == inPort {
+			if r.Port == inPort || r.Port == -1 {
 				return true
 			} else {
 				return false
 			}
 		} else if r.Direction == 1 { //出方向
-			if r.Port == outPort {
+			if r.Port == outPort || r.Port == -1 {
 				return true
 			} else {
 				return false
 			}
 		} else if r.Direction == -1 { //双向
-			if r.Port == inPort || r.Port == outPort {
+			if r.Port == inPort || r.Port == outPort || r.Port == -1 {
 				return true
 			} else {
 				return false

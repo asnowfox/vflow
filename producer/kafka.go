@@ -141,7 +141,6 @@ func (k *Kafka) inputMsg(mCh chan MQMessage, ec *uint64) {
 		if !ok {
 			break
 		}
-		//如果自带topic，覆盖topic
 
 		kMsg := &sarama.ProducerMessage{
 			Topic: msg.Topic,

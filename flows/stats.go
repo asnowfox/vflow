@@ -107,6 +107,7 @@ func StatsFlowHandler(i *IPFIX, s *SFlow, n *NetflowV9) http.HandlerFunc {
 		}
 	}
 }
+
 func StatsForwardHandler(exchanger *mirror.Netflowv9Mirror) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		j, err := json.Marshal(exchanger.Status())
