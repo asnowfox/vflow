@@ -23,7 +23,6 @@ type PolicyController struct {
 // @router /:objectId [get]
 func (o *PolicyController) Get() {
 	policyId := o.GetString("policyId")
-	fmt.Printf("call get method of policy policyId is %s\r\n", policyId)
 	if policyId != "" {
 		policy := mirror.GetPolicyById(policyId)
 		if policy == nil {

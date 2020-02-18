@@ -84,7 +84,7 @@ func buildMap() {
 		}
 	}
 	for _, policy := range policyConfigs {
-		fmt.Printf("Policy %10s, enable %10d, target is %10s,rules count is %d\n",
+		vlogger.Logger.Printf("Policy %10s, enable %10d, target is %10s,rules count is %d\n",
 			policy.PolicyId, policy.Enable, policy.TargetAddress, len(policy.Rules))
 		if policy.Enable == 0 {
 			continue
@@ -94,7 +94,7 @@ func buildMap() {
 				mirrorMaps[r.Source] = make([]Rule, 0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
-			fmt.Printf("   (Source:%15s, Port %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.DistAddress)
+			vlogger.Logger.Printf("   (Source:%15s, Port %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.DistAddress)
 
 			for _, rule := range r.DistAddress {
 				remoteAddr := strings.Split(rule, ":")[0]
@@ -102,7 +102,6 @@ func buildMap() {
 					connect, err := NewRawConn(net.ParseIP(remoteAddr))
 					if err != nil {
 						vlogger.Logger.Printf("Mirror interface ip %s is wrong\n", remoteAddr)
-						fmt.Printf("Mirror interface ip %s is wrong\n", remoteAddr)
 					} else {
 						rawSockets[remoteAddr] = connect
 					}

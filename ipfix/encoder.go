@@ -1,9 +1,9 @@
 package ipfix
 
 import (
-	"encoding/binary"
 	"bytes"
-	"fmt"
+	"encoding/binary"
+	"github.com/VerizonDigital/vflow/vlogger"
 	"reflect"
 )
 
@@ -80,7 +80,7 @@ func Encode(originalMsg Message, seq uint32, DataFlowSets []DataFlowSet) []byte 
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.DomainID)
 
 	for _, template := range originalMsg.TemplateRecords {
-		fmt.Printf("write template record template id is %d, field count is %d.\n", template.TemplateID, template.FieldCount)
+		vlogger.Logger.Printf("write template record template id is %d, field count is %d.\n", template.TemplateID, template.FieldCount)
 		writeTemplate(buf, template)
 	}
 	for _, flowSet := range DataFlowSets {
@@ -113,6 +113,6 @@ func writeTemplate(buf *bytes.Buffer, TemplaRecord TemplateRecord) {
 			}
 		}
 	} else {
-		fmt.Printf("template record's Field count is 0\n")
+		vlogger.Logger.Printf("template record's Field count is 0\n")
 	}
 }

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/VerizonDigital/vflow/producer"
 	"github.com/VerizonDigital/vflow/restful/models"
 	"github.com/astaxie/beego"
@@ -22,7 +21,6 @@ type MQPolicyController struct {
 // @router /:objectId [get]
 func (o *MQPolicyController) Get() {
 	policyId := o.GetString("policyId")
-	fmt.Printf("call get method of policy policyId is %s\r\n", policyId)
 	if policyId != "" {
 		policy := producer.GetPolicyById(policyId)
 		if policy == nil {
@@ -40,7 +38,6 @@ func (o *MQPolicyController) Get() {
 		for _, p := range configs {
 			data = append(data, models.TransQueuePolicy(p))
 		}
-		fmt.Printf("serve all configs\r\n")
 		o.Data["json"] = data
 		o.ServeJSON()
 		return

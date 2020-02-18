@@ -1,7 +1,6 @@
 package mirror
 
 import (
-	"fmt"
 	"github.com/VerizonDigital/vflow/netflow/v9"
 	"github.com/VerizonDigital/vflow/utils"
 	"github.com/VerizonDigital/vflow/vlogger"
@@ -69,7 +68,7 @@ func (t *Netflowv9Mirror) ReceiveMessage(msg netflow9.Message) {
 				err := raw.Send(rBytes1)
 
 				if len(sMsg.TemplateRecords) > 0 {
-					fmt.Printf("I will send template record to %s:%d, parse rule port %d, direction %d.\n",
+					vlogger.Logger.Printf("I will send template record to %s:%d, parse rule port %d, direction %d.\n",
 						dstAddr, dstPort, mRule.Port, mRule.Direction)
 				}
 

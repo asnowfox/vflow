@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/VerizonDigital/vflow/snmp"
 	"github.com/VerizonDigital/vflow/vlogger"
 	"github.com/astaxie/beego"
@@ -14,7 +13,6 @@ type DeviceController struct {
 }
 
 func (o *DeviceController) Get() {
-	fmt.Printf("call get method of device controller")
 	devConfigs := snmp.ManageInstance.ListConfig()
 	o.Data["json"] = devConfigs
 	o.ServeJSON()

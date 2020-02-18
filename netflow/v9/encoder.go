@@ -1,10 +1,9 @@
 package netflow9
 
 import (
-	"encoding/binary"
 	"bytes"
-
-	"fmt"
+	"encoding/binary"
+	"github.com/VerizonDigital/vflow/vlogger"
 )
 
 //   The Packet Header format is specified as:
@@ -70,7 +69,7 @@ func Encode(agentId string,originalMsg Message, seq uint32, DataFlowSets []DataF
 	binary.Write(buf, binary.BigEndian, originalMsg.Header.SrcID)
 
 	for _, template := range originalMsg.TemplateRecords {
-		fmt.Printf("%s write template record,setId is %d, templateId is %d, Template Field count is %d.\n", agentId,
+		vlogger.Logger.Printf("%s write template record,setId is %d, templateId is %d, Template Field count is %d.\n", agentId,
 			template.SetId,
 			template.Header.TemplateID, template.Header.FieldCount)
 		writeTemplate(buf, template)
@@ -113,6 +112,6 @@ func writeTemplate(buf *bytes.Buffer, TemplaRecord TemplateRecord) {
 			binary.Write(buf, binary.BigEndian, spec.Length)
 		}
 	} else {
-		fmt.Printf("template record's Field count is 0\n")
+		vlogger.Logger.Printf("template record's Field count is 0\n")
 	}
 }

@@ -474,13 +474,11 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 
 	// IPFIX Message Header decoding
 	if err := msg.Header.unmarshal(d.reader); err != nil {
-		fmt.Printf("%s decode header error.", d.raddr)
 		vlogger.Logger.Printf("%s decode header error.", d.raddr)
 		return nil, err
 	}
 	// IPFIX Message Header validation
 	if err := msg.Header.validate(d.raddr.String()); err != nil {
-		fmt.Printf("%s validate error.", d.raddr)
 		vlogger.Logger.Printf("%s validate error.", d.raddr)
 		return nil, err
 	}
@@ -526,7 +524,6 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		var ok bool
 		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr)
 		if !ok {
-			vlogger.Logger.Printf("unknown flowSetId %d", setHeader.FlowSetID)
 			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d",
 				d.raddr.String(),
 				setHeader.FlowSetID,
@@ -550,10 +547,10 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			if err == nil {
 				mem.insert(tr.Header.TemplateID, d.raddr, tr)
 				msg.TemplateRecords = append(msg.TemplateRecords, tr)
-				fmt.Printf("%s, FlowSetId is %d, templeteId is %d, header record size is %d, msg's templatRecord size is %d\n", msg.AgentID,
+				vlogger.Logger.Printf("%s, FlowSetId is %d, templeteId is %d, header record size is %d, msg's templatRecord size is %d\n", msg.AgentID,
 					setId, tr.Header.TemplateID, tr.Header.FieldCount, len(msg.TemplateRecords))
 			} else {
-				fmt.Printf("unable unmarshal %s's template record.\n", msg.AgentID)
+				vlogger.Logger.Printf("unable unmarshal %s's template record.\n", msg.AgentID)
 			}
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records

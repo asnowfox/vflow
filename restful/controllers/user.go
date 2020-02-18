@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"github.com/VerizonDigital/vflow/restful/models"
-	"fmt"
 	"github.com/astaxie/beego"
 )
 
@@ -35,7 +34,6 @@ func (u *UserController) GetAll() {
 	//u.Data["json"] = users
 	//fmt.Printf("user's length is %d",len(users))
 	//u.ServeJSON()
-	fmt.Printf("call getall")
 	u.Ctx.WriteString("hello")
 }
 
@@ -46,7 +44,6 @@ func (u *UserController) GetAll() {
 // @Failure 403 :uid is empty
 // @router /:uid [get]
 func (u *UserController) Get() {
-	fmt.Printf("call get")
 	uid := u.GetString(":uid")
 	if uid != "" {
 		user, err := models.GetUser(uid)

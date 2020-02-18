@@ -179,7 +179,6 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 		packets []Packet
 		samples [][]byte
 	)
-	fmt.Printf("call gen packets.")
 	ipHLen := mirror.IPv4HLen
 	udp := mirror.UDP{55117, i.Port, 0, 0}
 	udpHdr := udp.Marshal()

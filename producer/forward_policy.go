@@ -213,7 +213,7 @@ func buildMap() {
 		}
 	}
 	for _, policy := range queuePolicyConfigs {
-		fmt.Printf("Policy %10s, enable %10d, target is %10s,rules count is %d\n",
+		vlogger.Logger.Printf("Policy %10s, enable %10d, target is %10s,rules count is %d\n",
 			policy.PolicyId, policy.Enable, policy.TargetQueues, len(policy.Rules))
 		if policy.Enable == 0 {
 			continue
@@ -223,7 +223,7 @@ func buildMap() {
 				mirrorMaps[r.Source] = make([]QueueRule, 0)
 			}
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
-			fmt.Printf("   (Source:%15s, Port %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.TargetQueues)
+			vlogger.Logger.Printf("   (Source:%15s, Port %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.TargetQueues)
 
 			for _, rule := range r.TargetQueues {
 				topic := rule
@@ -363,14 +363,12 @@ func recycleClients() {
 		usedClient := make(map[string]string)
 		for _, policy := range queuePolicyConfigs {
 			vlogger.Logger.Printf("check rule for policy %s, rules length is %d.\r\n", policy.PolicyId, len(policy.Rules))
-			fmt.Printf("check rule for policy %s, rules length is %d.\r\n", policy.PolicyId, len(policy.Rules))
 			for _, ecr := range policy.Rules {
 				//找到在用的
 				for _, dist := range ecr.TargetQueues {
 					dstAddr := dist
 					if _, ok := queueTopics[dstAddr]; ok {
 						vlogger.Logger.Printf("used address add %s .\r\n", dstAddr)
-						fmt.Printf("used address add %s .\r\n", dstAddr)
 						usedClient[dstAddr] = dist
 					}
 				}
@@ -382,7 +380,6 @@ func recycleClients() {
 				for _, dstTopic := range ecr.TargetQueues {
 					if _, ok := usedClient[dstTopic]; !ok {
 						vlogger.Logger.Printf("recycle dst queue %s .\r\n", dstTopic)
-						fmt.Printf("recycle dst queue %s .\r\n", dstTopic)
 						delete(queueTopics, dstTopic)
 					}
 				}
