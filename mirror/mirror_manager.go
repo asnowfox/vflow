@@ -168,6 +168,9 @@ func UpdatePolicy(policyId string, nPolicy Policy) (int, string) {
 		policyConfigs[index].PolicyId = nPolicy.PolicyId
 		policyConfigs[index].TargetAddress = nPolicy.TargetAddress
 		policyConfigs[index].Enable = nPolicy.Enable
+		for _,e := range policyConfigs[index].Rules {
+			e.DistAddress = nPolicy.TargetAddress
+		}
 		buildMap()
 		saveConfigsTofile()
 		recycleClients()

@@ -253,6 +253,9 @@ func UpdateQueuePolicy(policyId string, nPolicy QueuePolicy) (int, string) {
 		queuePolicyConfigs[index].PolicyId = nPolicy.PolicyId
 		queuePolicyConfigs[index].TargetQueues = nPolicy.TargetQueues
 		queuePolicyConfigs[index].Enable = nPolicy.Enable
+		for _,e := range queuePolicyConfigs[index].Rules {
+			e.TargetQueues = nPolicy.TargetQueues
+		}
 		buildMap()
 		saveConfigsTofile()
 		recycleClients()
