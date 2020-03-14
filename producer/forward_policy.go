@@ -44,7 +44,7 @@ func ParseTopic(agentId string, inPort int32, outPort int32, direction int) []st
 	//加锁，防止修改policy的时候并发修改的问题
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
-	key := agentId + strconv.Itoa(int(inPort)) + "_" + strconv.Itoa(int(outPort)) + "_" + strconv.Itoa(direction)
+	key := agentId + "_" + strconv.Itoa(int(inPort)) + "_" + strconv.Itoa(int(outPort)) + "_" + strconv.Itoa(direction)
 	topics := cachedQueueNames[key]
 
 	if topics == nil {
@@ -77,7 +77,6 @@ func innerParse(agentId string, inport int32, outport int32, direction int) []st
 
 func (r *QueueRule) isParsed(agentId string, inPort int32, outPort int32, direction int) bool {
 	if r.Source == agentId {
-
 		if r.Direction == 0 { //入方向
 			if r.Port == inPort || r.Port == -1 {
 				return true
@@ -91,11 +90,14 @@ func (r *QueueRule) isParsed(agentId string, inPort int32, outPort int32, direct
 				return false
 			}
 		} else if r.Direction == -1 { //双向
-			if r.Port == inPort || r.Port == outPort || r.Port == -1 {
+			if r.Port == inPort && direction == 0 { //入方向
 				return true
-			} else {
-				return false
+			} else if r.Port == outPort && direction == 1 {
+				return true
+			} else if r.Port == -1 {
+				return true
 			}
+			return false
 		} else {
 			return false
 		}
@@ -204,16 +206,16 @@ func AddQueuePolicy(policy QueuePolicy) (int, string) {
 func buildMap() {
 	mirrorMaps = make(map[string][]QueueRule)
 	for _, policy := range queuePolicyConfigs {
-		if policy.Enable == 0 {
-			continue
-		}
+		//if policy.Enable == 0 {
+		//	continue
+		//}
 		targetAddress := policy.TargetQueues
 		for i := 0; i < len(policy.Rules); i++ {
 			policy.Rules[i].TargetQueues = targetAddress
 		}
 	}
 	for _, policy := range queuePolicyConfigs {
-		vlogger.Logger.Printf("Policy %10s, enable %10d, target is %10s,rules count is %d\n",
+		vlogger.Logger.Printf("Policy %20s, enable %5d, target is %10s,rules count is %d\n",
 			policy.PolicyId, policy.Enable, policy.TargetQueues, len(policy.Rules))
 		if policy.Enable == 0 {
 			continue
@@ -225,10 +227,9 @@ func buildMap() {
 			mirrorMaps[r.Source] = append(mirrorMaps[r.Source], r)
 			vlogger.Logger.Printf("   (Source:%15s, Port %5d, Direction %5d) ->  %s \n", r.Source, r.Port, r.Direction, r.TargetQueues)
 
-			for _, rule := range r.TargetQueues {
-				topic := rule
+			for _, queueName := range r.TargetQueues {
+				topic := queueName
 				if _, ok := queueTopics[topic]; !ok {
-
 					queueTopics[topic] = topic
 				}
 			}
@@ -253,9 +254,10 @@ func UpdateQueuePolicy(policyId string, nPolicy QueuePolicy) (int, string) {
 		queuePolicyConfigs[index].PolicyId = nPolicy.PolicyId
 		queuePolicyConfigs[index].TargetQueues = nPolicy.TargetQueues
 		queuePolicyConfigs[index].Enable = nPolicy.Enable
-		for _,e := range queuePolicyConfigs[index].Rules {
-			e.TargetQueues = nPolicy.TargetQueues
-		}
+		//for _, r := range queuePolicyConfigs[index].Rules {
+		//	r.TargetQueues = nPolicy.TargetQueues
+		//	vlogger.Logger.Printf("update rule %s target queue is %s", r.Source, r.TargetQueues)
+		//}
 		buildMap()
 		saveConfigsTofile()
 		recycleClients()
@@ -356,6 +358,13 @@ func DeleteQueueRule(policyId string, rule QueueRule) (int, string) {
 
 func saveConfigsTofile() {
 	b, err := json.MarshalIndent(queuePolicyConfigs, "", "    ")
+	for _, p := range queuePolicyConfigs {
+		vlogger.Logger.Printf("Save policy %s -> %s", p.PolicyId, p.TargetQueues)
+		for _, r := range p.Rules {
+			r.TargetQueues = p.TargetQueues
+			vlogger.Logger.Printf("r is %s -> %s", r.Source, r.TargetQueues)
+		}
+	}
 	if err == nil {
 		_ = ioutil.WriteFile(utils.Opts.QueueForwardFile, b, 0x777)
 	}

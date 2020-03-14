@@ -121,7 +121,7 @@ func StatsForwardHandler(exchanger *mirror.Netflowv9Mirror) http.HandlerFunc {
 	}
 }
 
-func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger *mirror.Netflowv9Mirror) {
+func StatsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9, exchanger *mirror.Netflowv9Mirror) {
 	if !utils.Opts.StatsEnabled {
 		return
 	}

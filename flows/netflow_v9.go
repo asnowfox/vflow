@@ -214,8 +214,8 @@ LOOP:
 			msg := *decodedMsg
 			i.udpMirror.ReceiveMessage(msg)
 		}
+		atomic.AddUint64(&i.stats.DecodedCount, uint64(len(decodedMsg.DataFlowSets)))
 
-		atomic.AddUint64(&i.stats.DecodedCount, 1)
 		i.pktStat.recordSeq(decodedMsg.AgentID, decodedMsg.Header.SrcID, decodedMsg.Header.SeqNum)
 
 		dstMessage := deepcopy.Copy(*decodedMsg).(netflow9.Message)
@@ -227,8 +227,8 @@ LOOP:
 					vlogger.Logger.Println(err)
 					continue
 				}
-
 				netflowV9MainMQChannel <- producer.MQMessage{Topic: utils.Opts.NetflowV9Topic, Msg: string(b[:])} //append([]byte{}, b...)
+
 				if len(netflowV9MainMQChannel) >= 10000 {
 					vlogger.Logger.Printf("current kafka channel length is great than 10000, length is %d .", len(netflowV9MainMQChannel))
 				}

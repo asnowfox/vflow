@@ -75,9 +75,9 @@ func parsePort(value interface{}) uint32 {
 func buildMap() {
 	mirrorMaps = make(map[string][]Rule)
 	for _, policy := range policyConfigs {
-		if policy.Enable == 0 {
-			continue
-		}
+		//if policy.Enable == 0 {
+		//	continue
+		//}
 		targetAddress := policy.TargetAddress
 		for i := 0; i < len(policy.Rules); i++ {
 			policy.Rules[i].DistAddress = targetAddress
@@ -168,9 +168,10 @@ func UpdatePolicy(policyId string, nPolicy Policy) (int, string) {
 		policyConfigs[index].PolicyId = nPolicy.PolicyId
 		policyConfigs[index].TargetAddress = nPolicy.TargetAddress
 		policyConfigs[index].Enable = nPolicy.Enable
-		for _,e := range policyConfigs[index].Rules {
-			e.DistAddress = nPolicy.TargetAddress
-		}
+		//for _,rule := range policyConfigs[index].Rules {
+		//	rule.DistAddress = nPolicy.TargetAddress
+		//	vlogger.Logger.Printf("update rule %s target queue is %s", rule.Source, rule.DistAddress)
+		//}
 		buildMap()
 		saveConfigsTofile()
 		recycleClients()

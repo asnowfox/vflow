@@ -101,6 +101,7 @@ func main() {
 			p.Run()
 		}(p)
 	}
+	go flows.StatsHTTPServer(ipfix, sFlow, netflow9, nil)
 
 	//go statsHTTPServer(ipfix, sFlow, netflow9, flowMirror)
 	//启动BeegoServer

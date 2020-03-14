@@ -23,7 +23,7 @@ func (o *DeviceController) Post() {
 	method := o.GetString("method")
 	cnt := -1
 	if method == "add" {
-		vlogger.Logger.Printf("call add method of device controller")
+		vlogger.Logger.Printf("call add method of device controller\r\n")
 		var ob snmp.CommunityConfig
 		err := json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 		msg := "parse json error."

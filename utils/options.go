@@ -139,7 +139,7 @@ func newOptions() *Options {
 		CPUCap:           "100%",
 
 		StatsEnabled:  true,
-		StatsHTTPPort: "8081",
+		StatsHTTPPort: "8082",
 		StatsHTTPAddr: "",
 
 		SFlowEnabled:    true,
