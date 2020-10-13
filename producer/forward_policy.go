@@ -54,7 +54,6 @@ func ParseTopic(agentId string, inPort int32, outPort int32, direction int) []st
 		}
 	}
 	return topics
-
 }
 
 func innerParse(agentId string, inport int32, outport int32, direction int) []string {
@@ -206,9 +205,6 @@ func AddQueuePolicy(policy QueuePolicy) (int, string) {
 func buildMap() {
 	mirrorMaps = make(map[string][]QueueRule)
 	for _, policy := range queuePolicyConfigs {
-		//if policy.Enable == 0 {
-		//	continue
-		//}
 		targetAddress := policy.TargetQueues
 		for i := 0; i < len(policy.Rules); i++ {
 			policy.Rules[i].TargetQueues = targetAddress
@@ -254,10 +250,7 @@ func UpdateQueuePolicy(policyId string, nPolicy QueuePolicy) (int, string) {
 		queuePolicyConfigs[index].PolicyId = nPolicy.PolicyId
 		queuePolicyConfigs[index].TargetQueues = nPolicy.TargetQueues
 		queuePolicyConfigs[index].Enable = nPolicy.Enable
-		//for _, r := range queuePolicyConfigs[index].Rules {
-		//	r.TargetQueues = nPolicy.TargetQueues
-		//	vlogger.Logger.Printf("update rule %s target queue is %s", r.Source, r.TargetQueues)
-		//}
+
 		buildMap()
 		saveConfigsTofile()
 		recycleClients()
@@ -336,7 +329,7 @@ func DeleteQueueRule(policyId string, rule QueueRule) (int, string) {
 	}
 	var index = -1
 	for i, r := range queuePolicyConfigs[pid].Rules {
-		if r.Port == rule.Port &&
+		if r.Port == rule.Port && r.Source == rule.Source &&
 			r.Direction == rule.Direction {
 			index = i
 			break
@@ -375,6 +368,9 @@ func recycleClients() {
 		usedClient := make(map[string]string)
 		for _, policy := range queuePolicyConfigs {
 			vlogger.Logger.Printf("check rule for policy %s, rules length is %d.\r\n", policy.PolicyId, len(policy.Rules))
+			if policy.Enable == 0 {
+				continue
+			}
 			for _, ecr := range policy.Rules {
 				//找到在用的
 				for _, dist := range ecr.TargetQueues {

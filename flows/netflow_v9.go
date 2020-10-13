@@ -69,8 +69,8 @@ type NetflowV9Stats struct {
 }
 
 var (
-	netflowV9UDPCh         = make(chan NetflowV9UDPMsg, 10000)
-	netflowV9MainMQChannel = make(chan producer.MQMessage, 10000)
+	netflowV9UDPCh         = make(chan NetflowV9UDPMsg, 50000)
+	netflowV9MainMQChannel = make(chan producer.MQMessage, 500000)
 	mCacheNF9              netflow9.MemCache
 	// ipfix udp payload pool
 	netflowV9Buffer = &sync.Pool{
@@ -162,7 +162,6 @@ func (i *NetflowV9) Shutdown() {
 		vlogger.Logger.Println("netflow v9 disabled")
 		return
 	}
-
 	// stop reading from UDP listener
 	i.stop = true
 	vlogger.Logger.Println("stopping netflow v9 service gracefully ...")
@@ -229,8 +228,8 @@ LOOP:
 				}
 				netflowV9MainMQChannel <- producer.MQMessage{Topic: utils.Opts.NetflowV9Topic, Msg: string(b[:])} //append([]byte{}, b...)
 
-				if len(netflowV9MainMQChannel) >= 10000 {
-					vlogger.Logger.Printf("current kafka channel length is great than 10000, length is %d .", len(netflowV9MainMQChannel))
+				if len(netflowV9MainMQChannel) >= 500000 {
+					vlogger.Logger.Printf("current kafka channel length is great than 500000, length is %d .", len(netflowV9MainMQChannel))
 				}
 
 				if utils.Opts.Verbose {
@@ -249,7 +248,6 @@ func forwardMessageToSubMQ(decodedMsg *netflow9.Message) {
 	topicDataFlowSet := make(map[string][]netflow9.DataFlowRecord)
 	for _, e := range decodedMsg.DataFlowSets {
 		for _, record := range e.DataFlowRecords {
-
 			topics := producer.ParseTopic(decodedMsg.AgentID, int32(record.InPort), int32(record.OutPort), record.Direction)
 			if topics != nil { //找到了该条数据需要发送的topics
 				for _, topic := range topics {
@@ -271,7 +269,6 @@ func forwardMessageToSubMQ(decodedMsg *netflow9.Message) {
 			continue
 		}
 		//k 为需要发送到的topic
-
 		netflowV9MainMQChannel <- producer.MQMessage{Topic: k, Msg: string(b[:])}
 		if utils.Opts.Verbose {
 			vlogger.Logger.Println(string(b))

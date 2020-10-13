@@ -267,7 +267,7 @@ func DeleteRule(policyId string, rule Rule) (int, string) {
 	}
 	var index = -1
 	for i, r := range policyConfigs[pid].Rules {
-		if r.Port == rule.Port &&
+		if r.Port == rule.Port && r.Source == rule.Source &&
 			r.Direction == rule.Direction {
 			index = i
 			break

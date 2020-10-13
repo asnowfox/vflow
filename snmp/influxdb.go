@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	hostUrl  = "http://vflow-web:8086"
+	hostUrl  = "http://flow-matrix-second:8086"
 	dbName   = "flowMatrix"
 	username = "admin"
 	password = "vlfow"

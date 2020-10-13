@@ -86,6 +86,8 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	config.ClientID = "vFlow.Kafka"
 	config.Producer.Retry.Max = k.config.RetryMax
 	config.Producer.Retry.Backoff = time.Duration(k.config.RetryBackoff) * time.Millisecond
+	config.Producer.Flush.Messages = 10000
+	config.Producer.Flush.Frequency = time.Duration(1) * time.Millisecond
 	sarama.MaxRequestSize = k.config.RequestSizeMax
 
 	switch k.config.Compression {
@@ -130,9 +132,9 @@ func (k *Kafka) inputMsg(mCh chan MQMessage, ec *uint64) {
 
 	go func() {
 		for err := range k.producer.Errors() {
-			k.logger.Println(err)
+			k.logger.Println("MQ error is ", err)
 			str := msg.Msg
-			k.logger.Println(str)
+			k.logger.Println("MQ error message is ", str)
 			*ec++
 		}
 	}()

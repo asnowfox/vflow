@@ -80,7 +80,6 @@ func (p *Producer) Run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		//topic := p.Topic
 		p.MQ.inputMsg(p.Chan, p.MQErrorCount)
 	}()
 
