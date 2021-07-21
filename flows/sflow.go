@@ -210,7 +210,7 @@ LOOP:
 		if utils.MqEnabled {
 			select {
 			// case sFlowMQCh <- append([]byte{}, b...):
-			case sFlowMQCh <- producer.MQMessage{Topic: utils.Opts.NetflowV9Topic, Msg: string(b[:])}:
+			case sFlowMQCh <- producer.MQMessage{Topic: utils.Opts.SFlowTopic, Msg: string(b[:])}:
 			default:
 			}
 		}
