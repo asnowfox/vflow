@@ -65,7 +65,7 @@ type SFlowStats struct {
 
 var (
 	sFlowUDPCh = make(chan SFUDPMsg, 1000)
-	sFlowMQCh  = make(chan []byte, 1000)
+	sFlowMQCh  = make(chan producer.MQMessage, 1000)
 
 	// sflow udp payload pool
 	sFlowBuffer = &sync.Pool{
@@ -117,8 +117,8 @@ func (s *SFlow) Run() {
 			p.MQConfigFile = path.Join(utils.Opts.VFlowConfigPath, utils.Opts.MQConfigFile)
 			p.MQErrorCount = &s.stats.MQErrorCount
 			p.Logger = vlogger.Logger
-			//p.Chan = sFlowMQCh
-			//p.Topic = utils.Opts.SFlowTopic
+
+			p.Chan = sFlowMQCh
 
 			if err := p.Run(); err != nil {
 				vlogger.Logger.Fatal(err)
@@ -209,7 +209,8 @@ LOOP:
 		}
 		if utils.MqEnabled {
 			select {
-			case sFlowMQCh <- append([]byte{}, b...):
+			// case sFlowMQCh <- append([]byte{}, b...):
+			case sFlowMQCh <- producer.MQMessage{Topic: utils.Opts.NetflowV9Topic, Msg: string(b[:])}:
 			default:
 			}
 		}
